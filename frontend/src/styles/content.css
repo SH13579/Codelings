@@ -1,0 +1,55 @@
+.content-wrapper{
+  background-color: black;
+}
+.search-bar{
+  padding-top: 2rem;
+}
+.services{
+  background-color: white;
+  margin-top: 2rem;
+}
+.service-wrapper{
+  cursor: pointer;
+}
+.service-wrapper:hover{
+  background-color: rgb(239, 239, 239);
+  transition: background-color 0.15s ease-in;
+}
+.service{
+  padding: 2rem;
+  margin-bottom: 2.5px;
+  font-size: 1rem;
+}
+.user-info{
+  display: flex;
+  width: 8rem;
+  justify-content: space-between;
+  align-items: center;
+  color: rgb(0, 0, 0);
+}
+.user-name-review-wrapper{
+  margin-left: 0.5rem;
+}
+.reviews-wrapper{
+  font-size: 0.85rem;
+}
+.reviews-count{
+  margin-left: 0.5rem;
+}
+.user-name{
+  font-weight: 500;
+}
+.pfp{
+  height: 2rem;
+  border-radius: 50%;
+}
+.service-title{
+  margin: 0.5rem 0rem 0.5rem 0rem;
+}
+.language{
+  text-decoration: underline;
+}
+.horizontal-line {
+  height: 1px;
+  background-color: #e3e3e3;
+}
