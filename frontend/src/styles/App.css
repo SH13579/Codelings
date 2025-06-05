@@ -38,3 +38,13 @@
 .read-the-docs {
   color: #888;
 }
+
+.blur{
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1040;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(21, 21, 21, 0.85);
+}

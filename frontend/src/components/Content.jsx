@@ -1,4 +1,4 @@
-import React, { useState }from 'react';
+import React, { useState } from 'react';
 import '../styles/content.css'
 import services from '../data/services'
 
@@ -39,7 +39,7 @@ function ServiceCard(props){
           <span className="language">{props.user_language}</span> for <span className="language">{props.target_language}</span></h2>
         <div className="service-desc">{props.description}</div>
       </div>
-      <div class="horizontal-line"></div>
+      <div className="horizontal-line"></div>
     </div>
   )
 }
@@ -57,10 +57,6 @@ export default function Services(){
   )
   return (
     <section className="content-wrapper">
-      <form action="/search" method="GET" className="search-bar">
-        <input type="search" placeholder="Search for a specific topic..."/>
-        <button type="submit">Search</button>
-      </form>
       <div className="services">
         {all_services}
       </div>

@@ -1,5 +1,5 @@
 .header{
-  background-color: gray;
+  background-color: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -7,11 +7,28 @@
   position: sticky;
   top: 0;
   z-index: 1000;
+  transition: background-color 0.2s ease-in-out;
 }
-
+.header.scrolled{
+  background-color: rgb(204, 204, 204);
+}
 .header-buttons{
   padding: 2rem;
   text-decoration: none;
   cursor: pointer;
   color: black;
 }
+.search-wrapper{
+  max-width: 30%;
+  width: 25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.search-bar{
+  height: 2.25rem;
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+}
+

@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import Header from './components/Header'
 import Content from './components/Content'
+import Account from './components/Account'
 import './styles/App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [login, setLogin] = useState(false);
 
   return (
     <div>
-      <Header />
+      <Header setLogin={setLogin}/>
       <Content />
+      {login ? <Account setLogin={setLogin}/> : null}
+      {console.log(login)}
     </div>
   )
 }
