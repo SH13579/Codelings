@@ -3,13 +3,13 @@ import '../styles/content.css'
 import services from '../data/services'
 
 function StarRating({ reviews_stars }){
+  //Create a new array of size 5 and for each undefined element in the array, fill it by using it's index (i) as a reference
   let stars = Array.from({length: 5}, (_, i) => {
-    console.log(reviews_stars);
     return (
       <span 
       key={i} 
       className="review-star"
-      style={{color: i < reviews_stars ? "#ffc107" : "#e4e5e9"}}
+      style={{color: i+1 <= reviews_stars ? "#ffc107" : "#e4e5e9"}}  //keep filling each star as yellow until its index+1 is more than the stars the user has
       >
         ★
       </span>
