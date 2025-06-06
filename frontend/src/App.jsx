@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Header from './components/Header'
 import Content from './components/Content'
-import Account from './components/Account'
+import Footer from './components/Footer'
 import './styles/App.css'
 
 function App() {
@@ -9,10 +9,9 @@ function App() {
 
   return (
     <div>
-      <Header setLogin={setLogin}/>
+      <Header/>
       <Content />
-      {login ? <Account setLogin={setLogin}/> : null}
-      {console.log(login)}
+      <Footer />
     </div>
   )
 }

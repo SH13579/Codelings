@@ -31,7 +31,7 @@ export default [
   },
   {
     id: 3,
-    description: "Naghahanap ako ng taong makapagtuturo sa akin ng Swedish. Marunong akong magsalita ng Russian at madaling makapagsimula ng pag-uusap",
+    description: "Success is often seen as the result of talent or luck, but in reality, it is the outcome of dedication, resilience, and a clear sense of purpose. While talent can give someone a head start, it is consistent effort and the willingness to learn from mistakes that truly pave the way to achievement. Those who succeed are not always the smartest or most gifted, but the ones who show up every day, work hard, and keep going despite challenges. Failure, rather than being a setback, becomes a powerful teacher. It helps build character, strength, and problem-solving skills. Additionally, having clear goals and staying disciplined, even when motivation fades, is essential. Success is not a straight path, and it doesn’t happen overnight. It’s a journey that demands patience and perseverance. Ultimately, it’s the mindset and habits we build along the way that lead to meaningful and lasting accomplishments in life.",
     user_language: "Filipino",
     target_language: "Russian",
     name: "thelanguagebabe10",

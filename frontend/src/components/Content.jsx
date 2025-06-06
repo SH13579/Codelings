@@ -1,29 +1,18 @@
-import React, { useState } from 'react';
-import '../styles/content.css'
-import services from '../data/services'
-
-function StarRating({ reviews_stars }){
-  //Create a new array of size 5 and for each undefined element in the array, fill it by using it's index (i) as a reference
-  let stars = Array.from({length: 5}, (_, i) => {
-    return (
-      <span 
-      key={i} 
-      className="review-star"
-      style={{color: i+1 <= reviews_stars ? "#ffc107" : "#e4e5e9"}}  //keep filling each star as yellow until its index+1 is more than the stars the user has
-      >
-        ★
-      </span>
-    )
-  });
-
-  return stars;
-}
+import React, { useState, useEffect } from 'react';
+import '../styles/content.css';
+import Profile from './Profile';
+import services from '../data/services';
+import { StarRating } from '../utils';
 
 function ServiceCard(props){
+  const [clickProfile, setClickProfile] = useState(false);
+  useEffect(() => {
+      document.body.style.overflow = clickProfile ? 'hidden' : 'auto';
+  }, [clickProfile])
   return (
     <div className="service-wrapper">
       <div className="service">
-        <div className="user-info">
+        <div onClick={() => setClickProfile(true)} className="user-info">
           <img className="pfp" src={`../images/${props.pfp}`}/>
           <div className="user-name-review-wrapper">
             <span className="user-name">{props.name}</span>
@@ -40,6 +29,7 @@ function ServiceCard(props){
         <div className="service-desc">{props.description}</div>
       </div>
       <div className="horizontal-line"></div>
+      {clickProfile ? <Profile name={props.name} reviews_count={props.reviews_count} reviews_stars={props.reviews_stars} setClickProfile={setClickProfile}/> : null}
     </div>
   )
 }

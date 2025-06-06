@@ -5,8 +5,84 @@
   transform: translate(-50%, -50%);
   background-color: rgb(255, 255, 255);
   z-index: 1050;
+  border-radius: 15px;
+  padding: 2rem;
+  width: 22.5rem;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
+}
+.account-container label{
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.account-container input{
+  height: 1.75rem;
+  border-radius: 10px;
+  border: 1px solid black;
+  padding: 0.5rem 0.85rem 0.5rem 0.85rem;
+  font-size: 0.85rem;
+}
+.account-container input:focus{
+  outline: none;
+}
+.account-container button{
+  padding: 0.85rem;
+  border: none;
+}
+.account-container button:focus{
+  outline: none;
+}
+.login-button{
+  background-color: red;
+  color: white;
+}
+.register-button{
+  background-color: orange;
+  color: white;
+}
+.login-button, .register-button{
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+.account-container button:hover{
+  transition: background-color 0.25s ease, color 0.25s ease;
+  border: none;
+}
+.login-button:hover{
+  background-color: darkred;
+  color: white;
+}
+.register-button:hover{
+  background-color: darkgoldenrod;
+  color: white;
+}
+.form-section{
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: space-between;
+}
+.form-title{
+  font-weight: 1000;
+  margin-top: 0;
+}
+.exit-button{
+  padding: 0.85rem;
+  border: none;
+  margin-top: 0;
+  margin-bottom: 0;
+  background: none;
+  font-size: 25px;
+  cursor: pointer;
+  display: flex;
+  margin-left: auto;
+}
+.exit-button:hover{
+  color: rgb(167, 167, 167);
+  border: none;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  border: none;
 }
