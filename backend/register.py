@@ -6,11 +6,10 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Database config
 DB_HOST = 'localhost'
-DB_NAME = 'test'
+DB_NAME = 'skill-exchange'
 DB_USER = 'postgres'
-DB_PASS = '' #reminder to set environment variable
+DB_PASS = os.getenv('PG_PASSWORD') #access environment variable PG_PASSWORD
 DB_PORT = '5432'
 
 #connect to PostgreSQL database
@@ -22,10 +21,11 @@ try:
     password=DB_PASS,
     port=DB_PORT
   )
-  cursor = conn.cursor()
+  cursor = conn.cursor() #allow SQL to be used
 except Exception as e:
   print('Error connecting to database:', e)
 
+#route to handle registtration
 @app.route('/register', methods=['POST'])
 def register():
   global conn, cursor
@@ -36,16 +36,31 @@ def register():
   username = data.get('username')
   email = data.get('email')
   password = data.get('password')  #reminder to hash passwords and sensitive info
+  confirm_password = data.get('confirm_password')
 
   try:
-    #check if username exists
-    cursor.execute('SELECT * FROM accounts WHERE username =%s', (username,))
-    if cursor.fetchone():
-      return jsonify({'error': 'Username already exists'}), 409
+
+    #even though handled in frontend, good practice to handle in backend
+    #if fields are empty
+    if not username or not email or not password or not confirm_password:
+      return jsonify({'error': 'Missing username, email, or password'}), 400
+    #if password does not match with confirm_password
+    if password != confirm_password:
+        return jsonify({'error': 'Passwords do not match'}), 400
+    
+    #check if username is taken
+    cursor.execute('SELECT * FROM accounts WHERE username =%s', (username,)) #single element tuple. psycopg2 only accepts tuples
+    if cursor.fetchone(): #fetch from database and check if username taken
+      return jsonify({'error': 'Username is taken'}), 409
+    
+    #check if email is taken
+    cursor.execute('SELECT * FROM accounts WHERE email =%s', (email,)) #single element tuple. psycopg2 only accepts tuples
+    if cursor.fetchone(): #fetch from database and check if email taken
+      return jsonify({'error': 'Email is taken'}), 409
     
     #insert new account
     cursor.execute(
-        'INSERT INTO accounts (username, password) VALUES (%s, %s, %s)',
+        'INSERT INTO accounts (username, email, password) VALUES (%s, %s, %s)',
         (username, email, password)
     )
     conn.commit()
@@ -53,6 +68,27 @@ def register():
   except Exception as e:
       conn.rollback()
       return jsonify({'error': str(e)}), 500
+
+#route to handle logging in
+@app.route('/login', methods=['POST'])
+def login():
+  global conn, cursor
+  if not conn or not cursor:
+    return jsonify({'error': 'Database connection not established'}), 500
+  
+  data = request.json
+  username = data.get('username')
+  password = data.get('password')  #reminder to hash passwords and sensitive info
+
+  try:
+    cursor.execute('SELECT * FROM accounts WHERE username=%s AND password =%s', (username, password))
+
+    if cursor.fetchone(): #check if username and password valid
+      return jsonify({'message': 'Login successful'}), 200
+    else:
+      return jsonify({'error': 'Invalid username or password'}), 401
+  except Exception as e:
+    return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
   app.run(debug=True)
