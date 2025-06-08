@@ -1,32 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/content.css';
 import Profile from './Profile';
-import services from '../data/services';
-import { StarRating } from '../utils';
+import projects from '../data/projects';
 
-function ServiceCard(props){
+function ProjectCard(props){
   const [clickProfile, setClickProfile] = useState(false);
   useEffect(() => {
       document.body.style.overflow = clickProfile ? 'hidden' : 'auto';
   }, [clickProfile])
   return (
-    <div className="service-wrapper">
-      <div className="service">
+    <div className="project-wrapper">
+      <div className="project">
         <div onClick={() => setClickProfile(true)} className="user-info">
           <img className="pfp" src={`../images/${props.pfp}`}/>
-          <div className="user-name-review-wrapper">
-            <span className="user-name">{props.name}</span>
-            <div className="reviews-wrapper">
-              <span className="reviews-stars">
-                <StarRating reviews_stars={props.reviews_stars}/>
-              </span>
-              <span className="reviews-count">{`(${props.reviews_count})`}</span>
-            </div>
-          </div>
+          <span className="user-name">{props.name}</span>  
         </div>
-        <h2 className="service-title">
-          <span className="language">{props.user_language}</span> for <span className="language">{props.target_language}</span></h2>
-        <div className="service-desc">{props.description}</div>
+        <h2 className="project-title">{props.title}</h2>
+        <div className="project-desc">{props.description}</div>
       </div>
       <div className="horizontal-line"></div>
       {clickProfile ? <Profile name={props.name} reviews_count={props.reviews_count} reviews_stars={props.reviews_stars} setClickProfile={setClickProfile}/> : null}
@@ -34,10 +24,10 @@ function ServiceCard(props){
   )
 }
 
-export default function Services(){ 
-  const all_services = services.map(item => {
+export default function Projects(){ 
+  const all_projects = projects.map(item => {
     return (
-      <ServiceCard 
+      <ProjectCard 
         key={item.id}
         {...item}
       />
@@ -47,8 +37,8 @@ export default function Services(){
   )
   return (
     <section className="content-wrapper">
-      <div className="services">
-        {all_services}
+      <div className="projects">
+        {all_projects}
       </div>
     </section>
   )

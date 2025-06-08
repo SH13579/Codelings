@@ -29,8 +29,8 @@ export default function Header(){
   }, []);
 
   return (
-    <section>
-      <header className={`header ${isScrolled ? "scrolled" : ""}`}>
+    <section className={`header ${isScrolled ? "scrolled" : ""}`}>
+      <header className="header-info">
         <a className="header-buttons">IMG</a>
         <form className="search-wrapper" action="/search" method="GET">
           <input className="search-bar" type="search" placeholder="Search for a specific topic..."/>

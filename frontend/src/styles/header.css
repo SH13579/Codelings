@@ -1,8 +1,5 @@
 .header{
   background-color: white;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   height: 5rem;
   position: sticky;
   top: 0;
@@ -30,5 +27,11 @@
   width: 100%;
   padding: 0.5rem;
   font-size: 0.9rem;
+}
+.header-info{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
 }
 

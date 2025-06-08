@@ -1,12 +1,12 @@
-.service-wrapper{
+.project-wrapper{
   cursor: pointer;
 }
-.service-wrapper:hover{
+.project-wrapper:hover{
   background-color: rgb(239, 239, 239);
   transition: background-color 0.15s ease-in;
 }
-.service{
-  padding: 2rem;
+.project{
+  padding: 1.25rem;
   margin-bottom: 2.5px;
   font-size: 1rem;
 }
@@ -16,26 +16,15 @@
   padding-right: 0;
   color: rgb(0, 0, 0);
 }
-.user-name-review-wrapper{
-  margin-left: 0.5rem;
-}
-.reviews-wrapper{
-  font-size: 0.85rem;
-}
-.reviews-count{
-  margin-left: 0.5rem;
-}
 .user-name{
   font-weight: 500;
+  margin-left: 0.5rem;
 }
 .pfp{
   height: 2rem;
 }
-.service-title{
+.project-title{
   margin: 0.5rem 0rem 0.5rem 0rem;
-}
-.language{
-  text-decoration: underline;
 }
 .horizontal-line {
   height: 1px;

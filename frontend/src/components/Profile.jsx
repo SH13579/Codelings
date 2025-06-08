@@ -1,9 +1,10 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../styles/profile.css'
 import { useExitListener, StarRating } from '../utils';
 
 export default function Profile({ setClickProfile, name, reviews_stars, reviews_count }){
   const profileRef = useRef(null);
+  const [clickChat, setClickChat] = useState(false);
   
   useExitListener(setClickProfile, profileRef);
 
@@ -15,13 +16,9 @@ export default function Profile({ setClickProfile, name, reviews_stars, reviews_
         <div className="profile-info">
           <img className="profile-pfp" src="../images/doggy.png"/>
           <h2 className="profile-name">{name}</h2>
-          <div className="reviews-wrapper">
-            <span className="reviews-stars">
-              <StarRating reviews_stars={reviews_stars}/>
-            </span>
-            <span className="reviews-count">{`(${reviews_count})`}</span>
-          </div>
-          <span></span>
+          <button onClick={() => {
+            setClickChat(true);
+          }}>Chat</button>
         </div>
       </div>
     </div>
