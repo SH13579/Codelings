@@ -4,11 +4,12 @@ import '../styles/header.css';
 
 export default function Header(){
   const [isScrolled, setIsScrolled] = useState(false);
-  const [login, setLogin] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    document.body.style.overflow = login ? "hidden" : "auto";
-  }, [login])
+    document.body.style.overflow = showLogin ? "hidden" : "auto";
+  }, [showLogin])
 
   // turn the header's background color to black when page is being scrolled
   useEffect(() => {
@@ -35,11 +36,15 @@ export default function Header(){
         <form className="search-wrapper" action="/search" method="GET">
           <input className="search-bar" type="search" placeholder="Search for a specific topic..."/>
         </form>
+
+        {/* loggedIn ? (
+          <a className="header-buttons">WASSUP,</a>
+        ) */}
         <a onClick={() => {
-          setLogin(true)
+          setShowLogin(true)
         }} className="header-buttons">SIGN IN</a>
       </header>
-      {login ? <Account setLogin={setLogin}/> : null}
+      {showLogin ? <Account setShowLogin={setShowLogin}/> : null}
     </section>
   )
 }

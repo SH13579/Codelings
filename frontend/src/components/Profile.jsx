@@ -14,7 +14,7 @@ export default function Profile({ setClickProfile, name, reviews_stars, reviews_
       <div ref={profileRef} className="profile">
         <button className="exit-button" onClick={() => setClickProfile(false)}>&times;</button>
         <div className="profile-info">
-          <img className="profile-pfp" src="../images/doggy.png"/>
+          <img className="profile-pfp" src="../media/images/doggy.png"/>
           <h2 className="profile-name">{name}</h2>
           <button onClick={() => {
             setClickChat(true);

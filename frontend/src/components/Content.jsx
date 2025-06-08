@@ -8,15 +8,28 @@ function ProjectCard(props){
   useEffect(() => {
       document.body.style.overflow = clickProfile ? 'hidden' : 'auto';
   }, [clickProfile])
+
+  function ProjectVideo(){
+    return (
+      <div className="project-video">
+        <video width="640" height="360" controls>
+          <source src={`../media/videos/${props.video}`} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video >
+      </div>
+    )
+  }
+
   return (
-    <div className="project-wrapper">
-      <div className="project">
+    <div className="projects-wrapper">
+      <div className="projects">
         <div onClick={() => setClickProfile(true)} className="user-info">
-          <img className="pfp" src={`../images/${props.pfp}`}/>
+          <img className="pfp" src={`../media/images/${props.pfp}`}/>
           <span className="user-name">{props.name}</span>  
         </div>
         <h2 className="project-title">{props.title}</h2>
-        <div className="project-desc">{props.description}</div>
+        {props.video !== null ? <ProjectVideo /> : null}
+        {props.video == null ? <div className="project-desc">{props.description}</div> : null}
       </div>
       <div className="horizontal-line"></div>
       {clickProfile ? <Profile name={props.name} reviews_count={props.reviews_count} reviews_stars={props.reviews_stars} setClickProfile={setClickProfile}/> : null}

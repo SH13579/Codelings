@@ -81,10 +81,11 @@ def login():
   password = data.get('password')  #reminder to hash passwords and sensitive info
 
   try:
-    cursor.execute('SELECT * FROM accounts WHERE username=%s AND password =%s', (username, password))
+    cursor.execute('SELECT id, username FROM accounts WHERE username=%s AND password =%s', (username, password))
+    user = cursor.fetchone()  #return whatever is selected in tuple (id, username)
 
-    if cursor.fetchone(): #check if username and password valid
-      return jsonify({'message': 'Login successful'}), 200
+    if user: #check if username and password valid
+      return jsonify({'message': 'Login successful', 'user_id': user_id, 'username': username}), 200
     else:
       return jsonify({'error': 'Invalid username or password'}), 401
   except Exception as e:
