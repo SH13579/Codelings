@@ -6,14 +6,25 @@
   z-index: 1000;
   transition: background-color 0.2s ease-in-out;
 }
+.site-logo{
+  border: none;
+  width: 3.5rem;
+}
 .header.scrolled{
-  background-color: rgb(204, 204, 204);
+  background-color: rgb(23, 23, 23);
+  color: white;
 }
 .header-buttons{
-  padding: 2rem;
-  text-decoration: none;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  height: 100%;
   cursor: pointer;
-  color: black;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.15s ease;
+}
+.header-buttons:hover{
+  color: rgb(143, 143, 143);
 }
 .search-wrapper{
   max-width: 30%;
@@ -30,8 +41,8 @@
 }
 .header-info{
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  height: 100%;
+  justify-content: space-between;
+  height: 5rem;
 }
 

@@ -12,7 +12,7 @@ function ProjectCard(props){
   function ProjectVideo(){
     return (
       <div className="project-video">
-        <video width="640" height="360" controls>
+        <video controls>
           <source src={`../media/videos/${props.video}`} type="video/mp4" />
           Your browser does not support the video tag.
         </video >
@@ -21,8 +21,8 @@ function ProjectCard(props){
   }
 
   return (
-    <div className="projects-wrapper">
-      <div className="projects">
+    <div className="project-wrapper">
+      <div className="project">
         <div onClick={() => setClickProfile(true)} className="user-info">
           <img className="pfp" src={`../media/images/${props.pfp}`}/>
           <span className="user-name">{props.name}</span>  
@@ -30,6 +30,12 @@ function ProjectCard(props){
         <h2 className="project-title">{props.title}</h2>
         {props.video !== null ? <ProjectVideo /> : null}
         {props.video == null ? <div className="project-desc">{props.description}</div> : null}
+        <div className="upvotes-comments-wrapper">
+          <img className="upvote-icon" src="../media/images/thumbs-up.svg"/>
+          <div className="upvote-count">{props.upvotes}</div>
+          <img className="comments-icon" src="../media/images/comments.svg"/>
+          <div className="comment-count">{props.comments_count}</div>
+        </div>
       </div>
       <div className="horizontal-line"></div>
       {clickProfile ? <Profile name={props.name} reviews_count={props.reviews_count} reviews_stars={props.reviews_stars} setClickProfile={setClickProfile}/> : null}

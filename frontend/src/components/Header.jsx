@@ -32,17 +32,18 @@ export default function Header(){
   return (
     <section className={`header ${isScrolled ? "scrolled" : ""}`}>
       <header className="header-info">
-        <a className="header-buttons">IMG</a>
+        <a className="header-buttons">
+          <img className="site-logo" src="../media/images/logo.svg"/>
+        </a>
         <form className="search-wrapper" action="/search" method="GET">
           <input className="search-bar" type="search" placeholder="Search for a specific topic..."/>
         </form>
-
         {/* loggedIn ? (
           <a className="header-buttons">WASSUP,</a>
         ) */}
-        <a onClick={() => {
+        <div onClick={() => {
           setShowLogin(true)
-        }} className="header-buttons">SIGN IN</a>
+        }} className="header-buttons">SIGN IN</div>
       </header>
       {showLogin ? <Account setShowLogin={setShowLogin}/> : null}
     </section>

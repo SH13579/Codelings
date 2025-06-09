@@ -48,9 +48,7 @@ function LoginPage({ setLoginOrRegister, setShowLogin }){
           setShowLogin(false)
         }}>&times;</button>
         <form className="form-section" onSubmit={handleLogin}>
-
           <h3 className="form-title">Sign In</h3>
-
           {msg[0] === 'success' ? <div className="success-message">{msg[1]}</div> : <div className="error-message">{msg[1]}</div>}
           <label>Username</label>
           <input type="text" name="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter Username"/>

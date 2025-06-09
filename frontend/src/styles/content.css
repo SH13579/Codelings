@@ -1,14 +1,18 @@
-.projects-wrapper{
+.content-wrapper{
+  max-width: 60rem;
+  margin: auto;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+.project-wrapper{
   cursor: pointer;
 }
-.projects-wrapper:hover{
-  background-color: rgb(239, 239, 239);
+.project-wrapper:hover{
+  background-color: rgba(239, 239, 239, 0.725);
   transition: background-color 0.15s ease-in;
 }
-.projects{
-  padding: 1.25rem;
-  margin-bottom: 2.5px;
-  font-size: 1rem;
+.project{
+  padding: 0.75rem;
 }
 .user-info{
   display: inline-flex;
@@ -23,13 +27,45 @@
 .pfp{
   height: 2rem;
 }
+
 .project-title{
   margin: 0.5rem 0rem 0.5rem 0rem;
 }
 .project-video{
   margin-top: 1rem;
 }
+.project-video video{
+  width: 100%;
+  height: auto;
+  max-height: 32.5rem;
+}
+.upvotes-comments-wrapper{
+  margin-top: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+}
+.upvote-icon{
+  height: 1.5rem;
+  margin-right: 0.25rem;
+  transition: filter 0.1s ease;
+}
+.comments-icon{
+  height: 2rem;
+  margin-left: 0.25rem;
+}
+.upvote-icon{
+  filter: brightness(0) saturate(100%) invert(78%) sepia(39%) saturate(744%) hue-rotate(165deg) brightness(85%) contrast(98%);
+}
+.upvote-icon:hover{
+  filter: brightness(0) saturate(100%) invert(58%) sepia(75%) saturate(1131%) hue-rotate(160deg) brightness(91%) contrast(89%);
+}
+.comments-icon{
+  filter: brightness(0) saturate(100%) invert(76%) sepia(82%) saturate(2028%) hue-rotate(320deg) brightness(114%) contrast(101%);
+}
+.comments-icon:hover{
+  filter: brightness(0) saturate(100%) invert(57%) sepia(97%) saturate(3594%) hue-rotate(360deg) brightness(102%) contrast(106%);
+}
 .horizontal-line {
   height: 1px;
-  background-color: #e3e3e3;
+  background-color: #dfdfdf;
 }
