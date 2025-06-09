@@ -5,10 +5,12 @@ import projects from '../data/projects';
 
 function ProjectCard(props){
   const [clickProfile, setClickProfile] = useState(false);
+  //remove ability to scroll any content outside of the profile component
   useEffect(() => {
       document.body.style.overflow = clickProfile ? 'hidden' : 'auto';
   }, [clickProfile])
 
+  //video component of each project, if the user chooses the add one
   function ProjectVideo(){
     return (
       <div className="project-video">
@@ -55,7 +57,7 @@ export default function Projects(){
 
   )
   return (
-    <section className="content-wrapper">
+    <section className="content-wrapper" id="content-wrapper">
       <div className="projects">
         {all_projects}
       </div>

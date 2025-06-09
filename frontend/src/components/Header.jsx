@@ -7,6 +7,7 @@ export default function Header(){
   const [showLogin, setShowLogin] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
 
+  //remove ability to scroll any content outside of the account component
   useEffect(() => {
     document.body.style.overflow = showLogin ? "hidden" : "auto";
   }, [showLogin])
@@ -31,8 +32,8 @@ export default function Header(){
 
   return (
     <section className={`header ${isScrolled ? "scrolled" : ""}`}>
-      <header className="header-info">
-        <a className="header-buttons">
+      <nav className="header-info">
+        <a onClick={() => window.scrollTo({ top: 0, behavior: 'smooth'})}className="header-buttons">
           <img className="site-logo" src="../media/images/logo.svg"/>
         </a>
         <form className="search-wrapper" action="/search" method="GET">
@@ -44,7 +45,7 @@ export default function Header(){
         <div onClick={() => {
           setShowLogin(true)
         }} className="header-buttons">SIGN IN</div>
-      </header>
+      </nav>
       {showLogin ? <Account setShowLogin={setShowLogin}/> : null}
     </section>
   )

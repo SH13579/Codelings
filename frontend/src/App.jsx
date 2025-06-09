@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import Header from './components/Header'
-import Content from './components/Content'
-import Footer from './components/Footer'
-import './styles/App.css'
+import { useState } from 'react';
+import Header from './components/Header';
+import Content from './components/Content';
+import Footer from './components/Footer';
+import './styles/App.css';
 
 function App() {
   const [login, setLogin] = useState(false);
