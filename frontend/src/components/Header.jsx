@@ -39,14 +39,13 @@ export default function Header(){
         <form className="search-wrapper" action="/search" method="GET">
           <input className="search-bar" type="search" placeholder="Search for a specific topic..."/>
         </form>
-        {/* loggedIn ? (
-          <a className="header-buttons">WASSUP,</a>
-        ) */}
-        <div onClick={() => {
-          setShowLogin(true)
-        }} className="header-buttons">SIGN IN</div>
+        {currentUser ? (
+          <div>HELLO, {currentUser.username}</div>
+        ) : (
+          <div onClick={() => setShowLogin(true)} className="header-buttons">SIGN IN</div>
+        )}
       </nav>
-      {showLogin ? <Account setShowLogin={setShowLogin}/> : null}
+      {showLogin ? <Account setShowLogin={setShowLogin} setCurrentUser={setCurrentUser}/> : null}
     </section>
   )
 }

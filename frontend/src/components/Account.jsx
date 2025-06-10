@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import '../styles/account.css';
 import { useExitListener } from '../utils';
 
-function LoginPage({ setLoginOrRegister, setShowLogin }){
+function LoginPage({ setLoginOrRegister, setShowLogin, setCurrentUser }){
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState(''); //maybe unnecessary
   const [password, setPassword] = useState('');
@@ -28,6 +28,7 @@ function LoginPage({ setLoginOrRegister, setShowLogin }){
 
       if (res.ok){ //codes 200(ok), 201(created)
         setMsg(['success', 'Login successful!']);
+        setCurrentUser({username: data.username})
         setShowLogin(false);
       }
       else{ //!res.ok (Login unsuccessful)
@@ -36,7 +37,7 @@ function LoginPage({ setLoginOrRegister, setShowLogin }){
       }
     }
     catch (err){
-      alert('Error:', err)
+      alert('Error:' + err.message)
     }
   }
 
@@ -113,7 +114,7 @@ function RegisterPage({ setLoginOrRegister, setShowLogin }){
         // }
       }
     } catch (err){
-      alert('Error:', err)
+      alert('Error:' + err.message)
     }
   }
 
@@ -146,9 +147,9 @@ function RegisterPage({ setLoginOrRegister, setShowLogin }){
   )
 }
 
-export default function Account({ setShowLogin }){
+export default function Account({ setShowLogin, setCurrentUser }){
   const [loginOrRegister, setLoginOrRegister] = useState("login")
   return (
-    loginOrRegister === "login" ? <LoginPage setShowLogin={setShowLogin} setLoginOrRegister={setLoginOrRegister}/> : <RegisterPage setShowLogin={setShowLogin} setLoginOrRegister={setLoginOrRegister}/>
+    loginOrRegister === "login" ? <LoginPage setShowLogin={setShowLogin} setLoginOrRegister={setLoginOrRegister} setCurrentUser={setCurrentUser}/> : <RegisterPage setShowLogin={setShowLogin} setLoginOrRegister={setLoginOrRegister}/>
   )
 }

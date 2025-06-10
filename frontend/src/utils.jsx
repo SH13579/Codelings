@@ -21,7 +21,7 @@ export function useExitListener(setCond, ref){
     //handles click outside of the login/register box
     function handleClickOutside(event){
       if(ref.current && !ref.current.contains(event.target)){
-        setCond(false);
+        setCond(null);
       }
     }
     //detect any click on the page

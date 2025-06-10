@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/profile.css'
-import { useExitListener, StarRating } from '../utils';
+import { useExitListener } from '../utils';
 
-export default function Profile({ setClickProfile, name, reviews_stars, reviews_count }){
+export default function Profile({ setActiveProfile, name }){
   const profileRef = useRef(null);
   const [clickChat, setClickChat] = useState(false);
   
-  useExitListener(setClickProfile, profileRef);
+  useExitListener(setActiveProfile, profileRef);
 
   return (
     <div className="profile-wrapper">
       <div className="blur"></div>
       <div ref={profileRef} className="profile">
-        <button className="exit-button" onClick={() => setClickProfile(false)}>&times;</button>
+        <button className="exit-button" onClick={() => setActiveProfile(null)}>&times;</button>
         <div className="profile-info">
           <img className="profile-pfp" src="../media/images/doggy.png"/>
           <h2 className="profile-name">{name}</h2>
