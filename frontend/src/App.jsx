@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
-import Projects from './components/Projects';
+import Content from './components/Content';
+import Post from './components/Post';
 import Footer from './components/Footer';
 import './styles/App.css';
 
@@ -10,7 +12,11 @@ function App() {
   return (
     <div>
       <Header/>
-      <Projects />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Content />} />
+        </Routes>
+      </Router>
       <Footer />
     </div>
   )

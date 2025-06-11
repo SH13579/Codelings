@@ -15,7 +15,7 @@ export default [
     pfp: "doggy.png",
     title: " SOMEONE THAT CAN HELP ME WITH PHYSICS. WILL BUY U FOOD",
     description: "I'm looking for someone that can help me practice Chinese while I help them with English. Preferably someone that can have a conversation with me and we exchange words back and forth that way.",
-    video: null,
+    video: "testing_video.mp4",
     comments_count: "3",
     upvotes: "4",
   },

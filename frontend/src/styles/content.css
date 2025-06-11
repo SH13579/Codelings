@@ -4,7 +4,60 @@
   padding-left: 0.75rem;
   padding-right: 0.75rem;
 }
+.post-project{
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgb(215, 215, 215);
+  border-radius: 10px;
+  padding: 2rem;
+  margin-bottom: 1rem;
+}
+.post-project label{
+  font-weight: 500;
+}
+.create-post{
+  margin-top: 0;
+}
+.post-project-last{
+  display: flex;
+  margin-top: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.project-submit{
+  margin-left: auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  border: none;
+  background-color: #ff8533;
+  color: white;
+  transition: background-color 0.15s ease;
+}
+.project-submit:hover{
+  background-color: #ff6600;
+}
+.post-title, .post-description{
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid black;
+  padding: 0.5rem 0.85rem 0.5rem 0.85rem;
+  font-size: 1rem;
+}
+.post-title{
+  height: 1.4rem;
+}
+.post-description{
+  height: 10rem;
+}
+.post-video{
+  margin-top: 0.5rem;
+}
 .project-wrapper{
+  display: flex;
+  flex-direction: column;
+  color: black;
+  text-decoration: none;
   cursor: pointer;
 }
 .project-wrapper:hover{
@@ -19,6 +72,7 @@
   align-items: center;
   padding-right: 0;
   color: rgb(0, 0, 0);
+  z-index: 1030;
 }
 .user-name{
   font-weight: 500;

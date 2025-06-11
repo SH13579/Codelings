@@ -11,6 +11,7 @@ DB_NAME = 'codelings'
 DB_USER = os.getenv('PG_NEON_USER')
 DB_PASS = os.getenv('PG_NEON_PASSWORD') #access environment variable PG_PASSWORD
 DB_PORT = '5432'
+print(DB_PASS)
 
 #connect to PostgreSQL database
 try:
