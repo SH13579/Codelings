@@ -15,6 +15,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Content />} />
+          <Route path="/post" element={<Post />} />
         </Routes>
       </Router>
       <Footer />

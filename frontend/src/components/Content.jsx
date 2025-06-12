@@ -40,8 +40,21 @@ const ProjectCard = React.memo((props) => {
     )
   }
 
+  //cannot do state={props} because ProjectCard takes in props that also include functions: onProfileClick={onProfileClick} & onPostClick={onPostClick}
+  //Link from React Router reuires the state to be serializable (int, float, str, bool, list, dict, tuple, set, etc.) ***Functions are NOT serializable
+  //Serializable: data types that can be converted into a format suitable for storage or transmission (JSON, XML, binary format), and then reconstructed later
   return (
-    <Link to="/post" onClick={props.onPostClick}  className="project-wrapper">
+    <Link to="/post" className="project-wrapper"
+    state={{
+    id: props.id,
+    name: props.name,
+    pfp: props.pfp,
+    title: props.title,
+    description: props.description,
+    video: props.video,
+    comments_count: props.comments_count,
+    upvotes: props.upvotes,
+    }}>
       <div className="project">
         <div onClick={(e) => {
           handlePropagation(e);
@@ -116,9 +129,6 @@ export default function Projects(){
         {all_projects}
       </div>
       {activeProfile && <Profile name={activeProfile.name} setActiveProfile={setActiveProfile}/>}
-      <Routes>
-        <Route path="/post" element={<Post />} />
-      </Routes>
     </section>
   )
 }
