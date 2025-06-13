@@ -1,0 +1,23 @@
+.no-hover .project-wrapper {
+  cursor: default;
+}
+.no-hover .project-wrapper:hover {
+  background-color: transparent;
+  transition: none;
+}
+.user-info{
+  cursor: pointer;
+}
+/* .comment{
+  display: flex;
+  align-items: center;
+} */
+
+
+
+
+
+.horizontal-line {
+  height: 1px;
+  background-color: #dfdfdf;
+}

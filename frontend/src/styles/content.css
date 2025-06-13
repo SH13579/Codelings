@@ -49,6 +49,7 @@
 }
 .post-description{
   height: 10rem;
+  resize: none;
 }
 .post-video{
   margin-top: 0.5rem;
@@ -87,6 +88,7 @@
 }
 .project-video{
   margin-top: 1rem;
+  cursor: pointer;
 }
 .project-video video{
   width: 100%;

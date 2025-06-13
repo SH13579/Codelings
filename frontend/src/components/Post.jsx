@@ -1,8 +1,9 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import '../styles/content.css';
+import '../styles/post.css'
 import Profile from './Profile'
 import projects from '../data/projects';
+import comments from '../data/comments';
 
 export default function Post() {
   const {state: post } = useLocation(); //useLocation gives access to the current route's location object (including any state/props passed via <Link>)
@@ -21,8 +22,36 @@ export default function Post() {
       setActiveProfile(post);
     }, [post]);
 
+  const Comments = () => {
+    return (
+      <div className="comments-wrapper">
+        <h3>Comments</h3>
+        <div>
+          {/* 
+            Fetch from database to display comments of current post
+            Add input for user to post a comment
+          */}
+          {comments.map(item => {
+            return (
+              <div className="comment">
+                <div className="user-info">
+                  <img className="pfp" src={`../media/images/${item.pfp}`}/>
+                  <div>{item.name}</div>
+                </div>
+                <div>{item.comment}</div>
+              </div>
+            )
+          })}
+          <label></label>
+          <input type="text" name="username" placeholder="Add a comment"/>
+        </div>
+      </div>
+    )
+  }
+  
+  
   return (
-    <div className="content-wrapper">
+    <div className="content-wrapper no-hover">
       <div className="project-wrapper">
         <div className="project">
           <div onClick={(e) => {
@@ -39,16 +68,17 @@ export default function Post() {
               Your browser does not support the video tag.
             </video>
           </div>
-          <h2 className="project-desc">Description: {post.description}</h2>
+          <div className="project-desc-post">{post.description}</div>
           <div className="upvotes-comments-wrapper">
             <img className="upvote-icon" src="../media/images/thumbs-up.svg"/>
             <div className="upvote-count">{post.upvotes}</div>
             <img className="comments-icon" src="../media/images/comments.svg"/>
             <div className="comment-count">{post.comments_count}</div>
           </div>
+          {<Comments />}
         </div>
         
-        {activeProfile && <Profile name={activeProfile.name} setActiveProfile={setActiveProfile}/>}
+        {activeProfile && <Profile className="profile" name={activeProfile.name} setActiveProfile={setActiveProfile}/>}
       </div>
     </div>
   )

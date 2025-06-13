@@ -7,14 +7,14 @@ import Footer from './components/Footer';
 import './styles/App.css';
 
 function App() {
-  const [login, setLogin] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
   return (
     <div>
-      <Header/>
+      <Header currentUser={currentUser} setCurrentUser={setCurrentUser}/>
       <Router>
         <Routes>
-          <Route path="/" element={<Content />} />
+          <Route path="/" element={<Content currentUser={currentUser}/>} />
           <Route path="/post" element={<Post />} />
         </Routes>
       </Router>

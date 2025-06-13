@@ -5,6 +5,7 @@ import Profile from './Profile';
 import projects from '../data/projects';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Post from './Post';
+import { v4 as uuidv4 } from 'uuid';
 
 const ProjectCard = React.memo((props) => {
   const handlePropagation = (e) => {
@@ -77,18 +78,61 @@ const ProjectCard = React.memo((props) => {
   )
 });
 
-const PostProject = () => {
+const PostProject = ({ currentUser }) => {
+  const [projectPost, setProjectPost] = useState({
+    post_title: "",
+    post_date: "",
+    post_description: "",
+    video_file_name: "",
+    user_name: currentUser
+  });
+  const [msg, setMsg] = useState("");
+
+  const handleChange = (e) => {
+    setProjectPost(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
+  const handlePost = async(e) => {
+    e.preventDefault();
+    const currentDate = new Date();
+    setProjectPost(prev => ({
+      ...prev,
+      post_date: currentDate
+    }));
+    
+    if(!projectPost.post_title){
+      setMsg("Title cannot be empty");
+    }
+    else if(projectPost.post_title.length > 50){
+      setMsg("Title cannot be over 50 characters"); 
+    }
+    else if(projectPost.post_description.length > 3000){
+      setMsg("Description cannot be over 3000 characters");
+    }
+    else{
+      setMsg("Post submitted");
+    }
+  };
+
   return (
-    <form className="post-project">
+    <form onSubmit={handlePost} className="post-project">
       <h2 className="create-post">Create Post</h2>
+      <div className="post-error">{msg}</div>
       <label>Title<span className="required">*</span></label>
-      <input className="post-title" type="text" name="post-title"/>
-      <label>Description:</label>
-      <textarea className="post-description" type="text" name="post-description"/>
+      <input value={projectPost.post_title} onChange={handleChange} className="post-title" type="text" name="post_title"/>
+      <label>Description</label>
+      <textarea value={projectPost.description} onChange={handleChange} className="post-description" type="text" name="post_description"/>
       <div className="post-project-last">
-        <div>
-          <label>Demo: </label>
-          <input type="file" accept="video/*" placeholder="Add Video"/>
+        <div className="">
+          <label>Demo(mp4 only): </label>
+          <input onChange={handleChange} type="file" accept=".mp4" name="video_file_name"/>
+          <div>OR</div>
+          <div>Link: 
+            
+          </div>
         </div>
         <button className="project-submit">Post</button>
       </div>
@@ -96,9 +140,8 @@ const PostProject = () => {
   )
 }
 
-export default function Projects(){ 
+export default function Content({ currentUser }){ 
   const [activeProfile, setActiveProfile] = useState(null);
-  const [activePost, setActivePost] = useState(null);
   //remove ability to scroll any content outside of the profile component
   useEffect(() => {
       document.body.style.overflow = activeProfile ? 'hidden' : 'auto';
@@ -109,22 +152,18 @@ export default function Projects(){
       setActiveProfile(item);
     }, [item]);
 
-    const onPostClick = useCallback(() => {
-      setActivePost(item);
-    }, [item])
-
     return (
       <ProjectCard 
         key={item.id}
         {...item}
         onProfileClick={onProfileClick}
-        onPostClick={onPostClick}
       />
     )
   })
   return (
     <section className="content-wrapper">
-      <PostProject />
+      {/* {currentUser && <PostProject currentUser={currentUser}/>} */}
+      <PostProject currentUser={currentUser}/>
       <div className="projects">
         {all_projects}
       </div>

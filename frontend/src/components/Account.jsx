@@ -3,25 +3,37 @@ import '../styles/account.css';
 import { useExitListener } from '../utils';
 
 function LoginPage({ setLoginOrRegister, setShowLogin, setCurrentUser }){
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState(''); //maybe unnecessary
-  const [password, setPassword] = useState('');
   const [msg, setMsg] = useState([]);
   const loginRef = useRef(null);
 
+  //click anywhere outside of the box and it will exit out
   useExitListener(setShowLogin, loginRef);
 
+  const [login, setLogin] = useState({
+    username: "",
+    password: "",
+  });
+
+  const handleChange = (e) => {
+    setLogin(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
+  }
+  
   const handleLogin = async(e) => {
     e.preventDefault();
     try{
-      if (!username || !password){
+      if (!login.username || !login.password){
         setMsg(['error', 'Please fill in the blanks!']);
         return;
       }
       const res = await fetch('http://localhost:5000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({
+          username: login.username, 
+          password: login.password }),
       });
 
       const data = await res.json();
@@ -52,11 +64,11 @@ function LoginPage({ setLoginOrRegister, setShowLogin, setCurrentUser }){
           <h3 className="form-title">Sign In</h3>
           {msg[0] === 'success' ? <div className="success-message">{msg[1]}</div> : <div className="error-message">{msg[1]}</div>}
           <label>Username</label>
-          <input type="text" name="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter Username"/>
+          <input type="text" name="username" value={login.username} onChange={handleChange} placeholder="Enter Username"/>
           {/* <label>Email</label>
           <input type="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter Email"/> */}
           <label>Password</label>
-          <input type="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter Password"/>
+          <input type="password" name="password" value={login.password} onChange={handleChange} placeholder="Enter Password"/>
           <button className="login-button">Login</button>
           <center>Don't Have An Account? </center>
           <button className="register-button" onClick={() => {
@@ -69,23 +81,33 @@ function LoginPage({ setLoginOrRegister, setShowLogin, setCurrentUser }){
 }
 
 function RegisterPage({ setLoginOrRegister, setShowLogin }){
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [msg, setMsg] = useState([]);
   const registerRef = useRef(null);
-
   useExitListener(setShowLogin, registerRef);
+
+  const [register, setRegister] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    message: ""
+  });
+
+  const handleChange = (e) => {
+    setRegister(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
+  }
 
   const handleRegister = async(e) => {
     e.preventDefault();
     try{
-      if (!username || !password || !email || !confirmPassword){
+      if (!register.username || !register.password || !register.email || !register.confirmPassword){
         setMsg(['error', 'Please fill in the blanks!'])
         return;
       }
-      else if (password != confirmPassword){
+      else if (register.password != register.confirmPassword){
           setMsg(['error', 'Passwords do not match!']);
           return;
       }
@@ -94,7 +116,11 @@ function RegisterPage({ setLoginOrRegister, setShowLogin }){
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, email, password, confirm_password: confirmPassword }),
+        body: JSON.stringify({
+          username: register.username, 
+          email: register.email, 
+          password: register.password, 
+          confirm_password: register.confirmPassword }),
       });
 
       const data = await res.json();
@@ -129,13 +155,13 @@ function RegisterPage({ setLoginOrRegister, setShowLogin }){
           <h3 className="form-title">Register</h3>
           {msg[0] === 'success' ? <div className="success-message">{msg[1]}</div> : <div className="error-message">{msg[1]}</div>}
           <label>Username</label>
-          <input type="text" name="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter Username"/>
+          <input type="text" name="username" value={register.username} onChange={handleChange} placeholder="Enter Username"/>
           <label>Email</label>
-          <input type="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter Email"/>
+          <input type="email" name="email" value={register.email} onChange={handleChange} placeholder="Enter Email"/>
           <label>Password</label>
-          <input type="password" name="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter Password"/>
+          <input type="password" name="password" value={register.password} onChange={handleChange} placeholder="Enter Password"/>
           <label>Confirm Password</label>
-          <input type="password" name="conf-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-Enter Password"/>
+          <input type="password" name="confirmPassword" value={register.confirmPassword} onChange={handleChange} placeholder="Re-Enter Password"/>
           <button className="register-button">Register</button>
           <center>Already Have An Account?</center>
           <button className="login-button" onClick={() => {
