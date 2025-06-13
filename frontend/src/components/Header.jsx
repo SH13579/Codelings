@@ -2,10 +2,9 @@ import React, { useEffect, useState } from 'react';
 import Account from './Account'
 import '../styles/header.css';
 
-export default function Header(){
+export default function Header({  currentUser, setCurrentUser }){
   const [isScrolled, setIsScrolled] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
 
   //remove ability to scroll any content outside of the account component
   useEffect(() => {
