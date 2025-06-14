@@ -33,7 +33,6 @@
 .read-the-docs {
   color: #888;
 }
-
 .blur{
   position: fixed;
   top: 0;
@@ -41,9 +40,28 @@
   z-index: 1040;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(21, 21, 21, 0.85);
+  background-color: rgba(46, 46, 46, 0.85);
 }
-
+.exit-button{
+  padding: 0.85rem;
+  border: none;
+  margin-top: 0;
+  margin-bottom: 0;
+  background: none;
+  font-size: 25px;
+  cursor: pointer;
+  display: flex;
+  margin-left: auto;
+}
+.exit-button:hover{
+  color: rgb(167, 167, 167);
+  border: none;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  border: none;
+}
+.exit-button:focus{
+  outline: none;
+}
 .required{
   color: red;
 }

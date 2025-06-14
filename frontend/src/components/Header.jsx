@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import Account from './Account'
+import CreatePost from './CreatePost'
 import '../styles/header.css';
 
 export default function Header({  currentUser, setCurrentUser }){
   const [isScrolled, setIsScrolled] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [clickCreatePost, setClickCreatePost] = useState(false);
 
   //remove ability to scroll any content outside of the account component
   useEffect(() => {
@@ -32,18 +34,16 @@ export default function Header({  currentUser, setCurrentUser }){
   return (
     <section className={`header ${isScrolled ? "scrolled" : ""}`}>
       <nav className="header-info">
-        <a onClick={() => window.scrollTo({ top: 0, behavior: 'smooth'})}className="header-buttons">
-          <img className="site-logo" src="../media/images/logo.svg"/>
+        <a onClick={() => window.scrollTo({ top: 0, behavior: 'smooth'})}className="site-info">
+          <h2 className="site-name">Codelings</h2>
         </a>
-        <form className="search-wrapper" action="/search" method="GET">
-          <input className="search-bar" type="search" placeholder="Search for a specific topic..."/>
-        </form>
-        {currentUser ? (
-          <div>HELLO, {currentUser.username}</div>
-        ) : (
-          <div onClick={() => setShowLogin(true)} className="header-buttons">SIGN IN</div>
-        )}
+        <div className="header-buttons-wrapper">
+          {!clickCreatePost && <a className="header-create-post-button" onClick={() => setClickCreatePost(true)}>Create Post</a>}
+          {currentUser ? (<div>HELLO, {currentUser.username}</div>) : (<button className="header-login-button" onClick={() => setShowLogin(true)}>Log in</button>)}
+        </div>
       </nav>
+      {/* {currentUser && <PostProject currentUser={currentUser}/>} */}
+      {clickCreatePost && <CreatePost setClickCreatePost={setClickCreatePost} currentUser={currentUser}/>}
       {showLogin ? <Account setShowLogin={setShowLogin} setCurrentUser={setCurrentUser}/> : null}
     </section>
   )

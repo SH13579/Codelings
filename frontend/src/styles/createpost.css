@@ -1,0 +1,47 @@
+.post-project{
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgb(255, 255, 255);
+  z-index: 1050;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgb(215, 215, 215);
+  border-radius: 10px;
+  padding: 2rem;
+  margin-bottom: 1rem;
+}
+.post-project label{
+  font-weight: 500;
+  font-size: 1rem;
+}
+.post-project input:focus, textarea:focus{
+  outline-color: #023E7D;
+}
+.post-project textarea{
+  padding: 1rem;
+}
+.create-post{
+  margin-top: 0;
+  font-weight: 900;
+}
+.post-project-last{
+  display: flex;
+  margin-top: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.project-submit{
+  margin-left: auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  border: none;
+  background-color: #0353A4;
+  color: white;
+  transition: background-color 0.15s ease;
+}
+.project-submit:hover{
+  background-color: #001845;
+}

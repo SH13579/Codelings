@@ -1,40 +1,53 @@
 .content-wrapper{
-  max-width: 60rem;
+  max-width: 55rem;
   margin: auto;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
-}
-.post-project{
-  display: flex;
-  flex-direction: column;
-  border: 1px solid rgb(215, 215, 215);
-  border-radius: 10px;
-  padding: 2rem;
-  margin-bottom: 1rem;
-}
-.post-project label{
-  font-weight: 500;
-}
-.create-post{
-  margin-top: 0;
-}
-.post-project-last{
-  display: flex;
-  margin-top: 0.5rem;
-  align-items: center;
-  justify-content: space-between;
-}
-.project-submit{
-  margin-left: auto;
   padding-left: 2rem;
   padding-right: 2rem;
-  border: none;
-  background-color: #ff8533;
-  color: white;
-  transition: background-color 0.15s ease;
 }
-.project-submit:hover{
-  background-color: #ff6600;
+.about-us{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.about-us-wrapper{
+  width: 40rem;
+  text-align: center;
+}
+.about-us-title{
+  font-size: 3rem;
+  margin-bottom: 0;
+  margin-top: 2rem;
+  color: #023E7D;
+}
+.about-us-description{
+  font-weight: 600;
+  color: #5C677D;
+}
+.search-wrapper{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.search-bar{
+  height: 3rem;
+  width: 100%;
+  padding-left: 2.5rem;
+  padding-right: 1rem;
+  font-size: 1rem;
+  border: 1px solid rgb(228, 227, 227);
+  border-radius: 5px;
+  background-image: url("../media/images/search.svg");
+  background-repeat: no-repeat;
+  background-position: 0.8rem;
+  background-size: 1.2rem;
+}
+.search-bar:focus{
+  outline-color: #023E7D;
+}
+.content-title{
+  color: black;
+  margin-bottom: 0.75rem;
+  font-size: 1.75rem;
 }
 .post-title, .post-description{
   margin-top: 0.5rem;
@@ -54,10 +67,17 @@
 .post-video{
   margin-top: 0.5rem;
 }
+.projects{
+  margin-top: 2rem;
+}
 .project-wrapper{
   display: flex;
   flex-direction: column;
   color: black;
+  border: 1px solid rgb(228, 227, 227);
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  padding: 1.25rem 1.5rem 1.25rem 1.5rem;
   text-decoration: none;
   cursor: pointer;
 }
@@ -65,24 +85,20 @@
   background-color: rgba(239, 239, 239, 0.725);
   transition: background-color 0.15s ease-in;
 }
-.project{
-  padding: 0.75rem;
-}
 .user-info{
   display: inline-flex;
   align-items: center;
   padding-right: 0;
-  color: rgb(0, 0, 0);
   z-index: 1030;
 }
 .user-name{
   font-weight: 500;
   margin-left: 0.5rem;
+  color: #001233;
 }
 .pfp{
   height: 2rem;
 }
-
 .project-title{
   margin: 0.5rem 0rem 0.5rem 0rem;
 }
@@ -94,31 +110,40 @@
   height: auto;
   max-height: 32.5rem;
 }
+.project-desc{
+  color: #001233;
+}
 .upvotes-comments-wrapper{
-  margin-top: 0.75rem;
   display: inline-flex;
   align-items: center;
+  color: #001233;
+  margin-top: 1rem;
+}
+.upvotes-comments-wrapper span{
+  display: flex;
+  align-items: center;
+}
+.upvotes{
+  filter: brightness(0) saturate(100%) invert(16%) sepia(28%) saturate(6607%) hue-rotate(199deg) brightness(93%) contrast(98%);
+  margin-right: 0.5rem;
+}
+.upvotes:hover{
+  filter: brightness(0) saturate(100%) invert(45%) sepia(20%) saturate(5561%) hue-rotate(191deg) brightness(82%) contrast(100%);
 }
 .upvote-icon{
   height: 1.5rem;
-  margin-right: 0.25rem;
   transition: filter 0.1s ease;
+  margin-right: 0.35rem;
+}
+.comments{
+  filter: brightness(0) saturate(100%) invert(42%) sepia(0%) saturate(1942%) hue-rotate(139deg) brightness(68%) contrast(84%);
+}
+.comments:hover{
+  filter: brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(7483%) hue-rotate(24deg) brightness(102%) contrast(105%);
 }
 .comments-icon{
   height: 2rem;
-  margin-left: 0.25rem;
-}
-.upvote-icon{
-  filter: brightness(0) saturate(100%) invert(78%) sepia(39%) saturate(744%) hue-rotate(165deg) brightness(85%) contrast(98%);
-}
-.upvote-icon:hover{
-  filter: brightness(0) saturate(100%) invert(58%) sepia(75%) saturate(1131%) hue-rotate(160deg) brightness(91%) contrast(89%);
-}
-.comments-icon{
-  filter: brightness(0) saturate(100%) invert(76%) sepia(82%) saturate(2028%) hue-rotate(320deg) brightness(114%) contrast(101%);
-}
-.comments-icon:hover{
-  filter: brightness(0) saturate(100%) invert(57%) sepia(97%) saturate(3594%) hue-rotate(360deg) brightness(102%) contrast(106%);
+  margin-right: 0.15rem;
 }
 .horizontal-line {
   height: 1px;

@@ -27,6 +27,9 @@
   padding: 0.5rem 0.85rem 0.5rem 0.85rem;
   font-size: 0.85rem;
 }
+.account-container input:focus{
+  outline-color: #023E7D;
+}
 .account-container button{
   padding: 0.85rem;
   border: none;
@@ -35,11 +38,11 @@
   outline: none;
 }
 .login-button{
-  background-color: red;
+  background-color: #0353A4;
   color: white;
 }
 .register-button{
-  background-color: orange;
+  background-color: #0353A4;
   color: white;
 }
 .login-button, .register-button{
@@ -51,11 +54,11 @@
   border: none;
 }
 .login-button:hover{
-  background-color: darkred;
+  background-color: #002855;
   color: white;
 }
 .register-button:hover{
-  background-color: darkgoldenrod;
+  background-color: #002855;
   color: white;
 }
 .form-section{
@@ -80,21 +83,4 @@
   border-radius: 5px;
   display: flex;
   justify-content: center;
-}
-.exit-button{
-  padding: 0.85rem;
-  border: none;
-  margin-top: 0;
-  margin-bottom: 0;
-  background: none;
-  font-size: 25px;
-  cursor: pointer;
-  display: flex;
-  margin-left: auto;
-}
-.exit-button:hover{
-  color: rgb(167, 167, 167);
-  border: none;
-  transition: background-color 0.25s ease, color 0.25s ease;
-  border: none;
 }

@@ -5,44 +5,64 @@
   top: 0;
   z-index: 1000;
   transition: background-color 0.2s ease-in-out;
-}
-.site-logo{
-  border: none;
-  width: 3.5rem;
-}
-.header.scrolled{
-  background-color: rgb(23, 23, 23);
-  color: white;
-}
-.header-buttons{
-  padding-left: 2rem;
-  padding-right: 2rem;
-  height: 100%;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  transition: color 0.15s ease;
-}
-.header-buttons:hover{
-  color: rgb(143, 143, 143);
-}
-.search-wrapper{
-  max-width: 30%;
-  width: 25rem;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.search-bar{
-  height: 2.25rem;
-  width: 100%;
-  padding: 0.5rem;
-  font-size: 0.9rem;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  font-size: 1.1rem;
 }
 .header-info{
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 5rem;
+  width: 59rem;
+}
+.site-info{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+.site-name{
+  border: 1px solid black;
+  font-family: Roboto;
+  font-size: 2.5rem;
+  border: none;
+  color: #0353A4;
+  font-weight: 600;
+  margin: 0;
+  cursor: pointer;
+}
+.header.scrolled{
+  background-color: #e5e5e5;
+}
+.header-buttons-wrapper button:hover{
+  border: none;
+}
+.header-create-post-button{
+  cursor: pointer;
+  margin-right: 1.5rem;
+  color: black;
+  font-weight: 800;
+  transition: color 0.15s ease;
+}
+.header-create-post-button:hover{
+  color: #7D8597;
+}
+.header-login-button{
+  background-color: #0353A4;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  height: 100%;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  transition: background-color 0.15s ease;
+  color: white;
+}
+.header-login-button:hover{
+  background-color: #002855;
 }
 

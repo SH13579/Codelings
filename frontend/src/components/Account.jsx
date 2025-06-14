@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/account.css';
+import '../styles/createpost.css';
 import { useExitListener } from '../utils';
 
 function LoginPage({ setLoginOrRegister, setShowLogin, setCurrentUser }){
@@ -61,7 +62,7 @@ function LoginPage({ setLoginOrRegister, setShowLogin, setCurrentUser }){
           setShowLogin(false)
         }}>&times;</button>
         <form className="form-section" onSubmit={handleLogin}>
-          <h3 className="form-title">Sign In</h3>
+          <h2 className="form-title">Sign in</h2>
           {msg[0] === 'success' ? <div className="success-message">{msg[1]}</div> : <div className="error-message">{msg[1]}</div>}
           <label>Username</label>
           <input type="text" name="username" value={login.username} onChange={handleChange} placeholder="Enter Username"/>
@@ -152,7 +153,7 @@ function RegisterPage({ setLoginOrRegister, setShowLogin }){
           setShowLogin(false)
         }}>&times;</button>
         <form className="form-section" onSubmit={handleRegister}>
-          <h3 className="form-title">Register</h3>
+          <h2 className="form-title">Register</h2>
           {msg[0] === 'success' ? <div className="success-message">{msg[1]}</div> : <div className="error-message">{msg[1]}</div>}
           <label>Username</label>
           <input type="text" name="username" value={register.username} onChange={handleChange} placeholder="Enter Username"/>
