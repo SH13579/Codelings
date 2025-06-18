@@ -1,23 +1,54 @@
-.no-hover .project-wrapper {
+.no-hover{
+  padding-top: 1.5rem;
+  padding-bottom: 1rem;
+}
+.no-hover .project-wrapper{
   cursor: default;
 }
-.no-hover .project-wrapper:hover {
+.no-hover .project-wrapper:hover{
   background-color: transparent;
   transition: none;
 }
 .user-info{
   cursor: pointer;
 }
-/* .comment{
-  display: flex;
-  align-items: center;
+/* .comments-wrapper{
+  border-radius: 10px;
 } */
-
-
-
-
-
+ .upvotes-comments-wrapper img{
+  cursor: pointer;
+ }
+.comment{
+  border: 1px solid rgb(228, 227, 227);
+  border-radius: 10px;
+  padding: 1.25rem 1.25rem 1.25rem 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.comment-input-wrapper{
+  position: relative;
+  margin-bottom: 0.05rem;
+}
+.comment-input{
+  height: 5rem;
+  width: 100%;
+  padding: 1.85rem 2.3rem 0rem 1.7rem; /* top right bottom left */
+  resize: none;
+  border: 1px solid rgb(227, 227, 228);
+  border-radius: 10px;
+  box-sizing: border-box;
+  font-size: 1rem;
+}
+.comment-submit-icon{
+  position: absolute;
+  right: 1rem;
+  height: 5rem;
+  width: 2rem;
+  transition: filter 0.2s ease-in-out; /* reminder: this doesnt work */
+  cursor: pointer;
+  z-index: 1000;
+}
 .horizontal-line {
   height: 1px;
   background-color: #dfdfdf;
+  margin-top: 1.35rem;
 }

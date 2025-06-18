@@ -25,25 +25,30 @@ export default function Post() {
   const Comments = () => {
     return (
       <div className="comments-wrapper">
-        <h3>Comments</h3>
-        <div>
+        <h2>Comments</h2>
+        <div className="comment-input-wrapper">
+          <textarea className="comment-input" type="text" name="" placeholder="Add a comment..."/>
+          <img className="comment-submit-icon" src="../media/images/enter.svg"/>
+        </div>
+        <div className="all-comments">
           {/* 
             Fetch from database to display comments of current post
             Add input for user to post a comment
           */}
           {comments.map(item => {
+            const onProfileClick = () => {
+              setActiveProfile(item);
+            }
             return (
               <div className="comment">
-                <div className="user-info">
+                <div className="user-info" onClick={onProfileClick}>
                   <img className="pfp" src={`../media/images/${item.pfp}`}/>
-                  <div>{item.name}</div>
+                  <div className="user-name">{item.name}</div>
                 </div>
-                <div>{item.comment}</div>
+                <div className="comment-text">{item.comment}</div>
               </div>
             )
-          })}
-          <label></label>
-          <input type="text" name="username" placeholder="Add a comment"/>
+          })}       
         </div>
       </div>
     )
@@ -52,8 +57,8 @@ export default function Post() {
   
   return (
     <div className="content-wrapper no-hover">
-      <div className="project-wrapper">
-        <div className="project">
+      <div className="post-wrapper">
+        <div className="post-wrapper">
           <div onClick={(e) => {
             handlePropagation(e);
             onProfileClick();
@@ -70,11 +75,16 @@ export default function Post() {
           </div>
           <div className="project-desc-post">{post.description}</div>
           <div className="upvotes-comments-wrapper">
-            <img className="upvote-icon" src="../media/images/thumbs-up.svg"/>
-            <div className="upvote-count">{post.upvotes}</div>
-            <img className="comments-icon" src="../media/images/comments.svg"/>
-            <div className="comment-count">{post.comments_count}</div>
+            <span className="upvotes">
+              <img className="upvote-icon" src="../media/images/thumbs-up.svg"/>
+              <div className="upvote-count">{post.upvotes}</div>
+            </span>
+            <span className="comments">
+              <img className="comments-icon" src="../media/images/comments.svg"/>
+              <div className="comment-count">{post.comments_count}</div>
+            </span>
           </div>
+          <div className="horizontal-line"></div>
           {<Comments />}
         </div>
         

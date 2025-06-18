@@ -2,7 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import '../styles/profile.css'
 import { useExitListener } from '../utils';
 
-export default function Profile({ setActiveProfile, name }){
+const myProfile = ( currentUser ) => {
+  
+}
+
+export default function Profile({ currentUser, setActiveProfile, name }){
   const profileRef = useRef(null);
   const [clickChat, setClickChat] = useState(false);
   

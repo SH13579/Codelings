@@ -1,19 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import Account from './Account'
 import CreatePost from './CreatePost'
 import '../styles/header.css';
+import { UserContext } from '../utils';
 
-export default function Header({  currentUser, setCurrentUser }){
+export default function Header(){
+  const { currentUser, isLoggedIn } = useContext(UserContext)
   const [isScrolled, setIsScrolled] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [clickCreatePost, setClickCreatePost] = useState(false);
 
   //remove ability to scroll any content outside of the account component
   useEffect(() => {
-    document.body.style.overflow = showLogin ? "hidden" : "auto";
-  }, [showLogin])
+    document.body.style.overflow = (showLogin || clickCreatePost) ? "hidden" : "auto";
+  }, [showLogin, clickCreatePost])
 
-  // turn the header's background color to black when page is being scrolled
+  // turn the header's border to visible when the page is being scrolled
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 50){
@@ -31,20 +33,24 @@ export default function Header({  currentUser, setCurrentUser }){
     };
   }, []);
 
+  function checkLoggedIn(){
+    isLoggedIn ? setClickCreatePost(true) : setShowLogin(true);
+  }
+
   return (
     <section className={`header ${isScrolled ? "scrolled" : ""}`}>
       <nav className="header-info">
         <a onClick={() => window.scrollTo({ top: 0, behavior: 'smooth'})}className="site-info">
+          <img className="site-logo" src="../media/images/site-logo.svg"/>
           <h2 className="site-name">Codelings</h2>
         </a>
         <div className="header-buttons-wrapper">
-          {!clickCreatePost && <a className="header-create-post-button" onClick={() => setClickCreatePost(true)}>Create Post</a>}
-          {currentUser ? (<div>HELLO, {currentUser.username}</div>) : (<button className="header-login-button" onClick={() => setShowLogin(true)}>Log in</button>)}
+          <a className="header-create-post-button" onClick={checkLoggedIn}>Create Post</a>
+          {isLoggedIn ? (<img className="header-pfp" src={currentUser ? currentUser.pfp : "../media/images/doggy.png"}/>) : (<button className="header-login-button" onClick={() => setShowLogin(true)}>Log in</button>)}
         </div>
       </nav>
-      {/* {currentUser && <PostProject currentUser={currentUser}/>} */}
-      {clickCreatePost && <CreatePost setClickCreatePost={setClickCreatePost} currentUser={currentUser}/>}
-      {showLogin ? <Account setShowLogin={setShowLogin} setCurrentUser={setCurrentUser}/> : null}
+      {clickCreatePost && <CreatePost setClickCreatePost={setClickCreatePost}/>}
+      {showLogin && <Account setShowLogin={setShowLogin}/>}
     </section>
   )
 }

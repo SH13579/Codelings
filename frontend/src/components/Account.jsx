@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import '../styles/account.css';
 import '../styles/createpost.css';
 import { useExitListener } from '../utils';
+import { UserContext } from '../utils';
 
-function LoginPage({ setLoginOrRegister, setShowLogin, setCurrentUser }){
+function LoginPage({ setLoginOrRegister, setShowLogin }){
   const [msg, setMsg] = useState([]);
   const loginRef = useRef(null);
+  const { setIsLoggedIn } = useContext(UserContext);
 
   //click anywhere outside of the box and it will exit out
   useExitListener(setShowLogin, loginRef);
@@ -32,21 +34,20 @@ function LoginPage({ setLoginOrRegister, setShowLogin, setCurrentUser }){
       const res = await fetch('http://localhost:5000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: login.username, 
-          password: login.password }),
+        body: JSON.stringify(login),
       });
 
-      const data = await res.json();
+      const data = await res.json(); //frontend receives JSON object from backend
 
       if (res.ok){ //codes 200(ok), 201(created)
         setMsg(['success', 'Login successful!']);
-        setCurrentUser({username: data.username})
+        sessionStorage.setItem("token", data.token);
+        setIsLoggedIn(true);
         setShowLogin(false);
       }
       else{ //!res.ok (Login unsuccessful)
         //codes 400(bad request), 401(invalid credentials), 409(conflict, info already taken), 500(server error)
-        setMsg(['error', 'Invalid username or password!']);
+        setMsg(['error', data.error]);
       }
     }
     catch (err){
@@ -90,8 +91,7 @@ function RegisterPage({ setLoginOrRegister, setShowLogin }){
     username: "",
     email: "",
     password: "",
-    confirmPassword: "",
-    message: ""
+    confirmPassword: ""
   });
 
   const handleChange = (e) => {
@@ -104,41 +104,21 @@ function RegisterPage({ setLoginOrRegister, setShowLogin }){
   const handleRegister = async(e) => {
     e.preventDefault();
     try{
-      if (!register.username || !register.password || !register.email || !register.confirmPassword){
-        setMsg(['error', 'Please fill in the blanks!'])
-        return;
-      }
-      else if (register.password != register.confirmPassword){
-          setMsg(['error', 'Passwords do not match!']);
-          return;
-      }
       const res = await fetch('http://localhost:5000/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          username: register.username, 
-          email: register.email, 
-          password: register.password, 
-          confirm_password: register.confirmPassword }),
+        body: JSON.stringify(register),
       });
 
-      const data = await res.json();
-
+      const data = await res.json(); //frontend receives JSON object from backend
+      
       if (res.ok){
         setMsg(['success', 'Registration successful!']);
       }
       else{ //!res.ok (Registration unsuccessful)
-        if (data.error === 'Username is taken'){
-          setMsg(['error', 'Username is taken']);
-        }
-        if (data.error === 'Email is taken'){
-          setMsg(['error', 'Email is taken!']);
-        }
-        // else{
-        //   alert('Error: ' + data.error);
-        // }
+        setMsg(['error', data.error]);
       }
     } catch (err){
       alert('Error:' + err.message)
@@ -174,9 +154,9 @@ function RegisterPage({ setLoginOrRegister, setShowLogin }){
   )
 }
 
-export default function Account({ setShowLogin, setCurrentUser }){
+export default function Account({ setShowLogin }){
   const [loginOrRegister, setLoginOrRegister] = useState("login")
   return (
-    loginOrRegister === "login" ? <LoginPage setShowLogin={setShowLogin} setLoginOrRegister={setLoginOrRegister} setCurrentUser={setCurrentUser}/> : <RegisterPage setShowLogin={setShowLogin} setLoginOrRegister={setLoginOrRegister}/>
+    loginOrRegister === "login" ? <LoginPage setShowLogin={setShowLogin} setLoginOrRegister={setLoginOrRegister}/> : <RegisterPage setShowLogin={setShowLogin} setLoginOrRegister={setLoginOrRegister}/>
   )
 }

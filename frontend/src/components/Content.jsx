@@ -2,9 +2,13 @@ import React, { useRef, useCallback, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom'
 import '../styles/content.css';
 import Profile from './Profile';
-import projects from '../data/projects';
 import Post from './Post';
 
+function convertDate(date){
+
+}
+
+//short introduction to our website and search bar
 const AboutUs = () => {
   return (
     <section className="about-us">
@@ -19,7 +23,8 @@ const AboutUs = () => {
   )
 }
 
-const ProjectCard = React.memo((props) => {
+//each individual project component
+const ProjectCard = (props) => {
   const handlePropagation = (e) => {
     e.stopPropagation();
     e.preventDefault();
@@ -69,16 +74,20 @@ const ProjectCard = React.memo((props) => {
     upvotes: props.upvotes,
     }}>
       <div className="project">
-        <div onClick={(e) => {
-          handlePropagation(e);
-          props.onProfileClick();
-          }} className="user-info">
-          <img className="pfp" src={`../media/images/${props.pfp}`}/>
-          <span className="user-name">{props.name}</span>  
+        <div className="project-first-row">
+          <div onClick={(e) => {
+            handlePropagation(e);
+            props.onProfileClick();
+            }} className="user-info">
+            <img className="pfp" src={`../media/images/${props.pfp}`}/>
+            <span className="user-name">{props.name}</span>  
+          </div>
+          <div className="project-date">
+            <span className="project-date-dot">&#8226;</span>{props.date}
+          </div>
         </div>
-        <h2 className="project-title">{props.title}</h2>
-        {/* {props.video ? <ProjectVideo/> : <div className="project-desc">{props.description}</div>} */}
-        <div className="project-desc">{props.description}</div>
+        <h2 className="post-title">{props.title}</h2>
+        <div className="post-desc">{props.description}</div>
         <div className="upvotes-comments-wrapper">
           <span className="upvotes">
             <img className="upvote-icon" src="../media/images/thumbs-up.svg"/>
@@ -92,20 +101,90 @@ const ProjectCard = React.memo((props) => {
       </div>
     </Link>
   )
-});
+};
 
-export default function Content(){ 
+const AskAnswerCard = (props) => {
+  const handlePropagation = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+  }
+
+  return (
+    <Link to="/post" className="ask-ans-wrapper"
+    state={{
+    id: props.id,
+    name: props.name,
+    pfp: props.pfp,
+    title: props.title,
+    description: props.description,
+    video: props.video,
+    comments_count: props.comments_count,
+    upvotes: props.upvotes,
+    }}>
+      <div className="ask-and-ans">
+        <div className="project-first-row">
+          <div onClick={(e) => {
+            handlePropagation(e);
+            props.onProfileClick();
+            }} className="user-info">
+            <img className="pfp" src={`../media/images/${props.pfp}`}/>
+            <span className="user-name">{props.name}</span>  
+          </div>
+          <div className="project-date">
+            <span className="project-date-dot">&#8226;</span>{props.date}
+          </div>
+        </div>
+        <h2 className="post-title">{props.title}</h2>
+        <div className="upvotes-comments-wrapper">
+          <span className="upvotes">
+            <img className="upvote-icon" src="../media/images/thumbs-up.svg"/>
+            <div className="upvote-count">{props.upvotes}</div>
+          </span>
+          <span className="comments">
+            <img className="comments-icon" src="../media/images/comments.svg"/>
+            <div className="comment-count">{props.comments_count}</div>
+          </span>
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+export default function Content(){
   const [activeProfile, setActiveProfile] = useState(null);
+  const [projects, setProjects] = useState([])
+  const [askAndAnswers, setAskAndAnswers] = useState([])
+  
   //remove ability to scroll any content outside of the profile component
   useEffect(() => {
       document.body.style.overflow = activeProfile ? 'hidden' : 'auto';
   }, [activeProfile])
 
-  const all_projects = projects.map(item => {
-    const onProfileClick = useCallback(() => {
-      setActiveProfile(item);
-    }, [item]);
+  //retrieve from posts table (this will replace all_projects below)
+  useEffect(() => {
+    async function fetchProjects() {
+      try{
+        const res = await fetch('http://localhost:5000/get_projects', {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+        });
+        const data = await res.json();
+        //setProjects(data.projects)
+        //setAskAndAnswers(data.qna)
+        setProjects(data)
+        console.log(data)
 
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+    fetchProjects();
+  }, []);
+  
+  const all_projects = projects.map(item => {
+    const onProfileClick = () => {
+      setActiveProfile(item);
+    };
     return (
       <ProjectCard 
         key={item.id}
@@ -113,12 +192,37 @@ export default function Content(){
         onProfileClick={onProfileClick}
       />
     )
-  })
+  });
+
+  const all_askAndAnswers = projects.map(item => {
+                            //change projects to askAndAnswers
+    const onProfileClick = () => {
+      setActiveProfile(item);
+    };
+
+    return (
+      <>
+      <AskAnswerCard 
+        key={item.id}
+        {...item}
+        onProfileClick={onProfileClick}
+      />
+      </>
+    )
+  });
+
   return (
     <section className="content-wrapper">
       <AboutUs/>
-      <div className="projects">
-        {all_projects}
+      <div className="content-grid">
+        <div className="projects">
+          <h2 className="projects-label">Trending Projects</h2>
+          {all_projects}
+        </div>
+        <div className="ask-and-answers">
+          <h2 className="ask-and-answers-label">Ask & Answer</h2>
+          {all_askAndAnswers}
+        </div>
       </div>
       {activeProfile && <Profile name={activeProfile.name} setActiveProfile={setActiveProfile}/>}
     </section>

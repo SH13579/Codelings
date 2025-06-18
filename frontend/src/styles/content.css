@@ -1,5 +1,5 @@
 .content-wrapper{
-  max-width: 55rem;
+  max-width: 65rem;
   margin: auto;
   padding-left: 2rem;
   padding-right: 2rem;
@@ -8,13 +8,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 3rem;
 }
 .about-us-wrapper{
   width: 40rem;
   text-align: center;
 }
 .about-us-title{
-  font-size: 3rem;
+  font-size: 2.55rem;
   margin-bottom: 0;
   margin-top: 2rem;
   color: #023E7D;
@@ -22,6 +23,9 @@
 .about-us-description{
   font-weight: 600;
   color: #5C677D;
+  font-size: 1.4rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 .search-wrapper{
   display: flex;
@@ -30,7 +34,7 @@
 }
 .search-bar{
   height: 3rem;
-  width: 100%;
+  width: 82.5%;
   padding-left: 2.5rem;
   padding-right: 1rem;
   font-size: 1rem;
@@ -44,36 +48,37 @@
 .search-bar:focus{
   outline-color: #023E7D;
 }
+.content-grid{
+  display: flex;
+  flex-wrap: wrap;
+}
+.projects{
+  flex: 1 1 25rem;
+  margin-right: 1rem;
+}
+.ask-and-answers{
+  flex: 1 1 15rem;
+}
 .content-title{
-  color: black;
   margin-bottom: 0.75rem;
   font-size: 1.75rem;
 }
-.post-title, .post-description{
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  border-radius: 10px;
-  border: 1px solid black;
-  padding: 0.5rem 0.85rem 0.5rem 0.85rem;
-  font-size: 1rem;
+.projects-label, .ask-and-answers-label{
+  margin-bottom: 0;
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+  font-weight: 800;
+  color: #284b63;
 }
-.post-title{
-  height: 1.4rem;
+.ask-and-answers-label{
+  margin-bottom: 1.05rem;
 }
-.post-description{
-  height: 10rem;
-  resize: none;
-}
-.post-video{
-  margin-top: 0.5rem;
-}
-.projects{
-  margin-top: 2rem;
+.ask-and-ans{
+  padding: 1rem;
 }
 .project-wrapper{
   display: flex;
   flex-direction: column;
-  color: black;
   border: 1px solid rgb(228, 227, 227);
   border-radius: 10px;
   margin-bottom: 1rem;
@@ -81,15 +86,26 @@
   text-decoration: none;
   cursor: pointer;
 }
-.project-wrapper:hover{
+.project-wrapper:hover, .ask-and-ans:hover{
   background-color: rgba(239, 239, 239, 0.725);
-  transition: background-color 0.15s ease-in;
+  transition: background-color 0.2s ease-in-out;
+}
+.project-first-row{
+  display: flex;
+  align-items: center;
+}
+.ask-ans-wrapper{
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5rem;
+  padding-top: 0rem;
+  text-decoration: none;
+  cursor: pointer;
 }
 .user-info{
   display: inline-flex;
   align-items: center;
   padding-right: 0;
-  z-index: 1030;
 }
 .user-name{
   font-weight: 500;
@@ -98,9 +114,26 @@
 }
 .pfp{
   height: 2rem;
+  width: 2rem;
+  border-radius: 50%;
+  object-fit: cover;
+  overflow: hidden;
 }
-.project-title{
-  margin: 0.5rem 0rem 0.5rem 0rem;
+.project-date{
+  color: #5C677D;
+  font-size: 0.9rem;
+  margin-left: 0.3rem;
+}
+.project-date-dot{
+  margin-right: 0.3rem;
+}
+.ask-and-ans .post-title{
+  margin-bottom: 0;
+}
+.post-title{
+  margin: 0.4rem 0rem 0.5rem 0rem;
+  font-size: 1.3rem;
+  font-weight: 650;
 }
 .project-video{
   margin-top: 1rem;
@@ -110,14 +143,14 @@
   height: auto;
   max-height: 32.5rem;
 }
-.project-desc{
+.post-desc{
   color: #001233;
 }
 .upvotes-comments-wrapper{
   display: inline-flex;
   align-items: center;
   color: #001233;
-  margin-top: 1rem;
+  margin-top: 0.6rem;
 }
 .upvotes-comments-wrapper span{
   display: flex;
@@ -132,7 +165,7 @@
 }
 .upvote-icon{
   height: 1.5rem;
-  transition: filter 0.1s ease;
+  transition: filter 0.2s ease-in-out;
   margin-right: 0.35rem;
 }
 .comments{

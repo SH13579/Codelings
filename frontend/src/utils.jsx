@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, createContext } from 'react';
 
 export function StarRating({ reviews_stars }){
   //Create a new array of size 5 and for each undefined element in the array, fill it by using it's index (i) as a reference
@@ -32,3 +32,5 @@ export function useExitListener(setCond, ref){
     };
   }, [setCond, ref]);
 }
+
+export const UserContext = createContext(null)

@@ -10,12 +10,33 @@
   flex-direction: column;
   border: 1px solid rgb(215, 215, 215);
   border-radius: 10px;
-  padding: 2rem;
+  padding: 2rem 4rem 3rem 4rem;
   margin-bottom: 1rem;
+  width: 47.5rem;
 }
 .post-project label{
   font-weight: 500;
   font-size: 1rem;
+}
+.create-post-title, .create-post-description, .create-post-body{
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid black;
+  padding: 0.5rem 0.85rem 0.5rem 0.85rem;
+  font-size: 1rem;
+}
+.create-post-title{
+  height: 1.4rem;
+}
+.create-post-body, .create-post-description{
+  resize: none;
+}
+.create-post-body{
+  height: 10rem;
+}
+.post-video{
+  margin-top: 0.5rem;
 }
 .post-project input:focus, textarea:focus{
   outline-color: #023E7D;

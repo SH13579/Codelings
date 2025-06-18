@@ -1,6 +1,7 @@
-//pip install flask
-//pip install flask-cors
-//pip install psycopg2
+pip install flask
+pip install flask-cors
+pip install psycopg2
 npm install uuid
+pip install PyJWT
 
-//pip install psycopg2-binary (ignore for now; this might be better than just psycopg2; IDK YET)
+pip install psycopg2-binary (ignore for now; this might be better than just psycopg2; IDK YET)
