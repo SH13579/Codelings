@@ -1,14 +1,17 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import Account from './Account'
 import CreatePost from './CreatePost'
 import '../styles/header.css';
 import { UserContext } from '../utils';
+import { useExitListener }  from '../utils';
 
 export default function Header(){
-  const { currentUser, isLoggedIn } = useContext(UserContext)
+  const { currentUser, isLoggedIn, setCurrentUser, setIsLoggedIn } = useContext(UserContext)
   const [isScrolled, setIsScrolled] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [clickCreatePost, setClickCreatePost] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   //remove ability to scroll any content outside of the account component
   useEffect(() => {
@@ -33,8 +36,39 @@ export default function Header(){
     };
   }, []);
 
+  useExitListener(setShowProfileDropdown, dropdownRef);
+
   function checkLoggedIn(){
     isLoggedIn ? setClickCreatePost(true) : setShowLogin(true);
+  }
+
+  const ProfileDropdown = () => {
+    return (
+      <div className="profile-dropdown">
+        <a className="dropdown-profile">
+          <img className="header-pfp" src={currentUser ? currentUser.pfp : "../media/images/doggy.png"}/>
+          <div>
+            <div className="view-profile">View Profile</div>
+            <div className="dropdown-user">{currentUser && currentUser.username}</div>
+          </div>
+        </a>
+        <a className="dropdown-signout">
+          <img className="sign-out-svg" src="../media/images/sign-out.svg"/>
+          <div className="dropdown-logout" onClick={signOut}>Sign Out</div>
+        </a>
+      </div>
+    )
+  }
+
+  function signOut(){
+    sessionStorage.removeItem('token');
+    setCurrentUser(null);
+    setIsLoggedIn(null);
+    setShowProfileDropdown(false);
+  }
+
+  function showOrHideDropdown(){
+    showProfileDropdown ? setShowProfileDropdown(false) : setShowProfileDropdown(true);
   }
 
   return (
@@ -46,7 +80,10 @@ export default function Header(){
         </a>
         <div className="header-buttons-wrapper">
           <a className="header-create-post-button" onClick={checkLoggedIn}>Create Post</a>
-          {isLoggedIn ? (<img className="header-pfp" src={currentUser ? currentUser.pfp : "../media/images/doggy.png"}/>) : (<button className="header-login-button" onClick={() => setShowLogin(true)}>Log in</button>)}
+          <div ref={dropdownRef} className="login-or-profile">
+            {isLoggedIn ? (<img onClick={showOrHideDropdown} className="header-pfp" src={currentUser ? currentUser.pfp : "../media/images/doggy.png"}/>) : (<button className="header-login-button" onClick={() => setShowLogin(true)}>Log in</button>)}
+            {showProfileDropdown && <ProfileDropdown/>}
+          </div>
         </div>
       </nav>
       {clickCreatePost && <CreatePost setClickCreatePost={setClickCreatePost}/>}
