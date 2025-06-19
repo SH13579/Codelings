@@ -48,7 +48,7 @@ export default function CreatePost({ setClickCreatePost }){
           video_file_path: projectPost.video_file_path,
           likes: 0,
           comments: 0,
-          user_name: projectPost.user_name
+          user_name: currentUser.username //replaced projectPost.user_name
         }),
       });
 
@@ -75,10 +75,10 @@ export default function CreatePost({ setClickCreatePost }){
         <h2 className="create-post">Create Post</h2>
         <div className="post-error">{msg}</div>
         <label>Select type of post<span className="required"> *</span></label>
-        <select className="create-post-select" name="post_type">
-          <option disabled selected hidden>Select</option>
-          <option>Project</option>
-          <option>Q and A</option>
+        <select className="create-post-select" name="post_type" value={projectPost.post_type} onChange={handleChange}>
+          <option value="" disabled hidden>Select</option>
+          <option value="project">Project</option>
+          <option value="qna">Ask and Answer</option>
         </select>
         <label>Title<span className="required"> *</span></label>
         <input value={projectPost.post_title} onChange={handleChange} className="create-post-title" type="text" name="post_title"/>

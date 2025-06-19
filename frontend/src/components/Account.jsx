@@ -109,7 +109,10 @@ function RegisterPage({ setLoginOrRegister, setShowLogin }){
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(register),
+        body: JSON.stringify({
+          ...register,
+          confirm_password: register.confirmPassword //change to python format/rules
+        }),
       });
 
       const data = await res.json(); //frontend receives JSON object from backend

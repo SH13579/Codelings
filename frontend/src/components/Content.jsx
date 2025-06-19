@@ -169,11 +169,10 @@ export default function Content(){
           headers: { 'Accept': 'application/json' },
         });
         const data = await res.json();
-        //setProjects(data.projects)
-        //setAskAndAnswers(data.qna)
-        setProjects(data)
-        console.log(data)
-
+        setProjects(data.projects)
+        setAskAndAnswers(data.qna)
+        // console.log('projects', data.projects);
+        // console.log('qna:', data.qna);
       } catch (err) {
         alert('Error: ' + err.message);
       }
@@ -194,8 +193,7 @@ export default function Content(){
     )
   });
 
-  const all_askAndAnswers = projects.map(item => {
-                            //change projects to askAndAnswers
+  const all_askAndAnswers = askAndAnswers.map(item => {
     const onProfileClick = () => {
       setActiveProfile(item);
     };
