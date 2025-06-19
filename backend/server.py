@@ -162,20 +162,23 @@ def post_project():
   user_name= data.get('user_name')
   
   try:
-    if not title:
-      return jsonify({'error': 'Project needs a title'}), 400
+    if not post_type:
+      return jsonify({'error': 'Post needs a type'}), 400
+    elif not title:
+      return jsonify({'error': 'Post needs a title'}), 400
     elif not post_description:
-      return jsonify({'error': 'Project needs a short description'}), 400
+      return jsonify({'error': 'Post needs a short description'}), 400
     elif len(title) > 50:
-      return jsonify({'error': 'Project title cannot be over 50 characters'}), 400
+      return jsonify({'error': 'Post title cannot be over 50 characters'}), 400
     elif len(post_description) > 200:
-      return jsonify({'error': 'Project description cannot be over 200 characters'}), 400
+      return jsonify({'error': 'Post description cannot be over 200 characters'}), 400
     elif len(post_body) > 4000:
-      return jsonify({'error': 'Project body cannot be over 4000 characters'}), 400
+      return jsonify({'error': 'Post body cannot be over 4000 characters'}), 400
     else:
       with conn.cursor() as cursor:
         cursor.execute('SELECT id from users WHERE username=%s', (user_name,))
-        user_id = cursor.fetchone() 
+        user_id_tuple = cursor.fetchone() #returns tuple (1,)
+        user_id = user_id_tuple[0] #access the value to correctly insert into posts
         cursor.execute('INSERT INTO posts (post_date, post_type, user_id, title, post_description, post_body, video_file_path, likes, comments) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)', (post_date, post_type, user_id, title, post_description, post_body, video_file_path, likes, comments))
       conn.commit()
       return jsonify({'success': 'Your project has been posted'}), 201
@@ -209,7 +212,9 @@ def get_projects():
       ''')
 
       rows = cursor.fetchall() #returns list of tuples;
-      projects = []
+      posts = []
+      projects =[]
+      ask_and_answers = []
       now = datetime.datetime.now()
         
       # iterate through columns and fill in the dictionary with each row fetched from rows
@@ -238,26 +243,20 @@ def get_projects():
           else:
             difference = f"{days} days ago"
 
-        project_dict = dict(zip(columns,row))
-        project_dict['date'] = difference
+        post_dict = dict(zip(columns,row))
+        post_dict['date'] = difference
 
-        projects.append(project_dict)
-    
-      return jsonify(projects), 200
-      '''
-      project['post_date']
-
-      ***rename projects to posts; also find better variable names
-      for post in posts:
-        if post['type'] == 'project:
+        posts.append(post_dict)
+      
+      for post in posts: #can probably put this in for loop above^^^^^
+        if post['type'] == 'project':
           projects.append(post)
         elif post['type'] == 'qna':
           ask_and_answers.append(post)
       return jsonify({
-          'projects': projects
-          'qna': qna
-        })
-      '''
+          'projects': projects,
+          'qna': ask_and_answers
+        }), 200
     
   except Exception as e:
     return jsonify({'error': str(e)}), 500
