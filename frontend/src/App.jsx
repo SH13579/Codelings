@@ -1,58 +1,64 @@
-import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Header from './components/Header';
-import Content from './components/Content';
-import Post from './components/Post';
-import Footer from './components/Footer';
-import { UserContext } from './utils';
-import './styles/App.css';
+import { useState, useEffect } from "react";
+import { Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
+import Content from "./components/Content";
+import Post from "./components/Post";
+import Footer from "./components/Footer";
+import Profile from "./components/Profile";
+import Popup from "./components/Popup";
+import { UserContext } from "./utils";
+import "./styles/App.css";
 
 function App() {
-  const token = sessionStorage.getItem('token');
+  const token = sessionStorage.getItem("token");
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(token ? true : false);
+  const [userCreatedPost, setUserCreatedPost] = useState(false);
+  const [activeProfile, setActiveProfile] = useState(null);
+  const [showPopup, setShowPopup] = useState(null);
+  // {
+  //   visible: true,
+  //   message: "",
+  //   buttons: [],
+  // }
+
+  console.log("Rendering App");
 
   useEffect(() => {
-    console.log(currentUser);
-  }, [currentUser]);
-  
-  useEffect(() => {
-    if (!isLoggedIn){
+    if (!isLoggedIn) {
       return;
     }
     const controller = new AbortController();
     const signal = controller.signal;
 
-    const getCurrentUser = async() => {
-      try{
-        const res = await fetch('http://localhost:5000/fetch_profile', {
-          method: 'GET',
+    const getCurrentUser = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/fetch_user_profile", {
+          method: "GET",
           headers: {
-            Authorization: `Bearer ${token}` 
+            Authorization: `Bearer ${token}`,
           },
           signal: signal,
         });
 
         const data = await res.json();
 
-        if (res.ok){
+        if (res.ok) {
           setIsLoggedIn(true);
           setCurrentUser({
-            'username': data.username,
-            'email': data.email,
-            'pfp': data.pfp
-          })
-        }
-        else{ 
-          sessionStorage.removeItem('token');
+            username: data.username,
+            email: data.email,
+            pfp: data.pfp,
+          });
+        } else {
+          sessionStorage.removeItem("token");
           setCurrentUser(null);
           setIsLoggedIn(false);
         }
-      }
-      catch (err){
-        if (err.name !== 'AbortError') {
-          alert('Error: ' + err.message);
-          sessionStorage.removeItem('token');
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          alert("Error: " + err.message);
+          sessionStorage.removeItem("token");
           setCurrentUser(null);
           setIsLoggedIn(false);
         }
@@ -64,20 +70,40 @@ function App() {
     return () => controller.abort();
   }, [isLoggedIn]);
 
+  useEffect(() => {
+    console.log(currentUser);
+  }, [currentUser]);
+
   return (
-    <div>
-      <UserContext.Provider value={{ currentUser, setCurrentUser, isLoggedIn, setIsLoggedIn }}>
-        <Header currentUser={currentUser}/>
-        <Router>
+    <div className="site">
+      <UserContext.Provider
+        value={{
+          token,
+          currentUser,
+          setCurrentUser,
+          isLoggedIn,
+          setIsLoggedIn,
+          userCreatedPost,
+          setUserCreatedPost,
+          showPopup,
+          setShowPopup,
+        }}
+      >
+        <Header />
+        <div className="all-content-wrap">
           <Routes>
-            <Route path="/" element={<Content/>} />
-            <Route path="/post" element={<Post />} />
+            <Route path="/" element={<Content />} />
+            <Route path="/post/:postId" element={<Post />} />
+            <Route path="/profile/:username" element={<Profile />} />
           </Routes>
-        </Router>
+        </div>
+        {showPopup && (
+          <Popup message={showPopup.message} buttons={showPopup.buttons} />
+        )}
       </UserContext.Provider>
       <Footer />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -33,6 +33,15 @@
 .read-the-docs {
   color: #888;
 }
+.site{
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.all-content-wrap{
+  flex: 1;
+  margin-bottom: 2.5rem;
+}
 .blur{
   position: fixed;
   top: 0;
@@ -42,26 +51,64 @@
   height: 100vh;
   background-color: rgba(46, 46, 46, 0.85);
 }
+.blocking-div{
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2000;
+  width: 100vw;
+  height: 100vh;
+}
 .exit-button{
-  padding: 0.85rem;
   border: none;
-  margin-top: 0;
-  margin-bottom: 0;
   background: none;
-  font-size: 25px;
+  font-size: 22.5px;
   cursor: pointer;
   display: flex;
   margin-left: auto;
+  padding: 0;
+  color: black;
+  background-color: transparent;
 }
 .exit-button:hover{
   color: rgb(167, 167, 167);
   border: none;
   transition: background-color 0.25s ease, color 0.25s ease;
   border: none;
+  background-color: transparent;
 }
 .exit-button:focus{
   outline: none;
 }
 .required{
   color: red;
+}
+.popup-wrapper{
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #dbdbdb;
+  z-index: 2100;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 1rem;
+  max-width: calc(100% - 4rem);
+  color: black;
+}
+.popup{
+  width: 22.5rem;
+  text-align: center;
+}
+.popup-buttons-wrapper{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.popup-button{
+  padding: 0.5rem 2.5rem 0.5rem 2.5rem;
+  flex: 1;
+  color: white;
 }

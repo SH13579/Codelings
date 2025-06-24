@@ -1,12 +1,17 @@
-import React, { useRef, useCallback, useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'
-import '../styles/content.css';
-import Profile from './Profile';
-import Post from './Post';
-
-function convertDate(date){
-
-}
+import React, {
+  useRef,
+  useCallback,
+  useState,
+  useEffect,
+  useContext,
+} from "react";
+import { Link, useFetcher, useNavigate } from "react-router-dom";
+import "../styles/content.css";
+import Profile from "./Profile";
+import Post from "./Post";
+import ProjectCard from "./ProjectCard";
+import AskAnswerCard from "./AskAnswerCard";
+import { UserContext, fetchPosts } from "../utils";
 
 //short introduction to our website and search bar
 const AboutUs = () => {
@@ -14,215 +19,261 @@ const AboutUs = () => {
     <section className="about-us">
       <div className="about-us-wrapper">
         <h1 className="about-us-title">Share your Coding Projects</h1>
-        <h2 className="about-us-description">A place for tech students to showcase their work and connect with others</h2>
+        <h2 className="about-us-description">
+          A place for tech students to showcase their work and connect with
+          others
+        </h2>
         <form className="search-wrapper" action="/search" method="GET">
-          <input className="search-bar" type="search" placeholder="Looking for something?"/>
+          <input
+            className="search-bar"
+            type="search"
+            placeholder="Looking for something?"
+          />
         </form>
       </div>
     </section>
-  )
-}
-
-//each individual project component
-const ProjectCard = (props) => {
-  const handlePropagation = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-  }
-
-  const ProjectVideo = () => {
-    const videoRef = useRef(null);
-    const [playVideo, setPlayVideo] = useState(false);
-
-    function playOrPause(){
-      if(playVideo){
-        videoRef.current.pause();
-        setPlayVideo(false);
-      }
-      else{
-        videoRef.current.play();
-        setPlayVideo(true);
-      }
-    }
-    
-    return (
-      <div onClick={(e) => {
-        handlePropagation(e);
-        playOrPause();
-      }}className="project-video">
-        <video ref={videoRef} controls> 
-          <source src={`../media/videos/${props.video}`} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-      </div>
-    )
-  }
-
-  //cannot do state={props} because ProjectCard takes in props that also include functions: onProfileClick={onProfileClick} & onPostClick={onPostClick}
-  //Link from React Router reuires the state to be serializable (int, float, str, bool, list, dict, tuple, set, etc.) ***Functions are NOT serializable
-  //Serializable: data types that can be converted into a format suitable for storage or transmission (JSON, XML, binary format), and then reconstructed later
-  return (
-    <Link to="/post" className="project-wrapper"
-    state={{
-    id: props.id,
-    name: props.name,
-    pfp: props.pfp,
-    title: props.title,
-    description: props.description,
-    video: props.video,
-    comments_count: props.comments_count,
-    upvotes: props.upvotes,
-    }}>
-      <div className="project">
-        <div className="project-first-row">
-          <div onClick={(e) => {
-            handlePropagation(e);
-            props.onProfileClick();
-            }} className="user-info">
-            <img className="pfp" src={`../media/images/${props.pfp}`}/>
-            <span className="user-name">{props.name}</span>  
-          </div>
-          <div className="project-date">
-            <span className="project-date-dot">&#8226;</span>{props.date}
-          </div>
-        </div>
-        <h2 className="post-title">{props.title}</h2>
-        <div className="post-desc">{props.description}</div>
-        <div className="upvotes-comments-wrapper">
-          <span className="upvotes">
-            <img className="upvote-icon" src="../media/images/thumbs-up.svg"/>
-            <div className="upvote-count">{props.upvotes}</div>
-          </span>
-          <span className="comments">
-            <img className="comments-icon" src="../media/images/comments.svg"/>
-            <div className="comment-count">{props.comments_count}</div>
-          </span>
-        </div>
-      </div>
-    </Link>
-  )
+  );
 };
 
-const AskAnswerCard = (props) => {
-  const handlePropagation = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-  }
+export const handleNavigating = (e, navigate, username) => {
+  e.stopPropagation();
+  e.preventDefault();
+  navigate(`/profile/${username}`);
+};
 
+//empty container when the database fetched nothing
+export const EmptyContainer = () => {
   return (
-    <Link to="/post" className="ask-ans-wrapper"
-    state={{
-    id: props.id,
-    name: props.name,
-    pfp: props.pfp,
-    title: props.title,
-    description: props.description,
-    video: props.video,
-    comments_count: props.comments_count,
-    upvotes: props.upvotes,
-    }}>
-      <div className="ask-and-ans">
-        <div className="project-first-row">
-          <div onClick={(e) => {
-            handlePropagation(e);
-            props.onProfileClick();
-            }} className="user-info">
-            <img className="pfp" src={`../media/images/${props.pfp}`}/>
-            <span className="user-name">{props.name}</span>  
-          </div>
-          <div className="project-date">
-            <span className="project-date-dot">&#8226;</span>{props.date}
-          </div>
-        </div>
-        <h2 className="post-title">{props.title}</h2>
-        <div className="upvotes-comments-wrapper">
-          <span className="upvotes">
-            <img className="upvote-icon" src="../media/images/thumbs-up.svg"/>
-            <div className="upvote-count">{props.upvotes}</div>
-          </span>
-          <span className="comments">
-            <img className="comments-icon" src="../media/images/comments.svg"/>
-            <div className="comment-count">{props.comments_count}</div>
-          </span>
-        </div>
-      </div>
-    </Link>
-  )
+    <div className="empty-container-wrapper">
+      <img className="empty-icon" src="../media/images/empty.svg" />
+      <div>Empty here...</div>
+    </div>
+  );
+};
+
+//when changing the filter, we want to make we change the states back to it's initial value so that it start at 5 posts again
+export function handleFilter(
+  setPostType,
+  setFilter,
+  setStart,
+  setHasMore,
+  filterValue
+) {
+  setPostType([]);
+  setStart(0);
+  setHasMore(true);
+  setFilter(filterValue);
 }
 
-export default function Content(){
-  const [activeProfile, setActiveProfile] = useState(null);
-  const [projects, setProjects] = useState([])
-  const [askAndAnswers, setAskAndAnswers] = useState([])
-  
-  //remove ability to scroll any content outside of the profile component
-  useEffect(() => {
-      document.body.style.overflow = activeProfile ? 'hidden' : 'auto';
-  }, [activeProfile])
+export default function Content() {
+  const [projects, setProjects] = useState([]);
+  const [askAndAnswers, setAskAndAnswers] = useState([]);
 
-  //retrieve from posts table (this will replace all_projects below)
+  const [startProject, setStartProject] = useState(0);
+  const [startQna, setStartQna] = useState(0);
+
+  const [hasMoreProject, setHasMoreProject] = useState(true);
+  const [hasMoreQna, setHasMoreQna] = useState(true);
+
+  const [projectFilter, setProjectFilter] = useState("Best");
+  const [qnaFilter, setQnaFilter] = useState("Best");
+
+  const projectRef = useRef(null);
+  const askAndAnswerRef = useRef(null);
+
+  //fetches projects and ask & answers based on whether the user filters by best or newest, default is best
+  function fetchPostsByCategory(
+    postType,
+    setPostType,
+    start,
+    setStart,
+    setHasMore,
+    filter
+  ) {
+    const category = filter === "Best" ? "likes" : "post_date";
+    fetchPosts(
+      setPostType,
+      setStart,
+      setHasMore,
+      `http://localhost:5000/get_postsByCategory?post_type=${encodeURIComponent(
+        postType
+      )}&category=${category}&start=${start}&limit=5`
+    );
+  }
+
   useEffect(() => {
-    async function fetchProjects() {
-      try{
-        const res = await fetch('http://localhost:5000/get_projects', {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-        });
-        const data = await res.json();
-        setProjects(data.projects)
-        setAskAndAnswers(data.qna)
-        // console.log('projects', data.projects);
-        // console.log('qna:', data.qna);
-      } catch (err) {
-        alert('Error: ' + err.message);
-      }
+    if (!projectRef.current) {
+      projectRef.current = true;
+      return;
     }
-    fetchProjects();
-  }, []);
-  
-  const all_projects = projects.map(item => {
-    const onProfileClick = () => {
-      setActiveProfile(item);
-    };
-    return (
-      <ProjectCard 
-        key={item.id}
-        {...item}
-        onProfileClick={onProfileClick}
-      />
-    )
+    fetchPostsByCategory(
+      "project",
+      setProjects,
+      startProject,
+      setStartProject,
+      setHasMoreProject,
+      projectFilter
+    );
+  }, [projectFilter]);
+
+  useEffect(() => {
+    if (!askAndAnswerRef.current) {
+      askAndAnswerRef.current = true;
+      return;
+    }
+    fetchPostsByCategory(
+      "qna",
+      setAskAndAnswers,
+      startQna,
+      setStartQna,
+      setHasMoreQna,
+      qnaFilter
+    );
+  }, [qnaFilter]);
+
+  const all_projects = projects.map((item) => {
+    return <ProjectCard location="home-page" key={item.id} {...item} />;
   });
 
-  const all_askAndAnswers = askAndAnswers.map(item => {
-    const onProfileClick = () => {
-      setActiveProfile(item);
-    };
-
-    return (
-      <>
-      <AskAnswerCard 
-        key={item.id}
-        {...item}
-        onProfileClick={onProfileClick}
-      />
-      </>
-    )
+  const all_askAndAnswers = askAndAnswers.map((item) => {
+    return <AskAnswerCard location="home-page" key={item.id} {...item} />;
   });
 
   return (
     <section className="content-wrapper">
-      <AboutUs/>
+      <AboutUs />
       <div className="content-grid">
         <div className="projects">
-          <h2 className="projects-label">Trending Projects</h2>
-          {all_projects}
+          <div className="post-header">
+            <h2 className="post-label">Projects</h2>
+            <div className="filter-wrapper">
+              <div className="current-filter">
+                {projectFilter}
+                <img
+                  className="dropdown-arrow"
+                  src="../media/images/dropdown-arrow.svg"
+                ></img>
+              </div>
+              <div className="filter-dropdown">
+                {projectFilter !== "Best" && (
+                  <div
+                    onClick={() =>
+                      handleFilter(
+                        setProjects,
+                        setProjectFilter,
+                        setStartProject,
+                        setHasMoreProject,
+                        "Best"
+                      )
+                    }
+                    className="filter"
+                  >
+                    Best
+                  </div>
+                )}
+                {projectFilter !== "New" && (
+                  <div
+                    onClick={() =>
+                      handleFilter(
+                        setProjects,
+                        setProjectFilter,
+                        setStartProject,
+                        setHasMoreProject,
+                        "New"
+                      )
+                    }
+                    className="filter"
+                  >
+                    New
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          {projects.length > 0 ? all_projects : <EmptyContainer />}
+          {hasMoreProject && (
+            <button
+              onClick={() =>
+                fetchPostsByCategory(
+                  "project",
+                  setProjects,
+                  startProject,
+                  setStartProject,
+                  setHasMoreProject,
+                  projectFilter
+                )
+              }
+            >
+              View More
+            </button>
+          )}
         </div>
         <div className="ask-and-answers">
-          <h2 className="ask-and-answers-label">Ask & Answer</h2>
-          {all_askAndAnswers}
+          <div className="post-header">
+            <h2 className="post-label">Ask & Answer</h2>
+            <div className="filter-wrapper">
+              <div className="current-filter">
+                {qnaFilter}
+                <img
+                  className="dropdown-arrow"
+                  src="../media/images/dropdown-arrow.svg"
+                ></img>
+              </div>
+              <div className="filter-dropdown">
+                {qnaFilter !== "Best" && (
+                  <div
+                    onClick={() =>
+                      handleFilter(
+                        setAskAndAnswers,
+                        setQnaFilter,
+                        setStartQna,
+                        setHasMoreQna,
+                        "Best"
+                      )
+                    }
+                    className="filter"
+                  >
+                    Best
+                  </div>
+                )}
+                {qnaFilter !== "New" && (
+                  <div
+                    onClick={() =>
+                      handleFilter(
+                        setAskAndAnswers,
+                        setQnaFilter,
+                        setStartQna,
+                        setHasMoreQna,
+                        "New"
+                      )
+                    }
+                    className="filter"
+                  >
+                    New
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          {askAndAnswers.length > 0 ? all_askAndAnswers : <EmptyContainer />}
+          {hasMoreQna && (
+            <button
+              onClick={() =>
+                fetchPostsByCategory(
+                  "qna",
+                  setAskAndAnswers,
+                  startQna,
+                  setStartQna,
+                  setHasMoreQna,
+                  qnaFilter
+                )
+              }
+            >
+              View More
+            </button>
+          )}
         </div>
       </div>
-      {activeProfile && <Profile name={activeProfile.name} setActiveProfile={setActiveProfile}/>}
     </section>
-  )
+  );
 }

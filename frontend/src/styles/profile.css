@@ -1,30 +1,45 @@
+.profile-wrapper{
+  width: 65rem;
+  max-width: calc(100% - 2rem);
+  margin: auto;
+  margin-top: 0.5rem;
+}
 .profile{
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgb(255, 255, 255);
-  z-index: 2000;
-  width: 33rem;
-  height: 45rem;
-  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 1rem;
   max-width: 100%;
-  border-radius: 15px;
-  overflow: auto;
-  padding: 2rem;
 }
 .profile-info{
+  gap: 0.75rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
+  margin: auto;
+  width: 45rem;
+  max-width: 100%;
 }
 .profile-pfp{
-  height: 8rem;
-  border-radius: 10%;
-  border: 1px solid rgb(222, 222, 222);
+  height: 6rem;
+  width: 6rem;
+  overflow: hidden;
+  object-fit: cover;
+  border-radius: 50%;
+  background-color: white;
+}
+.profile-details{
+  flex: 1 1 83%;
 }
 .profile-name{
-  margin-bottom: 0.25rem;
+  font-size: 1.4rem;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.profile-projects-label, .profile-questions-label{
+  margin-top: 0;
+}
+.profile-pfp-name{
+  text-align: center;
 }

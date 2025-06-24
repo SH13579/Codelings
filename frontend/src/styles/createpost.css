@@ -1,18 +1,20 @@
-.post-project{
+.post-project-wrapper{
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: rgb(255, 255, 255);
-  z-index: 2000;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid rgb(215, 215, 215);
+  z-index: 1100;
   border-radius: 10px;
   padding: 2rem 4rem 3rem 4rem;
   margin-bottom: 1rem;
+  max-width: calc(100% - 8rem);
+}
+.post-project{
+  display: flex;
+  flex-direction: column;
   width: 47.5rem;
+  max-width: 100%;
 }
 .post-project label{
   font-weight: 500;
@@ -65,4 +67,9 @@
 }
 .project-submit:hover{
   background-color: #001845;
+}
+.post-success-wrapper{
+  text-align: center;
+}
+.post-success-wrapper button{
 }

@@ -1,0 +1,23 @@
+.footer-wrapper{
+  background-color: #023E7D;
+}
+.footer{
+  height: 6.5rem;
+  width: 65rem;
+  margin: auto;
+  max-width: calc(100% - 2rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.github-link{
+  text-decoration: none;
+}
+.footer-site-name{
+  color: white;
+  font-size: 1rem;
+}
+.github-logo{
+  filter: brightness(0) saturate(100%) invert(88%) sepia(100%) saturate(0%) hue-rotate(52deg) brightness(104%) contrast(103%);
+  width: 2.15rem;
+}

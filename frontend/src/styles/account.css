@@ -4,7 +4,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: rgb(255, 255, 255);
-  z-index: 2000;
+  z-index: 1100;
   border-radius: 15px;
   padding: 2rem;
   width: 22.5rem;
@@ -31,7 +31,6 @@
   outline-color: #023E7D;
 }
 .account-container button{
-  padding: 0.85rem;
   border: none;
 }
 .account-container button:focus{
@@ -40,10 +39,12 @@
 .login-button{
   background-color: #0353A4;
   color: white;
+  padding: 0.85rem;
 }
 .register-button{
   background-color: #0353A4;
   color: white;
+  padding: 0.85rem;
 }
 .login-button, .register-button{
   margin-top: 1rem;
@@ -77,10 +78,21 @@
   display: flex;
   justify-content: center;
 }
-.success-message{
-  color: green;
-  background-color: lightgreen;
-  border-radius: 5px;
+.register-success-wrapper{
   display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+.success-logo-wrapper{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(255, 255, 255);
+  padding-bottom: 1.5rem;
+}
+.success-logo{
+  width: 5rem;
+  display: flex;
+  align-items: center;
   justify-content: center;
 }

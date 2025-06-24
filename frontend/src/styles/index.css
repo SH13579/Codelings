@@ -12,7 +12,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
 body {
   margin: 0;
   min-width: 320px;
@@ -27,6 +26,7 @@ h1 {
 
 a {
   color: black;
+  cursor: pointer;
 }
 
 button {
@@ -39,20 +39,18 @@ button {
   background-color: #0353A4;
   cursor: pointer;
   transition: border-color 0.25s;
+  transition: background-color 0.15s ease;
+  color: white;
+  border-radius: 10px;
 }
-
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+button:hover{
+  background-color: #002855;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
     background-color: #ffffff;
-  }
-  button {
-    background-color: #f9f9f9;
   }
 }
 textarea{
