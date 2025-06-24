@@ -19,7 +19,9 @@ export default function Popup({ message, buttons }) {
     <div>
       <div className="blur"></div>
       <div ref={popupRef} className="popup-wrapper">
-        <div className="popup">{message}</div>
+        <div className="popup">
+          <h3 className="">{message}</h3>
+        </div>
         <div className="popup-buttons-wrapper">{all_buttons}</div>
       </div>
     </div>

@@ -143,7 +143,7 @@ def fetch_profile(decoded):
 
 
 #route to create a post and insert into database
-@app.route('/post_project', methods=['POST'])
+@app.route('/create_post', methods=['POST'])
 def post_project():
   if not conn:
     return jsonify({'error': 'Database connection is not established'}), 500
@@ -179,9 +179,15 @@ def post_project():
         cursor.execute('SELECT id from users WHERE username=%s', (user_name,))
         user_id_tuple = cursor.fetchone() #returns tuple (1,)
         user_id = user_id_tuple[0] #access the value to correctly insert into posts
-        cursor.execute('INSERT INTO posts (post_date, post_type, user_id, title, post_description, post_body, video_file_path, likes, comments) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)', (post_date, post_type, user_id, title, post_description, post_body, video_file_path, likes, comments))
+        cursor.execute('INSERT INTO posts (post_date, post_type, user_id, title, post_description, post_body, video_file_path, likes, comments) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id', (post_date, post_type, user_id, title, post_description, post_body, video_file_path, likes, comments))
+        post_id = cursor.fetchone()[0]
+
       conn.commit()
-      return jsonify({'success': 'Your project has been posted'}), 201
+      return jsonify({
+        'success': 'Your project has been posted',
+        "post_id": post_id
+      }), 201
+    
   except Exception as e:
     conn.rollback()
     return jsonify({'error': str(e)}), 500
@@ -191,7 +197,7 @@ def get_posts_helper(rows):
   now = datetime.datetime.now()
     
   # iterate through columns and fill in the dictionary with each row fetched from rows
-  columns = ['id', 'date', 'type', 'title', 'description', 'body', 'video', 'upvotes', 'comments_count', 'name']
+  columns = ['id', 'date', 'type', 'title', 'description', 'body', 'video', 'upvotes', 'comments_count', 'name', 'pfp']
   for row in rows:
     time_difference = now - row[1]
     seconds = round(time_difference.total_seconds())
@@ -225,24 +231,6 @@ def get_posts_helper(rows):
       'posts': posts
     }), 200
 
-# @app.route('/get_latestPost', methods=['GET'])
-# def get_latestPost():
-#   if not conn:
-#     return jsonify({'error': 'Database connection not established'}), 500
-  
-#   username = request.args.get('username')
-
-#   if not username:
-#     return jsonify({'error': 'Missing username'}), 400
-  
-#   try:
-#     with conn.cursor() as cursor:
-#       cursor.execute('''
-#       SELECT 
-#         post_id
-#       FROM posts
-#       ''')
-
 #route to fetch projects from database to display on Content.jsx
 @app.route('/get_postsByCategory', methods=['GET'])
 def get_posts():
@@ -273,7 +261,8 @@ def get_posts():
           posts.video_file_path,
           posts.likes,
           posts.comments,
-          users.username
+          users.username,
+          users.profile_picture
         FROM posts
         JOIN users ON posts.user_id = users.id
         WHERE posts.post_type = %s
@@ -322,7 +311,8 @@ def get_posts_byUser():
           posts.video_file_path,
           posts.likes,
           posts.comments,
-          users.username     
+          users.username,
+          users.profile_picture
         FROM posts 
         JOIN users on posts.user_id = users.id
         WHERE users.username = %s AND post_type = %s
@@ -483,7 +473,18 @@ def get_specific_post():
     #post_type???
     with conn.cursor() as cursor:
       cursor.execute('''
-      SELECT posts.id, posts.title, posts.post_description, posts.post_body, posts.video_file_path, posts.likes, posts.comments, users.username, users.profile_picture
+      SELECT 
+        posts.id, 
+        posts.post_date, 
+        posts.post_type, 
+        posts.title, 
+        posts.post_description, 
+        posts.post_body, 
+        posts.video_file_path, 
+        posts.likes, 
+        posts.comments, 
+        users.username, 
+        users.profile_picture
       FROM posts
       JOIN users ON posts.user_id = users.id
       WHERE posts.id = %s
@@ -492,10 +493,9 @@ def get_specific_post():
       row = cursor.fetchone() #returns 1 row
       if not row:
         return jsonify({'error': 'POST NOT FOUND'}), 404
-      columns = ['id', 'title', 'description', 'body', 'video', 'upvotes', 'comments_count', 'name', 'pfp']
-      post_data = dict(zip(columns,row))
+      print(row)
       
-      return jsonify(post_data)
+    return get_posts_helper([row])
   
   except Exception as e:
     return jsonify({'error': str(e)}), 500

@@ -175,12 +175,10 @@ function Comments({ postId, currentUser, token }) {
 export default function Post() {
   const token = sessionStorage.getItem("token");
   // const { state: post } = useLocation(); //useLocation gives access to the current route's location object (including any state/props passed via <Link>)
-  const [activeProfile, setActiveProfile] = useState(null);
   const [postInfo, setPostInfo] = useState({});
   const { currentUser } = useContext(UserContext);
   const navigate = useNavigate();
   const { postId } = useParams();
-  console.log("PostId " + postId);
 
   const handlePropagation = (e) => {
     e.stopPropagation();
@@ -200,8 +198,8 @@ export default function Post() {
         );
         const data = await res.json();
         if (res.ok) {
-          setPostInfo(data);
-          console.log(data);
+          console.log(userCreatedPost);
+          setPostInfo(data.posts[0]);
         } else {
           console.log("FAILED TO FETCH: " + data.error);
         }
@@ -210,27 +208,32 @@ export default function Post() {
       }
     };
     fetchPost();
-  }, []);
+  }, [postId]);
+
+  useEffect(() => {
+    console.log(postInfo);
+  }, [postInfo]);
 
   console.log("Rendering Post");
-
-  //remove ability to scroll any content outside of the profile component
-  useEffect(() => {
-    document.body.style.overflow = activeProfile ? "hidden" : "auto";
-  }, [activeProfile]);
 
   return (
     <div className="content-wrapper no-hover">
       <div className="post-wrapper">
-        <div
-          onClick={(e) => {
-            handlePropagation(e);
-            handleNavigating(e, navigate, postInfo.name);
-          }}
-          className="user-info"
-        >
-          <img className="pfp" src={`../media/images/${postInfo.pfp}`} />
-          <span className="user-name">{postInfo.name}</span>
+        <div className="project-first-row">
+          <div
+            onClick={(e) => {
+              handlePropagation(e);
+              handleNavigating(e, navigate, postInfo.name);
+            }}
+            className="user-info"
+          >
+            <img className="pfp" src={`../media/images/${postInfo.pfp}`} />
+            <span className="user-name">{postInfo.name}</span>
+          </div>
+          <div className="post-date">
+            <span className="post-date-dot">&#8226;</span>
+            {postInfo.date}
+          </div>
         </div>
         <h2 className="post-title">{postInfo.title}</h2>
         <h4 className="post-desc-post">{postInfo.description}</h4>
@@ -258,14 +261,6 @@ export default function Post() {
         <div className="horizontal-line"></div>
         {<Comments postId={postId} currentUser={currentUser} token={token} />}
       </div>
-
-      {activeProfile && (
-        <Profile
-          className="profile"
-          name={activeProfile.name}
-          setActiveProfile={setActiveProfile}
-        />
-      )}
     </div>
   );
 }

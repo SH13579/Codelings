@@ -13,14 +13,9 @@ function App() {
   const token = sessionStorage.getItem("token");
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(token ? true : false);
-  const [userCreatedPost, setUserCreatedPost] = useState(false);
   const [activeProfile, setActiveProfile] = useState(null);
   const [showPopup, setShowPopup] = useState(null);
-  // {
-  //   visible: true,
-  //   message: "",
-  //   buttons: [],
-  // }
+  const [userCreatedPost, setUserCreatedPost] = useState(null);
 
   console.log("Rendering App");
 
@@ -83,8 +78,6 @@ function App() {
           setCurrentUser,
           isLoggedIn,
           setIsLoggedIn,
-          userCreatedPost,
-          setUserCreatedPost,
           showPopup,
           setShowPopup,
         }}
@@ -93,8 +86,8 @@ function App() {
         <div className="all-content-wrap">
           <Routes>
             <Route path="/" element={<Content />} />
-            <Route path="/post/:postId" element={<Post />} />
             <Route path="/profile/:username" element={<Profile />} />
+            <Route path="/post/:postId" element={<Post />} />
           </Routes>
         </div>
         {showPopup && (

@@ -4,8 +4,7 @@ import { UserContext } from "../utils";
 import { useNavigate } from "react-router-dom";
 
 export default function CreatePost({ setClickCreatePost }) {
-  const { currentUser, userCreatedPost, setUserCreatedPost } =
-    useContext(UserContext);
+  const { currentUser } = useContext(UserContext);
   const [alertMsg, setAlertMsg] = useState(null);
   const [msg, setMsg] = useState("");
   const postFormRef = useRef(null);
@@ -38,15 +37,8 @@ export default function CreatePost({ setClickCreatePost }) {
     //handles submitting the post
     const handleSubmit = async (e) => {
       e.preventDefault();
-      // setProjectPost(prev => ({
-      //   ...prev,
-      //   post_date: dayjs().format('YYYY-MM-DD HH:mm:ss')
-      // }));
-      Object.keys(projectPost).forEach((key) => {
-        console.log(`${key}: ${projectPost[key]}`);
-      });
       try {
-        const res = await fetch("http://localhost:5000/post_project", {
+        const res = await fetch("http://localhost:5000/create_post", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -68,7 +60,7 @@ export default function CreatePost({ setClickCreatePost }) {
 
         if (res.ok) {
           setMsg(data.success);
-          setUserCreatedPost(true);
+          navigate(`/post/${data.post_id}`);
         } else {
           setMsg(data.error);
         }
@@ -169,15 +161,7 @@ export default function CreatePost({ setClickCreatePost }) {
           <div className="success-logo-wrapper">
             <img className="success-logo" src="../media/images/success.svg" />
           </div>
-          <h2>Your submission has been sent</h2>
-          <button
-            className="login-button"
-            onClick={() => {
-              setLoginOrRegister("login");
-            }}
-          >
-            View Post
-          </button>
+          <h3>Your submission has been sent</h3>
         </div>
       </div>
     );
@@ -189,8 +173,8 @@ export default function CreatePost({ setClickCreatePost }) {
         <div className="blocking-div"></div>
         <div className="popup-wrapper">
           <div className="popup">
-            <h2>Are you sure you want to quit?</h2>
-            <h3>Your post will not be saved</h3>
+            <h3>Are you sure you want to quit?</h3>
+            <h4>Your post will not be saved</h4>
           </div>
           <div className="popup-buttons-wrapper">
             <button

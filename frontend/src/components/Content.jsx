@@ -1,17 +1,14 @@
-import React, {
-  useRef,
-  useCallback,
-  useState,
-  useEffect,
-  useContext,
-} from "react";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import { Link, useFetcher, useNavigate } from "react-router-dom";
 import "../styles/content.css";
-import Profile from "./Profile";
-import Post from "./Post";
 import ProjectCard from "./ProjectCard";
 import AskAnswerCard from "./AskAnswerCard";
-import { UserContext, fetchPosts } from "../utils";
+import {
+  UserContext,
+  fetchPosts,
+  EmptyContainer,
+  handleFilter,
+} from "../utils";
 
 //short introduction to our website and search bar
 const AboutUs = () => {
@@ -41,30 +38,6 @@ export const handleNavigating = (e, navigate, username) => {
   navigate(`/profile/${username}`);
 };
 
-//empty container when the database fetched nothing
-export const EmptyContainer = () => {
-  return (
-    <div className="empty-container-wrapper">
-      <img className="empty-icon" src="../media/images/empty.svg" />
-      <div>Empty here...</div>
-    </div>
-  );
-};
-
-//when changing the filter, we want to make we change the states back to it's initial value so that it start at 5 posts again
-export function handleFilter(
-  setPostType,
-  setFilter,
-  setStart,
-  setHasMore,
-  filterValue
-) {
-  setPostType([]);
-  setStart(0);
-  setHasMore(true);
-  setFilter(filterValue);
-}
-
 export default function Content() {
   const [projects, setProjects] = useState([]);
   const [askAndAnswers, setAskAndAnswers] = useState([]);
@@ -88,7 +61,8 @@ export default function Content() {
     start,
     setStart,
     setHasMore,
-    filter
+    filter,
+    limit
   ) {
     const category = filter === "Best" ? "likes" : "post_date";
     fetchPosts(
@@ -97,7 +71,8 @@ export default function Content() {
       setHasMore,
       `http://localhost:5000/get_postsByCategory?post_type=${encodeURIComponent(
         postType
-      )}&category=${category}&start=${start}&limit=5`
+      )}&category=${category}&start=${start}&limit=${limit}`,
+      limit
     );
   }
 
@@ -112,7 +87,8 @@ export default function Content() {
       startProject,
       setStartProject,
       setHasMoreProject,
-      projectFilter
+      projectFilter,
+      10
     );
   }, [projectFilter]);
 
@@ -127,9 +103,52 @@ export default function Content() {
       startQna,
       setStartQna,
       setHasMoreQna,
-      qnaFilter
+      qnaFilter,
+      12
     );
   }, [qnaFilter]);
+
+  // useEffect(() => {
+  //   let timeout;
+  //   const handleInfiniteScroll = () => {
+  //     clearTimeout(timeout);
+  //     timeout = setTimeout(() => {
+  //       const bottomOfPage =
+  //         document.documentElement.scrollHeight - window.innerHeight;
+  //       if (window.scrollY + 300 >= bottomOfPage) {
+  //         console.log(startProject);
+  //         if (hasMoreQna) {
+  //           fetchPostsByCategory(
+  //             "qna",
+  //             setAskAndAnswers,
+  //             startQna,
+  //             setStartQna,
+  //             setHasMoreQna,
+  //             qnaFilter,
+  //             12
+  //           );
+  //         }
+  //         if (hasMoreProject) {
+  //           fetchPostsByCategory(
+  //             "project",
+  //             setProjects,
+  //             startProject,
+  //             setStartProject,
+  //             setHasMoreProject,
+  //             projectFilter,
+  //             10
+  //           );
+  //         }
+  //       }
+  //     }, 250);
+  //   };
+
+  //   window.addEventListener("scroll", handleInfiniteScroll);
+
+  //   return () => {
+  //     window.removeEventListener("scroll", handleInfiniteScroll);
+  //   };
+  // }, [startQna, startProject, hasMoreQna, hasMoreProject]);
 
   const all_projects = projects.map((item) => {
     return <ProjectCard location="home-page" key={item.id} {...item} />;
@@ -200,7 +219,8 @@ export default function Content() {
                   startProject,
                   setStartProject,
                   setHasMoreProject,
-                  projectFilter
+                  projectFilter,
+                  10
                 )
               }
             >
@@ -265,7 +285,8 @@ export default function Content() {
                   startQna,
                   setStartQna,
                   setHasMoreQna,
-                  qnaFilter
+                  qnaFilter,
+                  12
                 )
               }
             >

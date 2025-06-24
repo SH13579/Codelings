@@ -57,7 +57,7 @@ export default function ProjectCard(props) {
               onClick={(e) => handleNavigating(e, navigate, props.name)}
               className="user-info"
             >
-              <img className="pfp" src={`../media/images/${props.pfp}`} />
+              <img className="pfp" src={props.pfp} />
               <span className="user-name">{props.name}</span>
             </div>
           )}
@@ -91,5 +91,7 @@ export default function ProjectCard(props) {
         </div>
       </div>
     </Link>
-  ) : null;
+  ) : (
+    <div className="post-deleted">Post deleted</div>
+  );
 }

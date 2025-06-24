@@ -1,26 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { handleNavigating } from "./Content";
 
 export default function AskAnswerCard(props) {
+  const [deleted, setDeleted] = useState(false);
   const navigate = useNavigate();
 
-  return (
-    <Link
-      to={`/post/${props.id}`}
-      className="ask-ans-wrapper"
-      state={{
-        id: props.id,
-        name: props.name,
-        pfp: props.pfp,
-        title: props.title,
-        description: props.description,
-        body: props.body,
-        video: props.video,
-        comments_count: props.comments_count,
-        upvotes: props.upvotes,
-      }}
-    >
+  return !deleted ? (
+    <Link to={`/post/${props.id}`} className="ask-ans-wrapper">
       <div className="ask-and-ans">
         <div className="project-first-row">
           {props.location === "home-page" && (
@@ -48,7 +35,12 @@ export default function AskAnswerCard(props) {
             <div className="comment-count">{props.comments_count}</div>
           </span>
           {props.location === "profile" && (
-            <span className="delete">
+            <span
+              onClick={(e) => {
+                props.showDeletePopup(e, props.id, setDeleted);
+              }}
+              className="delete"
+            >
               <img
                 className="delete-icon"
                 src="../media/images/delete-icon.svg"
@@ -58,5 +50,7 @@ export default function AskAnswerCard(props) {
         </div>
       </div>
     </Link>
+  ) : (
+    <div className="post-deleted">Post deleted</div>
   );
 }

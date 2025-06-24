@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import "../styles/profile.css";
-import { useExitListener } from "../utils";
-import { UserContext, fetchPosts } from "../utils";
+import {
+  UserContext,
+  fetchPosts,
+  EmptyContainer,
+  handleFilter,
+} from "../utils";
 import { useParams } from "react-router-dom";
-import { handleNavigating, EmptyContainer, handleFilter } from "./Content";
 import ProjectCard from "./ProjectCard";
 import AskAnswerCard from "./AskAnswerCard";
 
@@ -35,7 +38,8 @@ export default function Profile({ activeProfile, setActiveProfile }) {
     start,
     setStart,
     setHasMore,
-    filter
+    filter,
+    limit
   ) {
     const category = filter === "Best" ? "likes" : "post_date";
     fetchPosts(
@@ -46,7 +50,8 @@ export default function Profile({ activeProfile, setActiveProfile }) {
         username
       )}&post_type=${encodeURIComponent(
         postType
-      )}&category=${category}&start=${start}&limit=5`
+      )}&category=${category}&start=${start}&limit=${limit}`,
+      limit
     );
   }
 
@@ -61,7 +66,8 @@ export default function Profile({ activeProfile, setActiveProfile }) {
       startProject,
       setStartProject,
       setHasMoreProject,
-      projectFilter
+      projectFilter,
+      10
     );
   }, [projectFilter]);
 
@@ -76,7 +82,8 @@ export default function Profile({ activeProfile, setActiveProfile }) {
       startQna,
       setStartQna,
       setHasMoreQna,
-      qnaFilter
+      qnaFilter,
+      12
     );
   }, [qnaFilter]);
 
@@ -128,7 +135,12 @@ export default function Profile({ activeProfile, setActiveProfile }) {
       }
     }
     setShowPopup({
-      message: "Are you sure you want to delete this post?",
+      message: (
+        <>
+          <h3>Delete Post?</h3>
+          <h4>Action cannot be restored</h4>
+        </>
+      ),
       buttons: [
         {
           label: "Yes",

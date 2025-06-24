@@ -260,3 +260,13 @@
 .delete:hover{
   filter: brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(7483%) hue-rotate(24deg) brightness(102%) contrast(105%);
 }
+.post-deleted{
+  color: #023E7D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.15rem;
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem;
+}

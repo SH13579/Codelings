@@ -42,9 +42,14 @@ export function useExitListenerWithAlert(setAlert, ref) {
   }, [ref, setAlert]);
 }
 
-//function to fetch 5 posts at a time
-export async function fetchPosts(setPostType, setStart, setHasMore, route) {
-  const limit = 5;
+//function to fetch 10 posts at a time
+export async function fetchPosts(
+  setPostType,
+  setStart,
+  setHasMore,
+  route,
+  limit
+) {
   try {
     const res = await fetch(route, {
       method: "GET",
@@ -57,11 +62,35 @@ export async function fetchPosts(setPostType, setStart, setHasMore, route) {
     }
     //update all the posts displayed
     setPostType((prev) => [...prev, ...data.posts]);
-    //increment the offset to fetch the next batch of 5 posts
+    //increment the offset to fetch the next batch of 10 posts
     setStart((prev) => prev + limit);
   } catch (err) {
     alert("Error: " + err.message);
   }
+}
+
+//empty container when the database fetched nothing
+export const EmptyContainer = () => {
+  return (
+    <div className="empty-container-wrapper">
+      <img className="empty-icon" src="../media/images/empty.svg" />
+      <div>Empty here...</div>
+    </div>
+  );
+};
+
+//when changing the filter, we want to make we change the states back to it's initial value so that it start at 5 posts again
+export function handleFilter(
+  setPostType,
+  setFilter,
+  setStart,
+  setHasMore,
+  filterValue
+) {
+  setPostType([]);
+  setStart(0);
+  setHasMore(true);
+  setFilter(filterValue);
 }
 
 export const UserContext = createContext(null);
