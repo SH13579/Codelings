@@ -142,6 +142,8 @@ def fetch_profile(decoded):
     return jsonify({'error': str(e)}), 500
 
 
+#-------------------- routes related to posts below ------------------------
+
 #route to create a post and insert into database
 @app.route('/create_post', methods=['POST'])
 def post_project():
@@ -328,6 +330,73 @@ def get_posts_byUser():
   except Exception as e:
     return jsonify({'error': str(e)}), 500
 
+#route to delete post
+@app.route('/delete_post', methods=['DELETE'])
+@token_required
+def delete_post(decoded):
+  if not conn:
+    return jsonify({'error': 'Database connection not established'}), 500
+  
+  data = request.get_json()
+  post_id = data.get('post_id')
+
+  try:
+    with conn.cursor() as cursor:
+     user_id = decoded['user_id']
+     cursor.execute('SELECT user_id FROM posts WHERE id = %s', (post_id,))
+     post_user_id = cursor.fetchone()[0]
+     
+     if user_id != post_user_id:
+       return jsonify({'error': '403 Forbidden'}), 403
+     
+     cursor.execute('DELETE FROM posts WHERE id = %s', (post_id,))
+     conn.commit()
+     return jsonify({'success' : 'Post has been deleted'})
+
+  except Exception as e:
+    conn.rollback()
+    return jsonify({'error': str(e)}), 500
+
+#route to get a specific post (after clicking a post in Content.jsx)
+@app.route('/get_specific_post', methods=['GET'])
+def get_specific_post():
+  if not conn:
+    return jsonify({'error': 'Database connection not established'}), 500
+  post_id = request.args.get('post_id')
+  try:
+    #post_type???
+    with conn.cursor() as cursor:
+      cursor.execute('''
+      SELECT 
+        posts.id, 
+        posts.post_date, 
+        posts.post_type, 
+        posts.title, 
+        posts.post_description, 
+        posts.post_body, 
+        posts.video_file_path, 
+        posts.likes, 
+        posts.comments, 
+        users.username, 
+        users.profile_picture
+      FROM posts
+      JOIN users ON posts.user_id = users.id
+      WHERE posts.id = %s
+      ''', (post_id,))
+
+      row = cursor.fetchone() #returns 1 row
+      if not row:
+        return jsonify({'error': 'POST NOT FOUND'}), 404
+      print(row)
+      
+    return get_posts_helper([row])
+  
+  except Exception as e:
+    return jsonify({'error': str(e)}), 500
+  
+
+#-------------------- routes related to comments below ------------------------
+
 #route to add comment(s) to a post
 @app.route('/post_comment', methods=['POST'])
 @token_required
@@ -338,6 +407,7 @@ def add_comment(decoded):
   data = request.json
   comment = data.get('comment_text')
   post_id = data.get('post_id')
+  parent_comment_id = data.get('parent_comment_id')
   
   try:
     #if fields are empty
@@ -351,7 +421,7 @@ def add_comment(decoded):
       user_id = user_id_tuple[0] #access the value to correctly insert into posts
 
       #insert new comment into comments table THEN immediately fetch the id(necessary if user deletes code right after adding comment) by SQL code: "RETURNING ID"
-      cursor.execute('INSERT INTO comments (comment, user_id, post_id, likes_count, comments_count) VALUES (%s, %s, %s, %s, %s) RETURNING id', (comment, user_id, post_id, 0, 0)) #returns (comment_id,)
+      cursor.execute('INSERT INTO comments (comment, parent_comment_id, user_id, post_id, likes_count, comments_count) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id', (comment, parent_comment_id, user_id, post_id, 0, 0)) #returns (comment_id,)
       #RETURNING clause allows to insert and immediately get back specific column from that newly inserted row
       comment_id = cursor.fetchone()[0]
       
@@ -396,32 +466,6 @@ def delete_comment(decoded):
   except Exception as e:
     conn.rollback()
     return jsonify({'error': str(e)}), 500
-  
-@app.route('/delete_post', methods=['DELETE'])
-@token_required
-def delete_post(decoded):
-  if not conn:
-    return jsonify({'error': 'Database connection not established'}), 500
-  
-  data = request.get_json()
-  post_id = data.get('post_id')
-
-  try:
-    with conn.cursor() as cursor:
-     user_id = decoded['user_id']
-     cursor.execute('SELECT user_id FROM posts WHERE id = %s', (post_id,))
-     post_user_id = cursor.fetchone()[0]
-     
-     if user_id != post_user_id:
-       return jsonify({'error': '403 Forbidden'}), 403
-     
-     cursor.execute('DELETE FROM posts WHERE id = %s', (post_id,))
-     conn.commit()
-     return jsonify({'success' : 'Post has been deleted'})
-
-  except Exception as e:
-    conn.rollback()
-    return jsonify({'error': str(e)}), 500
 
 #route to get comments from a post
 @app.route('/get_comments', methods=['GET'])
@@ -439,10 +483,11 @@ def get_comments():
   try:
     with conn.cursor() as cursor:
       cursor.execute('''
-      SELECT comments.id, comments.comment, comments.likes_count, comments.comments_count, users.username
+      SELECT comments.id, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username
       FROM comments
       JOIN users ON comments.user_id = users.id
       WHERE comments.post_id = %s
+      ORDER BY comments.id ASC
       ''', (post_id,))
 
       rows = cursor.fetchall()
@@ -451,9 +496,10 @@ def get_comments():
         data = {
           'comment_id': row[0],
           'comment': row[1],
-          'upvotes': row[2],
-          'comments_count': row[3],
-          'name': row[4]
+          'parent_comment_id': row[2],
+          'upvotes': row[3],
+          'comments_count': row[4],
+          'name': row[5]
         }
         comments_data.append(data)
 
@@ -461,45 +507,8 @@ def get_comments():
   
   except Exception as e:
     return jsonify({'error': str(e)}), 500
-
-#maybe combine with route above later
-#route to get a specific post (after clicking a post in Content.jsx)
-@app.route('/get_specific_post', methods=['GET'])
-def get_specific_post():
-  if not conn:
-    return jsonify({'error': 'Database connection not established'}), 500
-  post_id = request.args.get('post_id')
-  try:
-    #post_type???
-    with conn.cursor() as cursor:
-      cursor.execute('''
-      SELECT 
-        posts.id, 
-        posts.post_date, 
-        posts.post_type, 
-        posts.title, 
-        posts.post_description, 
-        posts.post_body, 
-        posts.video_file_path, 
-        posts.likes, 
-        posts.comments, 
-        users.username, 
-        users.profile_picture
-      FROM posts
-      JOIN users ON posts.user_id = users.id
-      WHERE posts.id = %s
-      ''', (post_id,))
-
-      row = cursor.fetchone() #returns 1 row
-      if not row:
-        return jsonify({'error': 'POST NOT FOUND'}), 404
-      print(row)
-      
-    return get_posts_helper([row])
   
-  except Exception as e:
-    return jsonify({'error': str(e)}), 500
-  
+
 # @app.route('/search', methods=['GET'])
 # def search():
 #   if not conn:

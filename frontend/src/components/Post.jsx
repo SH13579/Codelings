@@ -7,9 +7,12 @@ import { handleNavigating } from "./Content";
 
 function Comments({ postId, currentUser, token }) {
   const [commentText, setCommentText] = useState("");
+  const [replyText, setReplyText] = useState("");
   const [commentsList, setCommentsList] = useState([]);
+  const parentComments = commentsList.filter(comment => !comment.parent_comment_id); //parent comments do not have parents
+  const replies = commentsList.filter(comment => comment.parent_comment_id) //replies have a parent
+  const [replyCommentId, setReplyCommentId] = useState(null);
   const [msg, setMsg] = useState("");
-  const [userCommented, setUserCommented] = useState(false);
   const navigate = useNavigate();
 
   //fetch comments from a certain post
@@ -99,7 +102,54 @@ function Comments({ postId, currentUser, token }) {
     } catch (err) {
       alert("Error: " + err.message);
     }
+  }
+
+  const handleReplyClick = (commentId) => {
+    setReplyCommentId(commentId); //to open the box for the selected comment
+    //refer to showReplyBox below
+  }
+
+  const handleReplySubmit = async (e, parentCommentId) => {
+    e.preventDefault();
+    try {
+      //call the same route, but send different data (include parent_comment_id)
+      const res = await fetch("http://localhost:5000/post_comment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          post_id: postId,
+          comment_text: replyText,
+          parent_comment_id: parentCommentId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        const newReply = {
+          comment_id: data.commentId,
+          name: currentUser.username,
+          comment: replyText,
+          pfp: currentUser.pfp,
+          parent_comment_id: parentCommentId,
+          upvotes: 0,
+          comments_count: 0,
+        };
+        setCommentsList((prevComments) => [...prevComments, newReply]);
+        setReplyText("");
+        setReplyCommentId(null);
+        setMsg(data.success);
+      } else {
+        setMsg("");
+      }
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
   };
+
 
   return (
     <div className="comments-wrapper">
@@ -124,8 +174,10 @@ function Comments({ postId, currentUser, token }) {
       )}
       <div className="all-comments">
         {/* Fetch from database to display comments of current post*/}
-        {commentsList.map((item) => {
+        {parentComments.map((item) => {
+          const repliesList = replies.filter(reply => reply.parent_comment_id === item.comment_id) //get all replies of current Comment
           const isCommenter = currentUser && currentUser.username === item.name;
+          const showReplyBox = replyCommentId === item.comment_id; //
           return (
             <div className="comment" key={item.comment_id}>
               <div
@@ -153,7 +205,7 @@ function Comments({ postId, currentUser, token }) {
                 </span>
               </div>
               <div className="comment-buttons">
-                <div className="comment-reply">Reply</div>
+                <div className="comment-reply-button" onClick={() => handleReplyClick(item.comment_id)}>Reply</div>
                 {/*Add option to delete if user is the commenter*/}
                 {isCommenter && (
                   <div
@@ -164,6 +216,58 @@ function Comments({ postId, currentUser, token }) {
                   </div>
                 )}
               </div>
+              {/*Show reply box only for specific comment*/}
+              {showReplyBox && (
+                <form onSubmit={(e) => handleReplySubmit(e, item.comment_id)}>
+                  <div className="comment-reply-box" >
+                    <textarea 
+                      className="input"
+                      value={replyText}
+                      placeholder="Write your reply here..." 
+                      onChange={(e) => setReplyText(e.target.value)}  
+                    />
+                    <button className="comment-submit-icon-reply" type="submit">
+                      <img src="../media/images/enter.svg" />
+                    </button>
+                    <div 
+                      className="cancel-button" 
+                      onClick={() => {
+                        setReplyCommentId(null);
+                        setReplyText('');
+                      }}
+                    >Cancel</div>
+                  </div>
+                </form>
+              )}
+              {/* Comment's child replies */}
+              {repliesList.map((reply) => { //similar code to commentsList.map. replace "item" with "reply"
+                const isReplier = currentUser && currentUser.username === reply.name;
+                return (
+                  <div key={reply.comment_id} className="comment">
+                    <div
+                      className="user-info"
+                      onClick={(e) => handleNavigating(e, navigate, reply.name)}
+                    >
+                      <img className="pfp" src={`../media/images/${reply.pfp}`} />
+                      <div className="user-name">{reply.name}</div>
+                    </div>
+                    <div className="comment-text">{reply.comment}</div>
+
+                    <div className="comment-buttons">
+                      {/*Add option to delete if user is the replier*/}
+                      {isCommenter && (
+                        <div
+                          className="reply-delete"
+                          onClick={() => handleDeleteComment(reply.comment_id)}
+                        >
+                          Delete
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                )
+              })}
             </div>
           );
         })}
@@ -204,7 +308,7 @@ export default function Post() {
           console.log("FAILED TO FETCH: " + data.error);
         }
       } catch (err) {
-        alert("Error: ", err);
+        alert("Error: " + err.message);
       }
     };
     fetchPost();
