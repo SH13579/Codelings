@@ -1,16 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { handleNavigating } from "./Content";
+import { likeUnlike, UserContext } from "../utils";
 
 export default function AskAnswerCard(props) {
   const [deleted, setDeleted] = useState(false);
+  const [liked, setLiked] = useState(null);
+  const [likeCount, setLikeCount] = useState(null);
   const navigate = useNavigate();
+  const { currentUser, setShowPopup } = useContext(UserContext);
+
+  useEffect(() => {
+    setLiked(props.liked);
+  }, [props.liked]);
+
+  useEffect(() => {
+    setLikeCount(props.upvotes);
+  }, [props.upvotes]);
 
   return !deleted ? (
     <Link to={`/post/${props.id}`} className="ask-ans-wrapper">
       <div className="ask-and-ans">
         <div className="project-first-row">
-          {props.location === "home-page" && (
+          {props.location !== "profile" && (
             <div
               onClick={(e) => handleNavigating(e, navigate, props.name)}
               className="user-info"
@@ -24,29 +36,44 @@ export default function AskAnswerCard(props) {
             {props.date}
           </div>
         </div>
-        <h2 className="post-title">{props.title}</h2>
+        <h3 className="post-title">{props.title}</h3>
         <div className="upvotes-comments-wrapper">
           <span className="upvotes">
-            <img className="upvote-icon" src="../media/images/thumbs-up.svg" />
-            <div className="upvote-count">{props.upvotes}</div>
+            <img
+              onClick={(e) =>
+                likeUnlike(
+                  e,
+                  props.id,
+                  "posts",
+                  likeCount,
+                  setLiked,
+                  setLikeCount
+                )
+              }
+              className={liked ? "upvote-icon-liked" : "upvote-icon"}
+              src="../media/images/thumbs-up.svg"
+            />
+            <div className="upvote-count">{likeCount}</div>
           </span>
           <span className="comments">
             <img className="comments-icon" src="../media/images/comments.svg" />
             <div className="comment-count">{props.comments_count}</div>
           </span>
-          {props.location === "profile" && (
-            <span
-              onClick={(e) => {
-                props.showDeletePopup(e, props.id, setDeleted);
-              }}
-              className="delete"
-            >
-              <img
-                className="delete-icon"
-                src="../media/images/delete-icon.svg"
-              />
-            </span>
-          )}
+          {props.location === "profile" &&
+            currentUser &&
+            currentUser.username === props.user && (
+              <span
+                onClick={(e) => {
+                  props.showDeletePopup(e, props.id, setDeleted);
+                }}
+                className="delete"
+              >
+                <img
+                  className="delete-icon"
+                  src="../media/images/delete-icon.svg"
+                />
+              </span>
+            )}
         </div>
       </div>
     </Link>

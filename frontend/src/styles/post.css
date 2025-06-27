@@ -11,6 +11,9 @@
 .user-info{
   cursor: pointer;
 }
+.upvotes-comments-wrapper{
+  
+}
  .upvotes-comments-wrapper img{
   cursor: pointer;
  }
@@ -55,7 +58,16 @@
   background: none;
   opacity: 0.7;
 }
+.comment-text{
+  white-space: pre-line; /* allow users to go to new line */
+}
 .all-comments{
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+/* for some reason, can't do .all-comment .all-replies */
+.all-replies{
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -69,40 +81,57 @@
   padding: 0.5rem 0 0.5rem 0;
 }
 .comment-buttons{
+  width: 100%;
   display: flex;
   justify-content: space-between;
-  margin-top: 0.5rem;
   color: #0353A4;
 }
-.comment-reply-button{
+.comment-buttons .comment-reply-button{
   cursor: pointer;
+  padding-left: 2rem;
 }
-.comment-delete{
+.comment-delete-button{
   cursor: pointer;
 }
 .comment-reply-box{
   position: relative;
-  margin-bottom: 0.05rem;
+  margin-bottom: 0.5rem;
 }
-.comment-reply-box .input{
+.reply-buttons{
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: #0353A4;
+  font-weight: 500;
+}
+.reply-input{
   height: 5rem;
   width: 100%;
-  padding: 1.85rem 2.3rem 0rem 1.7rem; /* top right bottom left */
+  padding: 1.85rem 2.7rem 0rem 1.7rem; /* top right bottom left */
+  margin-top: 1rem;
   resize: none;
   border: 1px solid rgb(227, 227, 228);
   border-radius: 10px;
   box-sizing: border-box;
   font-size: 1rem;
 }
-.comment-reply-box .cancel-button{
+.cancel-button{
   cursor: pointer;
-  color: #0353A4;
+  color: white;
+  border-radius: 2rem;
+  /* margin-top: 1rem;
+  margin-bottom: 1rem; */
 }
+/* .cancel-button:hover{
+  background-color: gray;
+} */
 .comment-submit-icon-reply{
   background: none;
   border: none;
   position: absolute;
   right: 1rem;
+  top: 1rem;
   height: 5rem;
   width: 2rem;
   padding: 0;
@@ -120,9 +149,15 @@
   background: none;
   opacity: 0.7;
 }
-.reply-delete{
+.reply-reply-button{
+  cursor: pointer;
+}
+.reply-delete-button{
   cursor: pointer;
   float: right;
+}
+.view-more-button{
+  width: 100%;
 }
 .horizontal-line {
   height: 1px;
@@ -131,9 +166,9 @@
 .project-desc-post{
   margin-top: 1rem;
 }
-.post-title{
+.no-hover .post-title{
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: 1.5rem
 }
 .post-desc-post{
   margin-top: 0.75rem;

@@ -1,17 +1,19 @@
 import React, { useState, useRef, useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { handleNavigating } from "./Content";
-import { UserContext } from "../utils";
+import { UserContext, likeUnlike } from "../utils";
 
 //each individual project component
 export default function ProjectCard(props) {
   const [deleted, setDeleted] = useState(false);
+  const [liked, setLiked] = useState(props.liked);
+  const [likeCount, setLikeCount] = useState(props.upvotes);
   const handlePropagation = (e) => {
     e.stopPropagation();
     e.preventDefault();
   };
 
-  const { currentUser } = useContext(UserContext);
+  const { currentUser, setShowPopup } = useContext(UserContext);
 
   const navigate = useNavigate();
 
@@ -45,6 +47,14 @@ export default function ProjectCard(props) {
     );
   };
 
+  useEffect(() => {
+    setLikeCount(props.upvotes);
+  }, [props.upvotes]);
+
+  useEffect(() => {
+    setLiked(props.liked);
+  }, [props.liked]);
+
   //cannot do state={props} because ProjectCard takes in props that also include functions: onProfileClick={onProfileClick} & onPostClick={onPostClick}
   //Link from React Router reuires the state to be serializable (int, float, str, bool, list, dict, tuple, set, etc.) ***Functions are NOT serializable
   //Serializable: data types that can be converted into a format suitable for storage or transmission (JSON, XML, binary format), and then reconstructed later
@@ -52,7 +62,7 @@ export default function ProjectCard(props) {
     <Link to={`/post/${props.id}`} className="project-wrapper">
       <div className="project">
         <div className="project-first-row">
-          {props.location === "home-page" && (
+          {props.location !== "profile" && (
             <div
               onClick={(e) => handleNavigating(e, navigate, props.name)}
               className="user-info"
@@ -66,28 +76,41 @@ export default function ProjectCard(props) {
             {props.date}
           </div>
         </div>
-        <h2 className="post-title">{props.title}</h2>
+        <h3 className="post-title">{props.title}</h3>
         <div className="post-desc">{props.description}</div>
         <div className="upvotes-comments-wrapper">
           <span className="upvotes">
-            <img className="upvote-icon" src="../media/images/thumbs-up.svg" />
-            <div className="upvote-count">{props.upvotes}</div>
+            <img
+              onClick={(e) =>
+                likeUnlike(e, props.id, "posts", liked, setLiked, setLikeCount)
+              }
+              className={liked ? "upvote-icon-liked" : "upvote-icon"}
+              src="../media/images/thumbs-up.svg"
+            />
+            <div className="upvote-count">{likeCount}</div>
           </span>
           <span className="comments">
             <img className="comments-icon" src="../media/images/comments.svg" />
             <div className="comment-count">{props.comments_count}</div>
           </span>
-          {props.location === "profile" && currentUser && (
-            <span className="delete">
-              <img
-                onClick={(e) => {
-                  props.showDeletePopup(e, props.id, setDeleted);
-                }}
-                className="delete-icon"
-                src="../media/images/delete-icon.svg"
-              />
-            </span>
-          )}
+          {props.location === "profile" &&
+            currentUser &&
+            currentUser.username === props.user && (
+              <span className="delete">
+                <img
+                  onClick={(e) => {
+                    props.showDeletePopup(
+                      e,
+                      props.id,
+                      setDeleted,
+                      setShowPopup
+                    );
+                  }}
+                  className="delete-icon"
+                  src="../media/images/delete-icon.svg"
+                />
+              </span>
+            )}
         </div>
       </div>
     </Link>

@@ -1,4 +1,10 @@
-import React, { useCallback, useState, useEffect, useContext } from "react";
+import React, {
+  useCallback,
+  useState,
+  useEffect,
+  useContext,
+  useRef,
+} from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "../styles/post.css";
 import Profile from "./Profile";
@@ -9,35 +15,49 @@ function Comments({ postId, currentUser, token }) {
   const [commentText, setCommentText] = useState("");
   const [replyText, setReplyText] = useState("");
   const [commentsList, setCommentsList] = useState([]);
-  const parentComments = commentsList.filter(comment => !comment.parent_comment_id); //parent comments do not have parents
-  const replies = commentsList.filter(comment => comment.parent_comment_id) //replies have a parent
+  const parentComments = commentsList.filter(
+    (comment) => !comment.parent_comment_id
+  ); //parent comments do not have parents
+  const replies = commentsList.filter((comment) => comment.parent_comment_id); //replies have a parent
   const [replyCommentId, setReplyCommentId] = useState(null);
   const [msg, setMsg] = useState("");
+  const [start, setStart] = useState(0);
+  const limit = 5;
+  const [hasMoreComments, setHasMoreComments] = useState(true);
   const navigate = useNavigate();
+  const commentsRef = useRef(null);
 
-  //fetch comments from a certain post
-  useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        const res = await fetch(
-          `http://localhost:5000/get_comments?post_id=${postId}`,
-          {
-            method: "GET",
-            headers: { Accept: "application/json" },
-          }
-        );
-        const data = await res.json();
-        if (res.ok) {
-          setCommentsList(data);
-          setCommentText("");
+  //cant put useEffect around this because fetchComments() is called when user clicks "view more"
+  async function fetchComments() {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/get_comments?post_id=${postId}&start=${start}&limit=${limit}`,
+        {
+          method: "GET",
+          headers: { Accept: "application/json" },
         }
-        console.log(data);
-      } catch (err) {
-        alert("Error: " + err.message);
+      );
+      const data = await res.json();
+      if (res.ok) {
+        if (data.comments.length < limit) {
+          setHasMoreComments(false);
+        }
+        setCommentsList((prev) => [...prev, ...data.comments]);
+        setStart((prev) => prev + limit);
       }
-    };
+      console.log(data);
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  }
+
+  useEffect(() => {
+    if (commentsRef.current === true) {
+      return;
+    }
+    commentsRef.current = true;
     fetchComments();
-  }, []); //put userCommented here???
+  }, []);
 
   //post comment
   const handleCommentSubmit = async (e) => {
@@ -102,12 +122,16 @@ function Comments({ postId, currentUser, token }) {
     } catch (err) {
       alert("Error: " + err.message);
     }
-  }
+  };
 
-  const handleReplyClick = (commentId) => {
-    setReplyCommentId(commentId); //to open the box for the selected comment
-    //refer to showReplyBox below
-  }
+  const handleReplyClick = (commentId, username, isReplyingToReply) => {
+    setReplyCommentId(currentUser ? commentId : null); //if not logged in, do not show textarea
+    setReplyText(
+      isReplyingToReply && username !== currentUser.username
+        ? `@${username} `
+        : ""
+    ); //if replying to reply, @username. Refer to showReplyBox below
+  };
 
   const handleReplySubmit = async (e, parentCommentId) => {
     e.preventDefault();
@@ -150,32 +174,33 @@ function Comments({ postId, currentUser, token }) {
     }
   };
 
-
   return (
     <div className="comments-wrapper">
       <h2>Comments</h2>
-      {currentUser === undefined ? null : ( //prevent "Log in to comment" to show up for a bit after refreshing
+      {currentUser === undefined ? null : currentUser ? (
         <form className="comment-input-wrapper" onSubmit={handleCommentSubmit}>
           {/*cannot add comment if not logged in*/}
-          {currentUser ? (
-            <textarea
-              className="comment-input"
-              value={commentText}
-              placeholder="Add a comment..."
-              onChange={(e) => setCommentText(e.target.value)}
-            />
-          ) : (
-            <div className="comment-login-msg">Log in to comment</div>
-          )}
+          <textarea
+            className="comment-input"
+            value={commentText}
+            placeholder="Add a comment..."
+            onChange={(e) => setCommentText(e.target.value)}
+          />
           <button className="comment-submit-icon" type="submit">
             <img src="../media/images/enter.svg" />
           </button>
         </form>
+      ) : (
+        <div className="comment-login-msg">Log in to comment</div>
       )}
+
       <div className="all-comments">
         {/* Fetch from database to display comments of current post*/}
         {parentComments.map((item) => {
-          const repliesList = replies.filter(reply => reply.parent_comment_id === item.comment_id) //get all replies of current Comment
+          //item = parent
+          const repliesList = replies.filter(
+            (reply) => reply.parent_comment_id === item.comment_id
+          ); //get all replies of current Comment
           const isCommenter = currentUser && currentUser.username === item.name;
           const showReplyBox = replyCommentId === item.comment_id; //
           return (
@@ -203,75 +228,109 @@ function Comments({ postId, currentUser, token }) {
                   />
                   <div className="comment-count">{item.comments_count}</div>
                 </span>
-              </div>
-              <div className="comment-buttons">
-                <div className="comment-reply-button" onClick={() => handleReplyClick(item.comment_id)}>Reply</div>
-                {/*Add option to delete if user is the commenter*/}
-                {isCommenter && (
+                <div className="comment-buttons">
                   <div
-                    className="comment-delete"
-                    onClick={() => handleDeleteComment(item.comment_id)}
+                    className="comment-reply-button"
+                    onClick={() =>
+                      handleReplyClick(item.comment_id, item.name, false)
+                    }
                   >
-                    Delete
+                    Reply
                   </div>
-                )}
+                  {/*Add option to delete if user is the commenter*/}
+                  {isCommenter && (
+                    <div
+                      className="comment-delete-button"
+                      onClick={() => handleDeleteComment(item.comment_id)}
+                    >
+                      Delete
+                    </div>
+                  )}
+                </div>
               </div>
+              {/* <div className="comment-buttons"></div> */}
               {/*Show reply box only for specific comment*/}
               {showReplyBox && (
                 <form onSubmit={(e) => handleReplySubmit(e, item.comment_id)}>
-                  <div className="comment-reply-box" >
-                    <textarea 
-                      className="input"
+                  <div className="comment-reply-box">
+                    <textarea
+                      className="reply-input"
                       value={replyText}
-                      placeholder="Write your reply here..." 
-                      onChange={(e) => setReplyText(e.target.value)}  
+                      placeholder="Write your reply here..."
+                      onChange={(e) => setReplyText(e.target.value)}
                     />
                     <button className="comment-submit-icon-reply" type="submit">
                       <img src="../media/images/enter.svg" />
                     </button>
-                    <div 
-                      className="cancel-button" 
+                    <button
+                      className="cancel-button"
                       onClick={() => {
                         setReplyCommentId(null);
-                        setReplyText('');
+                        setReplyText("");
                       }}
-                    >Cancel</div>
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </form>
               )}
               {/* Comment's child replies */}
-              {repliesList.map((reply) => { //similar code to commentsList.map. replace "item" with "reply"
-                const isReplier = currentUser && currentUser.username === reply.name;
-                return (
-                  <div key={reply.comment_id} className="comment">
-                    <div
-                      className="user-info"
-                      onClick={(e) => handleNavigating(e, navigate, reply.name)}
-                    >
-                      <img className="pfp" src={`../media/images/${reply.pfp}`} />
-                      <div className="user-name">{reply.name}</div>
-                    </div>
-                    <div className="comment-text">{reply.comment}</div>
+              {/* repliesLIst && ???? */}
+              <div className="all-replies">
+                {repliesList.map((reply) => {
+                  //similar code to commentsList.map. replace "item" with "reply"
+                  const isReplier =
+                    currentUser && currentUser.username === reply.name;
+                  return (
+                    <div key={reply.comment_id} className="comment">
+                      <div
+                        className="user-info"
+                        onClick={(e) =>
+                          handleNavigating(e, navigate, reply.name)
+                        }
+                      >
+                        <img
+                          className="pfp"
+                          src={`../media/images/${reply.pfp}`}
+                        />
+                        <div className="user-name">{reply.name}</div>
+                      </div>
+                      <div className="comment-text">{reply.comment}</div>
 
-                    <div className="comment-buttons">
-                      {/*Add option to delete if user is the replier*/}
-                      {isCommenter && (
+                      <div className="reply-buttons">
                         <div
-                          className="reply-delete"
-                          onClick={() => handleDeleteComment(reply.comment_id)}
+                          className="reply-reply-button"
+                          onClick={() =>
+                            handleReplyClick(item.comment_id, reply.name, true)
+                          }
                         >
-                          Delete
+                          Reply
                         </div>
-                      )}
+                        {/*Add option to delete if user is the replier*/}
+                        {isReplier && (
+                          <div
+                            className="reply-delete-button"
+                            onClick={() =>
+                              handleDeleteComment(reply.comment_id)
+                            }
+                          >
+                            Delete
+                          </div>
+                        )}
+                      </div>
                     </div>
-
-                  </div>
-                )
-              })}
+                  );
+                })}
+              </div>
             </div>
           );
         })}
       </div>
+      {hasMoreComments && (
+        <button className="view-more-button" onClick={fetchComments}>
+          View More
+        </button>
+      )}
     </div>
   );
 }
@@ -302,7 +361,7 @@ export default function Post() {
         );
         const data = await res.json();
         if (res.ok) {
-          console.log(userCreatedPost);
+          // console.log(userCreatedPost);
           setPostInfo(data.posts[0]);
         } else {
           console.log("FAILED TO FETCH: " + data.error);
@@ -313,10 +372,6 @@ export default function Post() {
     };
     fetchPost();
   }, [postId]);
-
-  useEffect(() => {
-    console.log(postInfo);
-  }, [postInfo]);
 
   console.log("Rendering Post");
 

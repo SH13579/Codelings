@@ -1,158 +1,106 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, { useState, useContext } from "react";
 import "../styles/profile.css";
 import {
   UserContext,
   fetchPosts,
   EmptyContainer,
   handleFilter,
+  displayLiked,
+  displaySectionPosts,
 } from "../utils";
 import { useParams } from "react-router-dom";
-import ProjectCard from "./ProjectCard";
-import AskAnswerCard from "./AskAnswerCard";
+import Projects from "./Projects";
+import AskAndAnswers from "./AskAndAnswers";
 
-export default function Profile({ activeProfile, setActiveProfile }) {
+export function showDeletePopup(e, post_id, setDeleted, setShowPopup) {
+  e.preventDefault();
+  e.stopPropagation();
+  const token = sessionStorage.getItem("token");
+  async function deletePost() {
+    try {
+      const res = await fetch("http://localhost:5000/delete_post", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          post_id: post_id,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        // ❗ show the error from Python backend
+        alert("Error: " + data.error);
+        return;
+      }
+      if (res.ok) {
+        console.log(data.success);
+        setDeleted(true);
+        setShowPopup(null);
+      }
+    } catch (err) {
+      alert("Error" + err.message);
+    }
+  }
+  setShowPopup({
+    message: (
+      <div>
+        <h3>Delete Post?</h3>
+        <h4>Action cannot be restored</h4>
+      </div>
+    ),
+    buttons: [
+      {
+        label: "Yes",
+        action: deletePost,
+      },
+      {
+        label: "Cancel",
+        action: () => setShowPopup(null),
+      },
+    ],
+  });
+}
+
+export function fetchProfilePostsByCategory(
+  postType,
+  setPostType,
+  start,
+  setStart,
+  setHasMore,
+  filter,
+  limit,
+  reset = false,
+  username
+) {
+  const category = filter === "Best" ? "likes" : "post_date";
+  fetchPosts(
+    setPostType,
+    setStart,
+    setHasMore,
+    `http://localhost:5000/get_posts_byUserAndCategory?username=${encodeURIComponent(
+      username
+    )}&post_type=${encodeURIComponent(
+      postType
+    )}&category=${category}&start=${start}&limit=${limit}`,
+    limit,
+    reset
+  );
+}
+
+export default function Profile() {
   const token = sessionStorage.getItem("token");
   const [clickChat, setClickChat] = useState(false);
-  const { currentUser, setCurrentUser, setShowPopup } = useContext(UserContext);
-
-  const [projects, setProjects] = useState([]);
-  const [askAndAnswers, setAskAndAnswers] = useState([]);
-
-  const [startProject, setStartProject] = useState(0);
-  const [startQna, setStartQna] = useState(0);
-
-  const [hasMoreProject, setHasMoreProject] = useState(true);
-  const [hasMoreQna, setHasMoreQna] = useState(true);
-
-  const [projectFilter, setProjectFilter] = useState("Best");
-  const [qnaFilter, setQnaFilter] = useState("Best");
-
-  const projectRef = useRef(null);
-  const askAndAnswerRef = useRef(null);
+  const { currentUser, setCurrentUser } = useContext(UserContext);
+  const [likedPosts, setLikedPosts] = useState([]);
+  const [currentSection, setCurrentSection] = useState("project");
 
   const { username } = useParams();
 
-  function fetchPostsByCategory(
-    postType,
-    setPostType,
-    start,
-    setStart,
-    setHasMore,
-    filter,
-    limit
-  ) {
-    const category = filter === "Best" ? "likes" : "post_date";
-    fetchPosts(
-      setPostType,
-      setStart,
-      setHasMore,
-      `http://localhost:5000/get_posts_byUserAndCategory?username=${encodeURIComponent(
-        username
-      )}&post_type=${encodeURIComponent(
-        postType
-      )}&category=${category}&start=${start}&limit=${limit}`,
-      limit
-    );
-  }
+  console.log("Rendering Profile");
 
-  useEffect(() => {
-    if (!projectRef.current) {
-      projectRef.current = true;
-      return;
-    }
-    fetchPostsByCategory(
-      "project",
-      setProjects,
-      startProject,
-      setStartProject,
-      setHasMoreProject,
-      projectFilter,
-      10
-    );
-  }, [projectFilter]);
-
-  useEffect(() => {
-    if (!askAndAnswerRef.current) {
-      askAndAnswerRef.current = true;
-      return;
-    }
-    fetchPostsByCategory(
-      "qna",
-      setAskAndAnswers,
-      startQna,
-      setStartQna,
-      setHasMoreQna,
-      qnaFilter,
-      12
-    );
-  }, [qnaFilter]);
-
-  const all_projects = projects.map((item) => {
-    return (
-      <ProjectCard
-        location="profile"
-        showDeletePopup={showDeletePopup}
-        key={item.id}
-        {...item}
-      />
-    );
-  });
-
-  const all_askAndAnswers = askAndAnswers.map((item) => {
-    return (
-      <AskAnswerCard
-        location="profile"
-        showDeletePopup={showDeletePopup}
-        key={item.id}
-        {...item}
-      />
-    );
-  });
-
-  function showDeletePopup(e, post_id, setDeleted) {
-    e.preventDefault();
-    e.stopPropagation();
-    async function deletePost() {
-      try {
-        const res = await fetch("http://localhost:5000/delete_post", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            post_id: post_id,
-          }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          console.log(data.success);
-          setDeleted(true);
-          setShowPopup(null);
-        }
-      } catch (err) {
-        alert("Error" + err.message);
-      }
-    }
-    setShowPopup({
-      message: (
-        <>
-          <h3>Delete Post?</h3>
-          <h4>Action cannot be restored</h4>
-        </>
-      ),
-      buttons: [
-        {
-          label: "Yes",
-          action: deletePost,
-        },
-        {
-          label: "Cancel",
-          action: () => setShowPopup(null),
-        },
-      ],
-    });
-  }
+  displayLiked(setLikedPosts, "posts");
 
   return (
     <div className="profile-wrapper">
@@ -169,140 +117,48 @@ export default function Profile({ activeProfile, setActiveProfile }) {
         <div className="horizontal-line"></div>
         <div className="profile-posts">
           <div className="content-grid">
-            <div className="projects">
-              <div className="post-header">
-                <h2 className="post-label">Projects</h2>
-                <div className="filter-wrapper">
-                  <div className="current-filter">
-                    {projectFilter}
-                    <img
-                      className="dropdown-arrow"
-                      src="../media/images/dropdown-arrow.svg"
-                    ></img>
-                  </div>
-                  <div className="filter-dropdown">
-                    {projectFilter !== "Best" && (
-                      <div
-                        onClick={() =>
-                          handleFilter(
-                            setProjects,
-                            setProjectFilter,
-                            setStartProject,
-                            setHasMoreProject,
-                            "Best"
-                          )
-                        }
-                        className="filter"
-                      >
-                        Best
-                      </div>
-                    )}
-                    {projectFilter !== "New" && (
-                      <div
-                        onClick={() =>
-                          handleFilter(
-                            setProjects,
-                            setProjectFilter,
-                            setStartProject,
-                            setHasMoreProject,
-                            "New"
-                          )
-                        }
-                        className="filter"
-                      >
-                        New
-                      </div>
-                    )}
-                  </div>
-                </div>
+            <div className="content-navbar">
+              <div
+                onClick={() => setCurrentSection("project")}
+                className={
+                  currentSection === "project" ? "highlight" : "navbar-label"
+                }
+              >
+                <img
+                  className="projects-logo"
+                  src="../media/images/projects-logo.svg"
+                />
+                <span>Projects</span>
               </div>
-              {projects.length > 0 ? all_projects : <EmptyContainer />}
-              {hasMoreProject && (
-                <button
-                  onClick={() =>
-                    fetchPostsByCategory(
-                      "project",
-                      setProjects,
-                      startProject,
-                      setStartProject,
-                      setHasMoreProject,
-                      projectFilter
-                    )
-                  }
-                >
-                  View More
-                </button>
-              )}
-            </div>
-            <div className="ask-and-answers">
-              <div className="post-header">
-                <h2 className="post-label">Ask & Answer</h2>
-                <div className="filter-wrapper">
-                  <div className="current-filter">
-                    {qnaFilter}
-                    <img
-                      className="dropdown-arrow"
-                      src="../media/images/dropdown-arrow.svg"
-                    ></img>
-                  </div>
-                  <div className="filter-dropdown">
-                    {qnaFilter !== "Best" && (
-                      <div
-                        onClick={() =>
-                          handleFilter(
-                            setAskAndAnswers,
-                            setQnaFilter,
-                            setStartQna,
-                            setHasMoreQna,
-                            "Best"
-                          )
-                        }
-                        className="filter"
-                      >
-                        Best
-                      </div>
-                    )}
-                    {qnaFilter !== "New" && (
-                      <div
-                        onClick={() =>
-                          handleFilter(
-                            setAskAndAnswers,
-                            setQnaFilter,
-                            setStartQna,
-                            setHasMoreQna,
-                            "New"
-                          )
-                        }
-                        className="filter"
-                      >
-                        New
-                      </div>
-                    )}
-                  </div>
-                </div>
+              <div
+                onClick={() => setCurrentSection("qna")}
+                className={
+                  currentSection === "qna" ? "highlight" : "navbar-label"
+                }
+              >
+                <img
+                  className="ask-answer-logo"
+                  src="../media/images/askAnswer.svg"
+                />
+                <span>Ask & Answer</span>
               </div>
-              {askAndAnswers.length > 0 ? (
-                all_askAndAnswers
-              ) : (
-                <EmptyContainer />
-              )}
-              {hasMoreQna && (
-                <button
-                  onClick={() =>
-                    fetchPostsByCategory(
-                      "qna",
-                      setAskAndAnswers,
-                      startQna,
-                      setStartQna,
-                      setHasMoreQna,
-                      qnaFilter
-                    )
-                  }
-                >
-                  View More
-                </button>
-              )}
             </div>
+            {currentSection === "project" && (
+              <Projects
+                username={username}
+                location="profile"
+                likedPosts={likedPosts}
+                currentSection={currentSection}
+              />
+            )}
+            {currentSection === "qna" && (
+              <AskAndAnswers
+                username={username}
+                location="profile"
+                likedPosts={likedPosts}
+                currentSection={currentSection}
+              />
+            )}
           </div>
         </div>
       </div>

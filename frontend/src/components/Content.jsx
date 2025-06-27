@@ -1,14 +1,30 @@
-import React, { useRef, useState, useEffect, useContext } from "react";
+import React, { useState } from "react";
 import { Link, useFetcher, useNavigate } from "react-router-dom";
 import "../styles/content.css";
-import ProjectCard from "./ProjectCard";
-import AskAnswerCard from "./AskAnswerCard";
-import {
-  UserContext,
-  fetchPosts,
-  EmptyContainer,
-  handleFilter,
-} from "../utils";
+import Projects from "./Projects";
+import AskAndAnswers from "./AskAndAnswers";
+import { fetchPosts, displayLiked } from "../utils";
+
+export const SearchBar = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        navigate(`/search/${searchTerm}`);
+      }}
+      className="search-wrapper"
+    >
+      <input
+        className="search-bar"
+        onChange={(e) => setSearchTerm(e.target.value)}
+        type="search"
+        placeholder="Looking for something?"
+      />
+    </form>
+  );
+};
 
 //short introduction to our website and search bar
 const AboutUs = () => {
@@ -20,13 +36,7 @@ const AboutUs = () => {
           A place for tech students to showcase their work and connect with
           others
         </h2>
-        <form className="search-wrapper" action="/search" method="GET">
-          <input
-            className="search-bar"
-            type="search"
-            placeholder="Looking for something?"
-          />
-        </form>
+        <SearchBar />
       </div>
     </section>
   );
@@ -38,262 +48,82 @@ export const handleNavigating = (e, navigate, username) => {
   navigate(`/profile/${username}`);
 };
 
-export default function Content() {
-  const [projects, setProjects] = useState([]);
-  const [askAndAnswers, setAskAndAnswers] = useState([]);
-
-  const [startProject, setStartProject] = useState(0);
-  const [startQna, setStartQna] = useState(0);
-
-  const [hasMoreProject, setHasMoreProject] = useState(true);
-  const [hasMoreQna, setHasMoreQna] = useState(true);
-
-  const [projectFilter, setProjectFilter] = useState("Best");
-  const [qnaFilter, setQnaFilter] = useState("Best");
-
-  const projectRef = useRef(null);
-  const askAndAnswerRef = useRef(null);
-
-  //fetches projects and ask & answers based on whether the user filters by best or newest, default is best
-  function fetchPostsByCategory(
-    postType,
+//fetches projects and ask & answers based on whether the user filters by best or newest, default is best
+export function fetchPostsByCategory(
+  postType,
+  setPostType,
+  start,
+  setStart,
+  setHasMore,
+  filter,
+  limit,
+  reset = false
+) {
+  const category = filter === "Best" ? "likes" : "post_date";
+  fetchPosts(
     setPostType,
-    start,
     setStart,
     setHasMore,
-    filter,
-    limit
-  ) {
-    const category = filter === "Best" ? "likes" : "post_date";
-    fetchPosts(
-      setPostType,
-      setStart,
-      setHasMore,
-      `http://localhost:5000/get_postsByCategory?post_type=${encodeURIComponent(
-        postType
-      )}&category=${category}&start=${start}&limit=${limit}`,
-      limit
-    );
-  }
+    `http://localhost:5000/get_postsByCategory?post_type=${encodeURIComponent(
+      postType
+    )}&category=${category}&start=${start}&limit=${limit}`,
+    limit,
+    reset
+  );
+}
 
-  useEffect(() => {
-    if (!projectRef.current) {
-      projectRef.current = true;
-      return;
-    }
-    fetchPostsByCategory(
-      "project",
-      setProjects,
-      startProject,
-      setStartProject,
-      setHasMoreProject,
-      projectFilter,
-      10
-    );
-  }, [projectFilter]);
+export default function Content() {
+  const [likedPosts, setLikedPosts] = useState([]);
+  const [currentSection, setCurrentSection] = useState("project");
 
-  useEffect(() => {
-    if (!askAndAnswerRef.current) {
-      askAndAnswerRef.current = true;
-      return;
-    }
-    fetchPostsByCategory(
-      "qna",
-      setAskAndAnswers,
-      startQna,
-      setStartQna,
-      setHasMoreQna,
-      qnaFilter,
-      12
-    );
-  }, [qnaFilter]);
+  console.log("Rendering Content");
 
-  // useEffect(() => {
-  //   let timeout;
-  //   const handleInfiniteScroll = () => {
-  //     clearTimeout(timeout);
-  //     timeout = setTimeout(() => {
-  //       const bottomOfPage =
-  //         document.documentElement.scrollHeight - window.innerHeight;
-  //       if (window.scrollY + 300 >= bottomOfPage) {
-  //         console.log(startProject);
-  //         if (hasMoreQna) {
-  //           fetchPostsByCategory(
-  //             "qna",
-  //             setAskAndAnswers,
-  //             startQna,
-  //             setStartQna,
-  //             setHasMoreQna,
-  //             qnaFilter,
-  //             12
-  //           );
-  //         }
-  //         if (hasMoreProject) {
-  //           fetchPostsByCategory(
-  //             "project",
-  //             setProjects,
-  //             startProject,
-  //             setStartProject,
-  //             setHasMoreProject,
-  //             projectFilter,
-  //             10
-  //           );
-  //         }
-  //       }
-  //     }, 250);
-  //   };
-
-  //   window.addEventListener("scroll", handleInfiniteScroll);
-
-  //   return () => {
-  //     window.removeEventListener("scroll", handleInfiniteScroll);
-  //   };
-  // }, [startQna, startProject, hasMoreQna, hasMoreProject]);
-
-  const all_projects = projects.map((item) => {
-    return <ProjectCard location="home-page" key={item.id} {...item} />;
-  });
-
-  const all_askAndAnswers = askAndAnswers.map((item) => {
-    return <AskAnswerCard location="home-page" key={item.id} {...item} />;
-  });
+  displayLiked(setLikedPosts, "posts");
 
   return (
     <section className="content-wrapper">
       <AboutUs />
       <div className="content-grid">
-        <div className="projects">
-          <div className="post-header">
-            <h2 className="post-label">Projects</h2>
-            <div className="filter-wrapper">
-              <div className="current-filter">
-                {projectFilter}
-                <img
-                  className="dropdown-arrow"
-                  src="../media/images/dropdown-arrow.svg"
-                ></img>
-              </div>
-              <div className="filter-dropdown">
-                {projectFilter !== "Best" && (
-                  <div
-                    onClick={() =>
-                      handleFilter(
-                        setProjects,
-                        setProjectFilter,
-                        setStartProject,
-                        setHasMoreProject,
-                        "Best"
-                      )
-                    }
-                    className="filter"
-                  >
-                    Best
-                  </div>
-                )}
-                {projectFilter !== "New" && (
-                  <div
-                    onClick={() =>
-                      handleFilter(
-                        setProjects,
-                        setProjectFilter,
-                        setStartProject,
-                        setHasMoreProject,
-                        "New"
-                      )
-                    }
-                    className="filter"
-                  >
-                    New
-                  </div>
-                )}
-              </div>
-            </div>
+        <div className="content-navbar">
+          <div
+            onClick={() => setCurrentSection("project")}
+            className={
+              currentSection === "project" ? "highlight" : "navbar-label"
+            }
+          >
+            <img
+              className="projects-logo"
+              src="../media/images/projects-logo.svg"
+            />
+            <span>Projects</span>
           </div>
-          {projects.length > 0 ? all_projects : <EmptyContainer />}
-          {hasMoreProject && (
-            <button
-              onClick={() =>
-                fetchPostsByCategory(
-                  "project",
-                  setProjects,
-                  startProject,
-                  setStartProject,
-                  setHasMoreProject,
-                  projectFilter,
-                  10
-                )
-              }
-            >
-              View More
-            </button>
-          )}
-        </div>
-        <div className="ask-and-answers">
-          <div className="post-header">
-            <h2 className="post-label">Ask & Answer</h2>
-            <div className="filter-wrapper">
-              <div className="current-filter">
-                {qnaFilter}
-                <img
-                  className="dropdown-arrow"
-                  src="../media/images/dropdown-arrow.svg"
-                ></img>
-              </div>
-              <div className="filter-dropdown">
-                {qnaFilter !== "Best" && (
-                  <div
-                    onClick={() =>
-                      handleFilter(
-                        setAskAndAnswers,
-                        setQnaFilter,
-                        setStartQna,
-                        setHasMoreQna,
-                        "Best"
-                      )
-                    }
-                    className="filter"
-                  >
-                    Best
-                  </div>
-                )}
-                {qnaFilter !== "New" && (
-                  <div
-                    onClick={() =>
-                      handleFilter(
-                        setAskAndAnswers,
-                        setQnaFilter,
-                        setStartQna,
-                        setHasMoreQna,
-                        "New"
-                      )
-                    }
-                    className="filter"
-                  >
-                    New
-                  </div>
-                )}
-              </div>
-            </div>
+          <div
+            onClick={() => setCurrentSection("qna")}
+            className={currentSection === "qna" ? "highlight" : "navbar-label"}
+          >
+            <img
+              className="ask-answer-logo"
+              src="../media/images/askAnswer.svg"
+            />
+            <span>Ask & Answer</span>
           </div>
-          {askAndAnswers.length > 0 ? all_askAndAnswers : <EmptyContainer />}
-          {hasMoreQna && (
-            <button
-              onClick={() =>
-                fetchPostsByCategory(
-                  "qna",
-                  setAskAndAnswers,
-                  startQna,
-                  setStartQna,
-                  setHasMoreQna,
-                  qnaFilter,
-                  12
-                )
-              }
-            >
-              View More
-            </button>
-          )}
         </div>
+        {currentSection === "project" && (
+          <Projects
+            fetchPostsByCategory={fetchPostsByCategory}
+            location="home-page"
+            likedPosts={likedPosts}
+            currentSection={currentSection}
+          />
+        )}
+        {currentSection === "qna" && (
+          <AskAndAnswers
+            fetchPostsByCategory={fetchPostsByCategory}
+            location="home-page"
+            likedPosts={likedPosts}
+            currentSection={currentSection}
+          />
+        )}
       </div>
     </section>
   );

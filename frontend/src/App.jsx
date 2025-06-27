@@ -6,6 +6,7 @@ import Post from "./components/Post";
 import Footer from "./components/Footer";
 import Profile from "./components/Profile";
 import Popup from "./components/Popup";
+import Search from "./components/Search";
 import { UserContext } from "./utils";
 import "./styles/App.css";
 
@@ -13,9 +14,7 @@ function App() {
   const token = sessionStorage.getItem("token");
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(token ? true : false);
-  const [activeProfile, setActiveProfile] = useState(null);
   const [showPopup, setShowPopup] = useState(null);
-  const [userCreatedPost, setUserCreatedPost] = useState(null);
 
   console.log("Rendering App");
 
@@ -88,6 +87,7 @@ function App() {
             <Route path="/" element={<Content />} />
             <Route path="/profile/:username" element={<Profile />} />
             <Route path="/post/:postId" element={<Post />} />
+            <Route path="/search/:searchTerm" element={<Search />} />
           </Routes>
         </div>
         {showPopup && (
