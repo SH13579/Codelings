@@ -14,11 +14,12 @@ import { handleNavigating } from "./Content";
 function Comments({ postId, currentUser, token }) {
   const [commentText, setCommentText] = useState("");
   const [replyText, setReplyText] = useState("");
-  const [commentsList, setCommentsList] = useState([]);
-  const parentComments = commentsList.filter(
-    (comment) => !comment.parent_comment_id
-  ); //parent comments do not have parents
-  const replies = commentsList.filter((comment) => comment.parent_comment_id); //replies have a parent
+  const [parentCommentsList, setParentCommentsList] = useState([]);
+  // const [commentsList, setCommentsList] = useState([]);
+  // const parentComments = commentsList.filter(
+  //   (comment) => !comment.parent_comment_id
+  // ); //parent comments do not have parents
+  // const replies = commentsList.filter((comment) => comment.parent_comment_id); //replies have a parent
   const [replyCommentId, setReplyCommentId] = useState(null);
   const [msg, setMsg] = useState("");
   const [start, setStart] = useState(0);
@@ -42,7 +43,7 @@ function Comments({ postId, currentUser, token }) {
         if (data.comments.length < limit) {
           setHasMoreComments(false);
         }
-        setCommentsList((prev) => [...prev, ...data.comments]);
+        setParentCommentsList((prev) => [...prev, ...data.comments]);
         setStart((prev) => prev + limit);
       }
       console.log(data);
@@ -87,7 +88,7 @@ function Comments({ postId, currentUser, token }) {
           comments_count: 0,
         };
         //show newly created comment immediately on frontend
-        setCommentsList((prevComments) => [...prevComments, newComment]);
+        setParentCommentsList((prev) => [...prev, { ...newComment, replies: [] }]);
         setCommentText(""); //empty input after adding comment
         setMsg(data.success);
       } else {
@@ -113,9 +114,22 @@ function Comments({ postId, currentUser, token }) {
       );
       const data = await res.json();
       if (res.ok) {
-        setCommentsList((prevComments) =>
+        setParentCommentsList((prevComments) =>
           prevComments.filter((comment) => comment.comment_id !== commentId)
         );
+
+        setParentCommentsList((prev) => 
+          prev.map((comment) =>
+            comment.comment_id === commentId ? null //if deleting parent comment, delete entire comment (including replies)
+            : { //if deleting reply
+                ...comment,
+                replies: comment.replies?.filter( //go through each reply and keep the ones where commentId do not match (matching id's = delete)
+                  (reply) => reply.comment_id !== commentId
+                )
+              }
+          )
+          // .filter(Boolean) //remove any null values from the list
+        )
       } else {
         alert(data.error);
       }
@@ -162,7 +176,17 @@ function Comments({ postId, currentUser, token }) {
           upvotes: 0,
           comments_count: 0,
         };
-        setCommentsList((prevComments) => [...prevComments, newReply]);
+        setParentCommentsList((prev) =>
+          prev.map((comment) => //go through each parent comment
+            comment.comment_id === parentCommentId //find reply's parent comment and update the parent comment's replies list
+              ? {
+                  ...comment,
+                  replies: [...(comment.replies || []), newReply],
+                }
+              : comment //if parent comment is not parent of reply, leave it unchanged
+          )
+        );
+
         setReplyText("");
         setReplyCommentId(null);
         setMsg(data.success);
@@ -196,11 +220,9 @@ function Comments({ postId, currentUser, token }) {
 
       <div className="all-comments">
         {/* Fetch from database to display comments of current post*/}
-        {parentComments.map((item) => {
+        {parentCommentsList.map((item) => {
           //item = parent
-          const repliesList = replies.filter(
-            (reply) => reply.parent_comment_id === item.comment_id
-          ); //get all replies of current Comment
+          const repliesList = item.replies || []; //get all replies of current Comment
           const isCommenter = currentUser && currentUser.username === item.name;
           const showReplyBox = replyCommentId === item.comment_id; //
           return (
@@ -264,6 +286,7 @@ function Comments({ postId, currentUser, token }) {
                     </button>
                     <button
                       className="cancel-button"
+                      type="button"
                       onClick={() => {
                         setReplyCommentId(null);
                         setReplyText("");

@@ -563,32 +563,55 @@ def get_comments():
     if not conn:
         return jsonify({"error": "Database connection not established"}), 500
 
-    start = request.args.get("start")
-    limit = request.args.get("limit")
-    # get post_id from url
-    post_id = request.args.get("post_id")
-    # if not post_id:
-    #     return jsonify({'error': 'post_id is missing'}), 400
-
-    # REMINDER TO ADD WHEN COMMENT WAS CREATED
+     # REMINDER TO ADD WHEN COMMENT WAS CREATED
+     
     try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                """
-      SELECT comments.id, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username
-      FROM comments
-      JOIN users ON comments.user_id = users.id
-      WHERE comments.post_id = %s
-      ORDER BY comments.id ASC
-      LIMIT %s OFFSET %s
-      """,
-                (post_id, limit, start),
-            )
+        start = int(request.args.get("start", 0))
+        limit = int(request.args.get("limit", 5))
+        post_id = request.args.get("post_id")
 
-            rows = cursor.fetchall()
-            comments_data = []
-            for row in rows:
-                data = {
+        with conn.cursor() as cursor:
+            #get parents comments
+            cursor.execute("""
+                SELECT comments.id, comments.comment, comments.likes_count, comments.comments_count, users.username
+                FROM comments
+                JOIN users ON comments.user_id = users.id
+                WHERE comments.post_id = %s AND comments.parent_comment_id IS NULL
+                ORDER BY comments.id ASC
+                LIMIT %s OFFSET %s
+            """, (post_id, limit, start))
+            parents = cursor.fetchall()
+            parent_ids = [row[0] for row in parents]
+
+            #each comment contains info including its children(replies)
+            parent_map = {}
+            for row in parents:
+                comment_id = row[0]
+                parent_map[comment_id] = {
+                    "comment_id": comment_id,
+                    "comment": row[1],
+                    "parent_comment_id": None,
+                    "upvotes": row[2],
+                    "comments_count": row[3],
+                    "name": row[4],
+                    "replies": [] #list of maps/dictionaries
+                }
+
+            #get replies for each parent
+            replies = []
+            if parent_ids: #if parent comments exist, fetch the replies of each comment
+                cursor.execute("""
+                    SELECT comments.id, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username
+                    FROM comments
+                    JOIN users ON comments.user_id = users.id
+                    WHERE comments.parent_comment_id IN %s
+                    ORDER BY comments.id ASC
+                """, ((tuple(parent_ids),))) #parent_ids is a list, so convert to list. (tuple of tuple)
+                replies = cursor.fetchall()
+
+            #each reply contains info
+            for row in replies:
+                reply_map = {
                     "comment_id": row[0],
                     "comment": row[1],
                     "parent_comment_id": row[2],
@@ -596,11 +619,13 @@ def get_comments():
                     "comments_count": row[4],
                     "name": row[5],
                 }
-                comments_data.append(data)
+                #row[2] = parent_comment_id
+                parent_map[row[2]]["replies"].append(reply_map) #find parent comment and append to reply list
 
-        return jsonify({"comments": comments_data})
+            return jsonify({"comments": list(parent_map.values())})
 
     except Exception as e:
+        conn.rollback()
         return jsonify({"error": str(e)}), 500
 
 
