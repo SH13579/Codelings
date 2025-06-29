@@ -81,14 +81,19 @@ function Comments({ postId, currentUser, token }) {
       if (res.ok) {
         const newComment = {
           comment_id: data.commentId, //fetch comment_id from database table(necessary to delete comment immediately)
+          date: data.date,
           name: currentUser.username,
           comment: commentText, //data.commentText unnecessary
           pfp: currentUser.pfp,
           upvotes: 0,
           comments_count: 0,
         };
-        //show newly created comment immediately on frontend
-        setParentCommentsList((prev) => [...prev, { ...newComment, replies: [] }]);
+        //only show newly created comment imemdiately on frontend if there are less than 5 comments
+        setParentCommentsList((prev) => 
+          prev.length < limit ? [...prev, { ...newComment, replies: [] }] : prev);
+        if (parentCommentsList.length < limit){
+          setStart((prev) => prev + 1); //increase offset by 1 to prevent duplicates 
+        }
         setCommentText(""); //empty input after adding comment
         setMsg(data.success);
       } else {
@@ -138,6 +143,7 @@ function Comments({ postId, currentUser, token }) {
     }
   };
 
+
   const handleReplyClick = (commentId, username, isReplyingToReply) => {
     setReplyCommentId(currentUser ? commentId : null); //if not logged in, do not show textarea
     setReplyText(
@@ -169,6 +175,7 @@ function Comments({ postId, currentUser, token }) {
       if (res.ok) {
         const newReply = {
           comment_id: data.commentId,
+          date: data.date,
           name: currentUser.username,
           comment: replyText,
           pfp: currentUser.pfp,
@@ -233,6 +240,10 @@ function Comments({ postId, currentUser, token }) {
               >
                 <img className="pfp" src={`../media/images/${item.pfp}`} />
                 <div className="user-name">{item.name}</div>
+                <div className="post-date">
+                  <span className="post-date-dot">&#8226;</span>
+                  {item.date}
+                </div>
               </div>
               <div className="comment-text">{item.comment}</div>
               <div className="upvotes-comments-wrapper">
@@ -317,7 +328,13 @@ function Comments({ postId, currentUser, token }) {
                           src={`../media/images/${reply.pfp}`}
                         />
                         <div className="user-name">{reply.name}</div>
+                        <div className="post-date">
+                          <span className="post-date-dot">&#8226;</span>
+                          {reply.date}
+                        </div>
                       </div>
+                      
+
                       <div className="comment-text">{reply.comment}</div>
 
                       <div className="reply-buttons">
