@@ -230,35 +230,40 @@ def post_project():
         return jsonify({"error": str(e)}), 500
 
 
+def get_post_date(row):
+    now = datetime.datetime.now()
+    time_difference = now - row[1]
+    seconds = round(time_difference.total_seconds())
+    minutes = round(seconds / 60)
+    hours = round(seconds / 3600)
+    days = time_difference.days
+    if minutes < 1:
+        difference = "Just now"
+    elif hours < 1:
+        if minutes <= 1:
+            difference = f"A minute ago"
+        else:
+            difference = f"{minutes} minutes ago"
+    elif hours <= 24:
+        if hours <= 1:
+            difference = f"An hour ago"
+        else:
+            difference = f"{hours} hours ago"
+    else:
+        if days <= 1:
+            difference = f"{days} day ago"
+        else:
+            difference = f"{days} days ago"
+    return difference
+
+
 def get_posts_helper(rows, columns):
     posts = []
     now = datetime.datetime.now()
 
     # iterate through columns and fill in the dictionary with each row fetched from rows
     for row in rows:
-        time_difference = now - row[1]
-        seconds = round(time_difference.total_seconds())
-        minutes = round(seconds / 60)
-        hours = round(seconds / 3600)
-        days = time_difference.days
-        if minutes < 1:
-            difference = "Just now"
-        elif hours < 1:
-            if minutes <= 1:
-                difference = f"A minute ago"
-            else:
-                difference = f"{minutes} minutes ago"
-        elif hours <= 24:
-            if hours <= 1:
-                difference = f"An hour ago"
-            else:
-                difference = f"{hours} hours ago"
-        else:
-            if days <= 1:
-                difference = f"{days} day ago"
-            else:
-                difference = f"{days} days ago"
-
+        difference = get_post_date(row)
         post_dict = dict(zip(columns, row))
         post_dict["date"] = difference
 
@@ -296,10 +301,15 @@ def get_posts():
           posts.likes,
           posts.comments,
           users.username,
-          users.profile_picture
+          users.profile_picture,
+          array_agg(tags.tag_name) AS tag_name
         FROM posts
         JOIN users ON posts.user_id = users.id
+        LEFT JOIN post_tags ON posts.id = post_tags.post_id
+        LEFT JOIN tags ON post_tags.tag_id = tags.id
         WHERE posts.post_type = %s
+        GROUP BY posts.id, posts.post_date, posts.post_type, posts.title,
+        posts.post_description, posts.likes, posts.comments, users.username, users.profile_picture
         ORDER BY posts.{category} DESC
         LIMIT %s OFFSET %s
       """
@@ -317,6 +327,7 @@ def get_posts():
             "comments_count",
             "name",
             "pfp",
+            "tags",
         ]
 
         posts = get_posts_helper(rows, columns)
@@ -326,6 +337,7 @@ def get_posts():
         return jsonify({"error": str(e)}), 500
 
 
+# used to fetch the posts for a specific user on a profile
 @app.route("/get_posts_byUserAndCategory", methods=["GET"])
 def get_posts_byUser():
     if not conn:
@@ -358,16 +370,22 @@ def get_posts_byUser():
           posts.likes,
           posts.comments,
           users.username,
-          users.profile_picture
+          users.profile_picture,
+          array_agg(tags.tag_name) AS tag_name
         FROM posts 
         JOIN users on posts.user_id = users.id
-        WHERE users.username = %s AND post_type = %s
+        LEFT JOIN post_tags ON posts.id = post_tags.post_id
+        LEFT JOIN tags ON post_tags.tag_id = tags.id
+        WHERE users.username = %s AND posts.post_type = %s
+        GROUP BY posts.id, posts.post_date, posts.post_type, posts.title,
+        posts.post_description, posts.likes, posts.comments, users.username, users.profile_picture
         ORDER BY posts.{category} DESC
         LIMIT %s OFFSET %s 
       """
             cursor.execute(query, (username, post_type, limit, start))
 
             rows = cursor.fetchall()
+            print(rows)
 
         columns = [
             "id",
@@ -379,6 +397,7 @@ def get_posts_byUser():
             "comments_count",
             "name",
             "pfp",
+            "tags",
         ]
 
         posts = get_posts_helper(rows, columns)
@@ -482,7 +501,7 @@ def get_specific_post():
 # route to add comment(s) to a post
 @app.route("/post_comment", methods=["POST"])
 @token_required
-def add_comment(decoded):
+def post_comment(decoded):
     if not conn:
         return jsonify({"error": "Database connection not established"}), 500
 
@@ -507,18 +526,30 @@ def add_comment(decoded):
                 0
             ]  # access the value to correctly insert into posts
 
-            # insert new comment into comments table THEN immediately fetch the id(necessary if user deletes code right after adding comment) by SQL code: "RETURNING ID"
+            # insert new comment into comments table THEN immediately fetch the id(necessary if user deletes comment right after adding comment) by SQL code: "RETURNING ID"
             cursor.execute(
-                "INSERT INTO comments (comment, comment_date, parent_comment_id, user_id, post_id, likes_count, comments_count) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id, comment_date",
+                "INSERT INTO comments (comment, comment_date, parent_comment_id, user_id, post_id, likes_count, comments_count) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id",
                 (comment, comment_date, parent_comment_id, user_id, post_id, 0, 0),
-            )  # returns (comment_id,)
-            # RETURNING clause allows to insert and immediately get back specific column from that newly inserted row
-            comment_id, comment_date = cursor.fetchone()
-        conn.commit()
-        
+            )
+            new_comment_id = cursor.fetchone()[0]
+
+            # update number of counts in posts table
+            cursor.execute(
+                "UPDATE posts SET comments = comments + 1 WHERE id = %s ", (post_id,)
+            )
+
+            # update number of counts in comments table
+            if parent_comment_id:  # if deleting reply
+                cursor.execute(
+                    "UPDATE comments SET comments_count = comments_count + 1 WHERE id = %s",
+                    (parent_comment_id,),
+                )
+
+            conn.commit()
+
         return (
             jsonify(
-                {"success": "Your comment has been posted", "commentId": comment_id, "date": comment_date}
+                {"success": "Your comment has been posted", "commentId": new_comment_id}
             ),
             201,
         )
@@ -537,6 +568,8 @@ def delete_comment(decoded):
 
     data = request.get_json()
     comment_id = data.get("comment_id")
+    post_id = data.get("post_id")
+    parent_comment_id = data.get("parent_comment_id")
 
     try:
         with conn.cursor() as cursor:
@@ -552,9 +585,21 @@ def delete_comment(decoded):
                 return jsonify({"error": "Cannot delete"})
 
             cursor.execute("DELETE FROM comments WHERE id = %s", (comment_id,))
+
+            # update number of comments in posts table
+            cursor.execute(
+                "UPDATE posts SET comments = comments - 1 WHERE id = %s", (post_id,)
+            )
+
+            # update number of comments in comments table
+            if parent_comment_id:
+                cursor.execute(
+                    "UPDATE comments SET comments_count = comments_count - 1 WHERE id = %s",
+                    (parent_comment_id,),
+                )
             conn.commit()
 
-            return jsonify({"sucess": "Comment deleted successfully"})
+            return jsonify({"success": "Comment deleted successfully"})
 
     except Exception as e:
         conn.rollback()
@@ -567,21 +612,24 @@ def get_comments():
     if not conn:
         return jsonify({"error": "Database connection not established"}), 500
 
+    start = int(request.args.get("start"))
+    limit = int(request.args.get("limit"))
+    post_id = request.args.get("post_id")
     try:
-        start = int(request.args.get("start", 0))
-        limit = int(request.args.get("limit", 5))
-        post_id = request.args.get("post_id")
 
         with conn.cursor() as cursor:
-            #get parents comments
-            cursor.execute("""
+            # get parents comments
+            cursor.execute(
+                """
                 SELECT comments.id, comments.comment_date, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username
                 FROM comments
                 JOIN users ON comments.user_id = users.id
                 WHERE comments.post_id = %s AND comments.parent_comment_id IS NULL
                 ORDER BY comments.id ASC
                 LIMIT %s OFFSET %s
-            """, (post_id, limit, start))
+            """,
+                (post_id, limit, start),
+            )
             parents = cursor.fetchall()
             columns = [
                 "comment_id",
@@ -590,40 +638,64 @@ def get_comments():
                 "parent_comment_id",
                 "upvotes",
                 "comments_count",
-                "name"
+                "name",
             ]
             parents_list = get_posts_helper(parents, columns)
-            parent_map = {
-                parent['comment_id']: {**parent, 'replies': []} for parent in parents_list
-            }
-            parent_ids = list(parent_map.keys())
+            for parent in parents_list:
+                parent["has_replies"] = int(parent["comments_count"]) > 0
 
-            #get replies for each parent
-            replies = []
-            if parent_ids: #if parent comments exist, fetch the replies of each comment
-                cursor.execute("""
-                    SELECT comments.id, comments.comment_date, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username
-                    FROM comments
-                    JOIN users ON comments.user_id = users.id
-                    WHERE comments.parent_comment_id IN %s
-                    ORDER BY comments.id ASC
-                """, ((tuple(parent_ids),))) #parent_ids is a list, so convert to list. (tuple of tuple)
-                replies = cursor.fetchall()
-                replies_list = get_posts_helper(replies, columns)
-
-                #go through all replies fetched from database and to replies list on parent_map
-                for reply in replies_list:
-                    parent_id = reply['parent_comment_id'] #get id of parent comment
-                    if parent_id in parent_map: #find parent comment and append to reply list
-                        parent_map[parent_id]['replies'].append(reply)
-
-            return jsonify({"comments": list(parent_map.values())}) #list of comment objects
+            return jsonify({"comments": parents_list})
 
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500
 
 
+# route to get replies from a comment
+@app.route("/get_replies", methods=["GET"])
+def get_replies():
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 500
+
+    start = int(request.args.get("start"))
+    limit = int(request.args.get("limit"))
+    parent_comment_id = request.args.get("parent_comment_id")
+
+    try:
+
+        with conn.cursor() as cursor:
+            # get parents comments
+            cursor.execute(
+                """
+                SELECT comments.id, comments.comment_date, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username
+                FROM comments
+                JOIN users ON comments.user_id = users.id
+                WHERE comments.parent_comment_id = %s
+                ORDER BY comments.id ASC
+                LIMIT %s OFFSET %s
+            """,
+                (parent_comment_id, limit, start),
+            )
+            replies = cursor.fetchall()
+            columns = [
+                "comment_id",
+                "date",
+                "comment",
+                "parent_comment_id",
+                "upvotes",
+                "comments_count",
+                "name",
+            ]
+            replies_list = get_posts_helper(replies, columns)
+
+            return jsonify({"replies": replies_list})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# allows the user to like and unlike a post
 @app.route("/like_unlike", methods=["POST"])
 @token_required
 def like_unlike_post(decoded):
@@ -677,6 +749,7 @@ def like_unlike_post(decoded):
         return jsonify({"error": str(e)}), 500
 
 
+# fetch all the liked posts the current user has
 @app.route("/fetch_likes", methods=["GET"])
 @token_required
 def fetch_likes(decoded):
@@ -703,6 +776,7 @@ def fetch_likes(decoded):
         return jsonify({"error": str(e)}), 500
 
 
+# fetches the posts that contains the keyword the user entered
 @app.route("/search_posts", methods=["GET"])
 def search_posts():
     if not conn:
@@ -711,6 +785,7 @@ def search_posts():
     search_term = request.args.get("search_term")
     limit = request.args.get("limit")
     offset = request.args.get("offset")
+    post_type = request.args.get("post_type")
 
     try:
         with conn.cursor() as cursor:
@@ -727,11 +802,11 @@ def search_posts():
                       users.profile_picture
                     FROM posts
                     JOIN users ON posts.user_id = users.id
-                    WHERE posts.title LIKE %s 
+                    WHERE posts.title LIKE %s AND posts.post_type = %s
                     LIMIT %s OFFSET %s
                   """
             search_str = f"%{search_term}%"
-            cursor.execute(query, (search_str, limit, offset))
+            cursor.execute(query, (search_str, post_type, limit, offset))
             posts = cursor.fetchall()
 
             columns = [
@@ -754,6 +829,7 @@ def search_posts():
         return jsonify({"error": str(e)}), 500
 
 
+# fetches the profiles that has contains the keyword the user entered
 @app.route("/search_profiles", methods=["GET"])
 def search_profiles():
     if not conn:
@@ -783,6 +859,88 @@ def search_profiles():
 
         return jsonify({"profiles": profiles_arr})
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# fetch all the tags on the website
+@app.route("/fetch_tags", methods=["GET"])
+def fetch_tags():
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 500
+
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT tag_name, post_type FROM tags")
+            tags = cursor.fetchall()
+        all_tags = []
+        for tag in tags:
+            all_tags.append({"tag_name": tag[0], "post_type": tag[1]})
+
+        return jsonify({"tags": all_tags})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# fetch all the posts for a specific tag
+@app.route("/fetch_specific_tag", methods=["GET"])
+def fetch_specific_tag():
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 500
+
+    target_tag = request.args.get("target_tag")
+    post_type = request.args.get("post_type")
+    start = request.args.get("start")
+    limit = request.args.get("limit")
+    category = request.args.get("category")
+    categories = ["likes", "post_date"]
+    if category not in categories:
+        return jsonify({"Error: ": "Invalid filter type"})
+
+    try:
+        with conn.cursor() as cursor:
+            query = f"""SELECT 
+                        posts.id,
+                        posts.post_date,
+                        posts.post_type,
+                        posts.title, 
+                        posts.post_description, 
+                        posts.likes,
+                        posts.comments,
+                        users.username,
+                        users.profile_picture,
+                        array_agg(tags.tag_name) AS tag_name
+                        FROM posts
+                        JOIN users ON posts.user_id = users.id
+                        LEFT JOIN post_tags ON posts.id = post_tags.post_id
+                        LEFT JOIN tags ON post_tags.tag_id = tags.id
+                        WHERE tags.post_type = %s
+                        GROUP BY posts.id, posts.post_date, posts.post_type, posts.title, 
+                        posts.post_description, posts.likes, posts.comments,
+                        users.username, users.profile_picture
+                        HAVING %s = ANY(array_agg(tags.tag_name))
+                        ORDER BY posts.{category} DESC
+                        LIMIT %s OFFSET %s"""
+            cursor.execute(
+                query,
+                (post_type, target_tag, limit, start),
+            )
+            posts = cursor.fetchall()
+            columns = [
+                "id",
+                "date",
+                "type",
+                "title",
+                "description",
+                "upvotes",
+                "comments_count",
+                "name",
+                "pfp",
+                "tags",
+            ]
+            posts_arr = get_posts_helper(posts, columns)
+            return jsonify({"posts": posts_arr})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
