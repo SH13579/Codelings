@@ -18,13 +18,16 @@
   cursor: pointer;
  }
 .comment{
-  border: 1px solid rgb(228, 227, 227);
+  /* border: 1px solid rgb(228, 227, 227); */
   border-radius: 10px;
-  padding: 1.25rem 1.25rem 1.25rem 1.25rem;
+  padding: 1.25rem 1.25rem 1.25rem 0rem;
 }
 .comment-input-wrapper{
   position: relative;
   margin-bottom: 0.05rem;
+}
+.all-replies{
+  padding-left: 1.25rem
 }
 .comment-input{
   height: 5rem;

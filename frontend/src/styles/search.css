@@ -3,11 +3,13 @@
   gap: 1rem;
   max-width: 100%;
   flex-wrap: wrap;
+  margin-top: 2.5rem;
 }
-.searched-posts{
+.searched-profiles-wrapper{
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  flex: 1 1;
 }
 .searched-profiles{
   display: flex;
@@ -22,17 +24,6 @@
   margin-left: 1rem;
   font-size: 1.15rem;
 }
-.search-results .horizontal-line{
-  
-  border: 1px solid black;
-  width: 10rem;
-}
-.searched-profiles-wrapper{
-  flex: 1 1 20rem;
-}
-.searched-posts-wrapper{
-  flex: 1 1 44rem;
-}
 .search-profile{
   padding: 1rem;
   cursor: pointer;
@@ -41,4 +32,7 @@
 .search-profile:hover{
   background-color: rgba(239, 239, 239, 0.725);
   transition: background-color 0.2s ease;
+}
+.search-results .content-navbar{
+  padding-top: 3.1rem;
 }

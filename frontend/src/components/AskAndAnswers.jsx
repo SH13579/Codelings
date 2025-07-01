@@ -1,29 +1,17 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import { displaySectionPosts, EmptyContainer } from "../utils";
-import { fetchPostsByCategory } from "./Content";
-import { fetchProfilePostsByCategory, showDeletePopup } from "./Profile";
+import { showDeletePopup } from "./Profile";
 import AskAnswerCard from "./AskAnswerCard";
 
 export default function AskAndAnswers(props) {
-  const [askAndAnswers, setAskAndAnswers] = useState([]);
-  const [startQna, setStartQna] = useState(0);
-  const [hasMoreQna, setHasMoreQna] = useState(true);
-  const [qnaFilter, setQnaFilter] = useState("Best");
+  //display the initial batch of 10 posts every time the user changes the filter or section
+  useEffect(() => {
+    props.setHasMoreQna(true);
+    props.displaySectionPosts();
+  }, [props.qnaFilter, props.currentSection, props.searchTerm]);
 
-  displaySectionPosts(
-    props.currentSection,
-    props.location === "home-page" //different routes for backend for both sections
-      ? fetchPostsByCategory
-      : fetchProfilePostsByCategory,
-    setAskAndAnswers,
-    startQna,
-    setStartQna,
-    setHasMoreQna,
-    qnaFilter,
-    props.username //only for profile section
-  );
-
-  const all_askAndAnswers = askAndAnswers.map((item) => {
+  //map through all the qnas
+  const all_askAndAnswers = props.askAndAnswers.map((item) => {
     return (
       <AskAnswerCard
         location={props.location}
@@ -41,44 +29,32 @@ export default function AskAndAnswers(props) {
         <h2 className="post-label">Ask & Answer</h2>
         <div className="filter-wrapper">
           <div className="current-filter">
-            {qnaFilter}
+            {props.qnaFilter}
             <img
               className="dropdown-arrow"
               src="../media/images/dropdown-arrow.svg"
             ></img>
           </div>
           <div className="filter-dropdown">
-            {qnaFilter !== "Best" && (
-              <div onClick={() => setQnaFilter("Best")} className="filter">
+            {props.qnaFilter !== "Best" && (
+              <div
+                onClick={() => props.setQnaFilter("Best")}
+                className="filter"
+              >
                 Best
               </div>
             )}
-            {qnaFilter !== "New" && (
-              <div onClick={() => setQnaFilter("New")} className="filter">
+            {props.qnaFilter !== "New" && (
+              <div onClick={() => props.setQnaFilter("New")} className="filter">
                 New
               </div>
             )}
           </div>
         </div>
       </div>
-      {askAndAnswers.length > 0 ? all_askAndAnswers : <EmptyContainer />}
-      {hasMoreQna && (
-        <button
-          onClick={() =>
-            fetchPostsByCategory(
-              "qna",
-              setAskAndAnswers,
-              startQna,
-              setStartQna,
-              setHasMoreQna,
-              qnaFilter,
-              10,
-              props.username
-            )
-          }
-        >
-          View More
-        </button>
+      {props.askAndAnswers.length > 0 ? all_askAndAnswers : <EmptyContainer />}
+      {props.hasMoreQna && (
+        <button onClick={props.fetchMorePosts}>View More</button>
       )}
     </div>
   );

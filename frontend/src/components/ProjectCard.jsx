@@ -47,6 +47,16 @@ export default function ProjectCard(props) {
     );
   };
 
+  const Tags = () => {
+    if (props.tags[0] === null) {
+      return;
+    }
+    const all_tags = props.tags.map((item) => {
+      return <div className="post-tag">#{item}</div>;
+    });
+    return <div className="post-tags">{all_tags}</div>;
+  };
+
   useEffect(() => {
     setLikeCount(props.upvotes);
   }, [props.upvotes]);
@@ -55,9 +65,6 @@ export default function ProjectCard(props) {
     setLiked(props.liked);
   }, [props.liked]);
 
-  //cannot do state={props} because ProjectCard takes in props that also include functions: onProfileClick={onProfileClick} & onPostClick={onPostClick}
-  //Link from React Router reuires the state to be serializable (int, float, str, bool, list, dict, tuple, set, etc.) ***Functions are NOT serializable
-  //Serializable: data types that can be converted into a format suitable for storage or transmission (JSON, XML, binary format), and then reconstructed later
   return !deleted ? (
     <Link to={`/post/${props.id}`} className="project-wrapper">
       <div className="project">
@@ -78,6 +85,7 @@ export default function ProjectCard(props) {
         </div>
         <h3 className="post-title">{props.title}</h3>
         <div className="post-desc">{props.description}</div>
+        {props.tags && <Tags />}
         <div className="upvotes-comments-wrapper">
           <span className="upvotes">
             <img

@@ -1,29 +1,17 @@
-import React, { useState, useRef, useEffect } from "react";
-import { handleFilter, displaySectionPosts, EmptyContainer } from "../utils";
-import { fetchPostsByCategory } from "./Content";
-import { fetchProfilePostsByCategory, showDeletePopup } from "./Profile";
+import React, { useEffect } from "react";
+import { EmptyContainer } from "../utils";
+import { showDeletePopup } from "./Profile";
 import ProjectCard from "./ProjectCard";
 
 export default function Projects(props) {
-  const [projects, setProjects] = useState([]);
-  const [startProject, setStartProject] = useState(0);
-  const [hasMoreProject, setHasMoreProject] = useState(true);
-  const [projectFilter, setProjectFilter] = useState("Best");
+  //display the initial batch of 10 posts every time the user changes the filter or section
+  useEffect(() => {
+    props.setHasMoreProject(true);
+    props.displaySectionPosts();
+  }, [props.projectFilter, props.currentSection, props.searchTerm]);
 
-  displaySectionPosts(
-    props.currentSection,
-    props.location === "home-page" //different routes for backend for both sections
-      ? fetchPostsByCategory
-      : fetchProfilePostsByCategory,
-    setProjects,
-    startProject,
-    setStartProject,
-    setHasMoreProject,
-    projectFilter,
-    props.username //only for profile section
-  );
-
-  const all_projects = projects.map((item) => {
+  //map through all the projects
+  const all_projects = props.projects.map((item) => {
     return (
       <ProjectCard
         location={props.location}
@@ -40,46 +28,39 @@ export default function Projects(props) {
     <div className="projects">
       <div className="post-header">
         <h2 className="post-label">Projects</h2>
-        <div className="filter-wrapper">
-          <div className="current-filter">
-            {projectFilter}
-            <img
-              className="dropdown-arrow"
-              src="../media/images/dropdown-arrow.svg"
-            ></img>
+        {props.projectFilter && (
+          <div className="filter-wrapper">
+            <div className="current-filter">
+              {props.projectFilter}
+              <img
+                className="dropdown-arrow"
+                src="../media/images/dropdown-arrow.svg"
+              ></img>
+            </div>
+            <div className="filter-dropdown">
+              {props.projectFilter !== "Best" && (
+                <div
+                  onClick={() => props.setProjectFilter("Best")}
+                  className="filter"
+                >
+                  Best
+                </div>
+              )}
+              {props.projectFilter !== "New" && (
+                <div
+                  onClick={() => props.setProjectFilter("New")}
+                  className="filter"
+                >
+                  New
+                </div>
+              )}
+            </div>
           </div>
-          <div className="filter-dropdown">
-            {projectFilter !== "Best" && (
-              <div onClick={() => setProjectFilter("Best")} className="filter">
-                Best
-              </div>
-            )}
-            {projectFilter !== "New" && (
-              <div onClick={() => setProjectFilter("New")} className="filter">
-                New
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
-      {projects.length > 0 ? all_projects : <EmptyContainer />}
-      {hasMoreProject && (
-        <button
-          onClick={() =>
-            fetchPostsByCategory(
-              "project",
-              setProjects,
-              startProject,
-              setStartProject,
-              setHasMoreProject,
-              projectFilter,
-              10,
-              props.username
-            )
-          }
-        >
-          View More
-        </button>
+      {props.projects.length > 0 ? all_projects : <EmptyContainer />}
+      {props.hasMoreProject && (
+        <button onClick={props.fetchMorePosts}>View More</button>
       )}
     </div>
   );

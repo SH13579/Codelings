@@ -129,58 +129,17 @@ export function handleFilter(
   setFilter(filterValue); // changes filter, triggers useEffect fetch
 }
 
-//function to fetch 10 posts at a time
-export async function fetchPosts(
-  setPostType,
-  setStart,
-  setHasMore,
-  route,
-  limit,
-  reset = false
-) {
-  try {
-    const res = await fetch(route, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-    });
-    const data = await res.json();
-    //if the number of posts received is lower than the limit, it means there's no more posts left to fetch
-    if (data.posts.length < limit) {
-      setHasMore(false);
-    }
-    if (reset) {
-      setPostType(data.posts);
-      setStart(data.posts.length);
-    } else {
-      //update all the posts displayed
-      setPostType((prev) => [...prev, ...data.posts]);
-      //increment the offset to fetch the next batch of 10 posts
-      setStart((prev) => prev + limit);
-    }
-  } catch (err) {
-    alert("Error: " + err.message);
-  }
-}
-
 //hook to display the posts of a particular section for homepage and profile
 export function displaySectionPosts(
   postType,
   fetchPostsByCategory,
   setPosts,
-  startPost,
   setStartPost,
   setHasMorePost,
   postFilter,
   username = null //only for profile section
 ) {
-  const firstRun = useRef(null);
-
   useEffect(() => {
-    // if (!firstRun.current) {
-    //   firstRun.current = true;
-    //   return;
-    // }
-    setStartPost(0);
     setHasMorePost(true);
     fetchPostsByCategory(
       postType,
@@ -193,7 +152,7 @@ export function displaySectionPosts(
       true,
       username //only for profile section
     );
-  }, [postFilter]);
+  }, [postFilter, postType]);
 }
 
 export function infiniteScrolling() {

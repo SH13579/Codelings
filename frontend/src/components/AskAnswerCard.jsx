@@ -64,7 +64,7 @@ export default function AskAnswerCard(props) {
             currentUser.username === props.user && (
               <span
                 onClick={(e) => {
-                  props.showDeletePopup(e, props.id, setDeleted);
+                  props.showDeletePopup(e, props.id, setDeleted, setShowPopup);
                 }}
                 className="delete"
               >
