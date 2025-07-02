@@ -13,19 +13,16 @@
   overflow: auto;
   color: black;
 }
-.account-container label{
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-left: 0.5rem;
-  margin-bottom: 0.5rem;
-}
 .account-container input{
   height: 1.75rem;
   border-radius: 10px;
-  border: 1px solid black;
+  border: none;
   padding: 0.5rem 0.85rem 0.5rem 0.85rem;
   font-size: 0.85rem;
+  background-color: #ececec;
+}
+.account-container input::placeholder{
+  color: rgb(128, 128, 128);
 }
 .account-container input:focus{
   outline-color: #023E7D;
@@ -36,29 +33,18 @@
 .account-container button:focus{
   outline: none;
 }
-.login-button{
+.form-button{
   background-color: #0353A4;
   color: white;
   padding: 0.85rem;
-}
-.register-button{
-  background-color: #0353A4;
-  color: white;
-  padding: 0.85rem;
-}
-.login-button, .register-button{
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 .account-container button:hover{
   transition: background-color 0.25s ease, color 0.25s ease;
   border: none;
 }
-.login-button:hover{
-  background-color: #002855;
-  color: white;
-}
-.register-button:hover{
+.form-button:hover{
   background-color: #002855;
   color: white;
 }
@@ -66,9 +52,10 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 1rem;
 }
 .form-title{
-  font-weight: 1000;
+  font-weight: 700;
   margin-top: 0;
 }
 .error-message{
@@ -95,4 +82,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.alternative{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.alternative-button{
+  cursor: pointer;
+  color: #0353A4;
+  font-weight: 600;
+}
+.alternative-button:hover{
+  color: #002855;
+  transition: color 0.2s ease;
 }

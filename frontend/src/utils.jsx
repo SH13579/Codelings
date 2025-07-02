@@ -200,3 +200,4 @@ export function infiniteScrolling() {
 }
 
 export const UserContext = createContext(null);
+export const UIContext = createContext(null);

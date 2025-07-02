@@ -37,5 +37,10 @@ export default function ContentNavbar(props) {
       </div>
     );
   });
-  return <div className="content-navbar">{all_sections}</div>;
+  return (
+    <div>
+      {/* <div className="blur"></div> */}
+      <div className="content-navbar">{all_sections}</div>;
+    </div>
+  );
 }

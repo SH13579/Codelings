@@ -5,6 +5,7 @@ import "../styles/header.css";
 import { UserContext } from "../utils";
 import { useExitListener } from "../utils";
 import { Link } from "react-router-dom";
+import ContentNavbar from "./ContentNavbar";
 
 export default function Header() {
   const { currentUser, isLoggedIn, setCurrentUser, setIsLoggedIn } =
@@ -120,7 +121,7 @@ export default function Header() {
                 className="header-login-button"
                 onClick={() => setShowLogin(true)}
               >
-                Log in
+                Sign In
               </button>
             )}
             {showProfileDropdown && <ProfileDropdown />}

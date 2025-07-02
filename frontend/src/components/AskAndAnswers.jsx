@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
-import { displaySectionPosts, EmptyContainer } from "../utils";
+import { displaySectionPosts, EmptyContainer, UIContext } from "../utils";
 import { showDeletePopup } from "./Profile";
 import AskAnswerCard from "./AskAnswerCard";
+import Loading from "./Loading";
 
 export default function AskAndAnswers(props) {
+  const { loading, setLoading } = useContext(UIContext);
   //display the initial batch of 10 posts every time the user changes the filter or section
   useEffect(() => {
     props.setHasMoreQna(true);
@@ -23,7 +25,9 @@ export default function AskAndAnswers(props) {
       />
     );
   });
-  return (
+  return loading ? (
+    <Loading />
+  ) : (
     <div className="ask-and-answers">
       <div className="post-header">
         <h2 className="post-label">Ask & Answer</h2>

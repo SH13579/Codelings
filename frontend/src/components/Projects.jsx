@@ -1,9 +1,11 @@
-import React, { useEffect } from "react";
-import { EmptyContainer } from "../utils";
+import React, { useEffect, useContext } from "react";
+import { EmptyContainer, UIContext } from "../utils";
 import { showDeletePopup } from "./Profile";
 import ProjectCard from "./ProjectCard";
+import Loading from "./Loading";
 
 export default function Projects(props) {
+  const { loading, setLoading } = useContext(UIContext);
   //display the initial batch of 10 posts every time the user changes the filter or section
   useEffect(() => {
     props.setHasMoreProject(true);
@@ -24,7 +26,9 @@ export default function Projects(props) {
     );
   });
 
-  return (
+  return loading ? (
+    <Loading />
+  ) : (
     <div className="projects">
       <div className="post-header">
         <h2 className="post-label">Projects</h2>
@@ -58,7 +62,11 @@ export default function Projects(props) {
           </div>
         )}
       </div>
-      {props.projects.length > 0 ? all_projects : <EmptyContainer />}
+      {!loading && props.projects.length > 0 ? (
+        all_projects
+      ) : (
+        <EmptyContainer />
+      )}
       {props.hasMoreProject && (
         <button onClick={props.fetchMorePosts}>View More</button>
       )}

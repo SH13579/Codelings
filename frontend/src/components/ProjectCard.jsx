@@ -1,7 +1,7 @@
 import React, { useState, useRef, useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { handleNavigating } from "./Content";
-import { UserContext, likeUnlike } from "../utils";
+import { UserContext, likeUnlike, UIContext } from "../utils";
 
 //each individual project component
 export default function ProjectCard(props) {
@@ -13,7 +13,8 @@ export default function ProjectCard(props) {
     e.preventDefault();
   };
 
-  const { currentUser, setShowPopup } = useContext(UserContext);
+  const { currentUser } = useContext(UserContext);
+  const { setShowPopup } = useContext(UIContext);
 
   const navigate = useNavigate();
 

@@ -6,6 +6,7 @@ import os
 import jwt
 from functools import wraps
 import math
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 CORS(app)
@@ -59,7 +60,7 @@ def register():
     data = request.json
     username = data.get("username")
     email = data.get("email")
-    password = data.get("password")  # reminder to hash passwords and sensitive info
+    password = data.get("password")
     confirm_password = data.get("confirm_password")
 
     # codes error type: 400(bad request), 401(invalid credentials), 409(conflict, info already taken), 500(server error)
@@ -72,6 +73,8 @@ def register():
             return jsonify({"error": "Passwords do not match!"}), 400
 
         with conn.cursor() as cursor:  # "with" closes cursor automatically at end of block
+            # hash the password to pass into database
+            hashed_password = generate_password_hash(password)
             # check if username is taken
             cursor.execute(
                 "SELECT * FROM users WHERE username =%s", (username,)
@@ -93,7 +96,7 @@ def register():
             # insert new account
             cursor.execute(
                 "INSERT INTO users (username, email, password) VALUES (%s, %s, %s)",
-                (username, email, password),
+                (username, email, hashed_password),
             )
         conn.commit()
         return jsonify({"message": "User registered successfully"}), 201
@@ -114,12 +117,11 @@ def login():
 
     try:
         with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT * FROM users WHERE username=%s AND password =%s",
-                (username, password),
-            )
+            cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
             user = cursor.fetchone()
-            if user:  # check if username and password valid
+            if user and check_password_hash(
+                user[3], password
+            ):  # check if username and hashed password is same as password inserted
                 token = jwt.encode(
                     {
                         "user_id": user[0],
@@ -161,7 +163,8 @@ def fetch_profile(decoded):
 
 # route to create a post and insert into database
 @app.route("/create_post", methods=["POST"])
-def post_project():
+@token_required
+def post_project(decoded):
     if not conn:
         return jsonify({"error": "Database connection is not established"}), 500
 
@@ -176,7 +179,7 @@ def post_project():
     video_file_path = data.get("video_file_path")
     likes = data.get("likes")
     comments = data.get("comments")
-    user_name = data.get("user_name")
+    tags = data.get("tags")
 
     try:
         if not post_type:
@@ -196,11 +199,7 @@ def post_project():
             return jsonify({"error": "Post body cannot be over 4000 characters"}), 400
         else:
             with conn.cursor() as cursor:
-                cursor.execute("SELECT id from users WHERE username=%s", (user_name,))
-                user_id_tuple = cursor.fetchone()  # returns tuple (1,)
-                user_id = user_id_tuple[
-                    0
-                ]  # access the value to correctly insert into posts
+                user_id = decoded["user_id"]
                 cursor.execute(
                     "INSERT INTO posts (post_date, post_type, user_id, title, post_description, post_body, video_file_path, likes, comments) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id",
                     (
@@ -216,6 +215,18 @@ def post_project():
                     ),
                 )
                 post_id = cursor.fetchone()[0]
+                # fetch all the ids for the tag names
+                cursor.execute("SELECT id FROM tags WHERE tag_name = ANY(%s)", (tags,))
+                tag_ids = cursor.fetchall()
+                post_tags_arr = []
+                # append it into array of tuple values (post_id, tag_id)
+                for tag_id in tag_ids:
+                    post_tags_arr.append((post_id, tag_id))
+                # executemany executes the same statement for all the values in the array
+                cursor.executemany(
+                    "INSERT INTO post_tags (post_id, tag_id) VALUES (%s, %s)",
+                    post_tags_arr,
+                )
 
             conn.commit()
             return (
@@ -230,6 +241,7 @@ def post_project():
         return jsonify({"error": str(e)}), 500
 
 
+# changes the date from each row to the difference between date posted and today's date
 def get_post_date(row):
     now = datetime.datetime.now()
     time_difference = now - row[1]
@@ -257,6 +269,7 @@ def get_post_date(row):
     return difference
 
 
+# turn each row into a object with corresponding dictionary values
 def get_posts_helper(rows, columns):
     posts = []
     now = datetime.datetime.now()

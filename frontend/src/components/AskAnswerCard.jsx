@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { handleNavigating } from "./Content";
-import { likeUnlike, UserContext } from "../utils";
+import { likeUnlike, UserContext, UIContext } from "../utils";
 
 export default function AskAnswerCard(props) {
   const [deleted, setDeleted] = useState(false);
   const [liked, setLiked] = useState(null);
   const [likeCount, setLikeCount] = useState(null);
   const navigate = useNavigate();
-  const { currentUser, setShowPopup } = useContext(UserContext);
+  const { currentUser } = useContext(UserContext);
+  const { setShowPopup } = useContext(UIContext);
 
   useEffect(() => {
     setLiked(props.liked);

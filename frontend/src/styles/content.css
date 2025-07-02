@@ -60,6 +60,7 @@
   flex-direction: column;
   width: 16rem;
   padding-top: 3.5rem;
+  background-color: white;
 }
 .navbar-label, .highlight{
   font-weight: 500;
@@ -103,16 +104,8 @@
   background-color: rgba(239, 239, 239, 0.725);
   transition: background-color 0.2s ease;
 }
-.projects{
+.projects, .ask-and-answers{
   flex: 1 1 30rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  overflow-wrap: break-word;
-  word-break: break-word;
-}
-.ask-and-answers{
-  flex: 1 1 17.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -330,3 +323,46 @@
   border-radius: 5px;
   font-size: 0.8rem;
 }
+.loader-wrapper{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+.loader {
+    color: #cecece;
+    font-family: Consolas, Menlo, Monaco, monospace;
+    font-weight: bold;
+    font-size: 4rem;
+    opacity: 0.8;
+  }
+  .loader:before {
+    content: "{";
+    display: inline-block;
+    animation: pulse 0.4s alternate infinite ease-in-out;
+  }
+  .loader:after {
+    content: "}";
+    display: inline-block;
+    animation: pulse 0.4s 0.3s alternate infinite ease-in-out;
+  }
+
+  @keyframes pulse {
+    to {
+      transform: scale(0.8);
+      opacity: 0.5;
+    }
+  }
+  
+  @media(48.9rem > width) {
+    .content-navbar{
+      position: absolute;
+      padding-top: 0;
+      background-color: rgb(255, 255, 255);
+      left:50%;
+      transform: translateX(-50%);
+      width: 25rem;
+      z-index: 2000;
+      border-radius: 7.5px;
+    }
+  }

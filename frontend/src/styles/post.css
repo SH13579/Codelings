@@ -22,6 +22,9 @@
   border-radius: 10px;
   padding: 1.25rem 1.25rem 1.25rem 0rem;
 }
+/* .comment.reply{
+  margin-left: 1rem;
+} */
 .comment-input-wrapper{
   position: relative;
   margin-bottom: 0.05rem;
@@ -76,12 +79,13 @@
   gap: 0.5rem;
 }
 .comment-login-msg{
-  background-color: beige;
+  background-color: #edf4fe;
   /* border: 1px solid yellow; */
   text-align: center;
   font-weight: bold;
   margin-bottom: 0.5rem;
   padding: 0.5rem 0 0.5rem 0;
+  border-radius: 5px;
 }
 .comment-buttons{
   width: 100%;

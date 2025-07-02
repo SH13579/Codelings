@@ -41,6 +41,7 @@
 .all-content-wrap{
   flex: 1;
   margin-bottom: 2.5rem;
+  position: relative;
 }
 .blur{
   position: fixed;

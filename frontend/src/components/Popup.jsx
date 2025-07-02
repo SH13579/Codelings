@@ -1,10 +1,10 @@
 import React, { useRef, useContext } from "react";
 import { useExitListener } from "../utils";
-import { UserContext } from "../utils";
+import { UIContext } from "../utils";
 
 export default function Popup({ message, buttons }) {
   const popupRef = useRef(null);
-  const { setShowPopup } = useContext(UserContext);
+  const { setShowPopup } = useContext(UIContext);
   useExitListener(setShowPopup, popupRef);
 
   const all_buttons = buttons.map((button) => {

@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { SearchBar } from "./Content";
 import { handleNavigating } from "./Content";
 import ContentNavbar from "./ContentNavbar";
 import Projects from "./Projects";
 import AskAndAnswers from "./AskAndAnswers";
+import Loading from "./Loading";
 import "../styles/search.css";
-import { displayLiked } from "../utils";
+import { displayLiked, UIContext } from "../utils";
 
 const SearchProfileCard = (props) => {
   const navigate = useNavigate();
@@ -31,7 +32,9 @@ const SearchProfiles = (props) => {
   const profilesReturned = props.profiles.map((item) => {
     return <SearchProfileCard key={item.id} {...item} />;
   });
-  return (
+  return props.loading ? (
+    <Loading />
+  ) : (
     <div className="searched-profiles-wrapper">
       <h2 className="post-label">Profiles</h2>
       <div className="searched-profiles">{profilesReturned}</div>
@@ -48,6 +51,7 @@ export default function Search() {
   const [posts, setPosts] = useState([]);
   const limit = 10;
   const [hasMore, setHasMore] = useState(true);
+  const { loading, setLoading } = useContext(UIContext);
 
   displayLiked(setLikedPosts, "posts");
 
@@ -76,6 +80,7 @@ export default function Search() {
     setPostStart,
     reset = false
   ) {
+    setLoading(true);
     try {
       const res = await fetch(
         `http://localhost:5000/search_posts?search_term=${searchTerm}&limit=${limit}&offset=${
@@ -102,6 +107,8 @@ export default function Search() {
       }
     } catch (err) {
       alert("Error: " + err.message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -112,6 +119,7 @@ export default function Search() {
     setProfileStart,
     reset = false
   ) {
+    setLoading(true);
     try {
       const res = await fetch(
         `http://localhost:5000/search_profiles?search_term=${searchTerm}&limit=${limit}&offset=${
@@ -137,6 +145,8 @@ export default function Search() {
       }
     } catch (err) {
       alert("Error: " + err.message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -161,6 +171,7 @@ export default function Search() {
             searchTerm={searchTerm}
             hasMore={hasMore}
             setHasMore={setHasMore}
+            loading={loading}
           />
         )}
         {currentSection === "project" && (

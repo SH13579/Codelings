@@ -22,42 +22,79 @@ function CommentCard({
   replyText,
   setReplyText,
   setReplyCommentId,
-  // handleReplySubmit,
-  // handleReplyClick,
-  handleDeleteComment,
-  // fetchReplies,
+  setParentCommentsList,
+
+  // setParentRepliesList,
+  parentRepliesList,
 }) {
-  // const repliesList = parentComment.replies || []; //get all replies of current Comment
+  const isReply = parentComment.parent_comment_id !== null;
   const isCommenter =
     currentUser && currentUser.username === parentComment.name;
   const showReplyBox = replyCommentId === parentComment.comment_id; //
-  const [repliesList, setRepliesList] = useState(parentComment.replies || []);
+  //if <CommentCard /> is parent, comment, set repliesList to []
+  //if <CommentCard /> is reply, set repliesList to existing repliesList in order for replying to reply to work
+  // const [repliesList, setRepliesList] = useState([]); //parent comment
+  const [repliesList, setRepliesList] = useState(
+    isReply ? parentRepliesList || [] : []
+  );
   const [replyStart, setReplyStart] = useState(0);
   const [hasMoreReplies, setHasMoreReplies] = useState(
     parentComment.has_replies
   );
   const limit = 5;
 
-  //useEffect to see if there are any replies
-  // useEffect(() => {
-  //   const checkReplies = async () => {
-  //     try {
-  //       const res = await fetch(
-  //         `http://localhost:5000/get_replies?parent_comment_id=${parentComment.comment_id}&start=0&limit=1`
-  //       ); //limit=1 just to check if there is 1 reply
+  const handleDeleteComment = async (commentId, parentCommentId = null) => {
+    try {
+      const res = await fetch(`http://localhost:5000/delete_comment`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          comment_id: commentId,
+          post_id: postId,
+          parent_comment_id: parentCommentId,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        //if reply, delete reply
+        if (isReply) {
+          setRepliesList((prev) =>
+            prev.filter((reply) => reply.comment_id !== commentId)
+          );
+        }
+        //if parent comment, delete comment along with its replies
+        else {
+          setParentCommentsList((prev) => {
+            return prev.filter((comment) => comment.comment_id !== commentId);
+          });
+        }
 
-  //       const data = await res.json();
-  //       if (res.ok) {
-  //         setHasMoreReplies(data.replies.length === 0 ? false : true);
-  //       } else {
-  //         console.log(data.error);
-  //       }
-  //     } catch (err) {
-  //       alert("Error: " + err.message);
-  //     }
-  //   };
-  //   checkReplies();
-  // }, [parentComment.comment_id]);
+        // setParentCommentsList(
+        //   (prev) =>
+        //     prev.map((comment) =>
+        //       comment.comment_id === commentId
+        //         ? null //if deleting parent comment, delete entire comment (including replies)
+        //         : {
+        //             //if deleting reply
+        //             ...comment,
+        //             replies: comment.replies?.filter(
+        //               //go through each reply and keep the ones where commentId do not match (matching id's = delete)
+        //               (reply) => reply.comment_id !== commentId
+        //             ),
+        //           }
+        //     )
+        //   // .filter(Boolean) //remove any null values from the list
+        // );
+      } else {
+        alert(data.error);
+      }
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
 
   const handleReplySubmit = async (e, parentCommentId) => {
     e.preventDefault();
@@ -116,7 +153,11 @@ function CommentCard({
   };
 
   const handleReplyClick = (commentId, username, isReplyingToReply) => {
-    setReplyCommentId(currentUser ? commentId : null); //if not logged in, do not show textarea
+    //still a bit confused on parentId
+    const parentId = isReplyingToReply
+      ? parentComment.parent_comment_id //connect to reply's parent_comment_id
+      : parentComment.comment_id; //connect to parent_comment's id
+    setReplyCommentId(currentUser ? parentId : null); //if not logged in, do not show textarea
     setReplyText(
       isReplyingToReply && username !== currentUser.username
         ? `@${username} `
@@ -149,7 +190,8 @@ function CommentCard({
   };
 
   return (
-    <div className="comment" key={parentComment.comment_id}>
+    //REMINDER: change to reply if commentcard is reply (unnecessary?)
+    <div className={`comment ${isReply ? "reply" : ""}`}>
       <div
         className="user-info"
         onClick={(e) => handleNavigating(e, navigate, parentComment.name)}
@@ -178,7 +220,7 @@ function CommentCard({
               handleReplyClick(
                 parentComment.comment_id,
                 parentComment.name,
-                false
+                isReply //check if <CommentCard /> is reply
               )
             }
           >
@@ -195,8 +237,7 @@ function CommentCard({
           )}
         </div>
       </div>
-      {/* <div className="comment-buttons"></div> */}
-      {/*Show reply box only for specific comment*/}
+      {/* show reply box when click "Reply" */}
       {showReplyBox && (
         <form onSubmit={(e) => handleReplySubmit(e, parentComment.comment_id)}>
           <div className="comment-reply-box">
@@ -222,75 +263,34 @@ function CommentCard({
           </div>
         </form>
       )}
-      {/* Comment's child replies */}
-      {/* repliesLIst && ???? */}
-      <div className="all-replies">
-        {repliesList.map((reply) => {
-          //similar code to commentsList.map. replace "item" with "reply"
-          const isReplier = currentUser && currentUser.username === reply.name;
-          return (
-            <div key={reply.comment_id} className="comment">
-              <div
-                className="user-info"
-                onClick={(e) => handleNavigating(e, navigate, reply.name)}
-              >
-                <img className="pfp" src={`../media/images/${reply.pfp}`} />
-                <div className="user-name">{reply.name}</div>
-                <div className="post-date">
-                  <span className="post-date-dot">&#8226;</span>
-                  {reply.date}
-                </div>
-              </div>
-              <div className="comment-text">{reply.comment}</div>
-              <div className="upvotes-comments-wrapper">
-                <span className="upvotes">
-                  <img
-                    className="upvote-icon"
-                    src="../media/images/thumbs-up.svg"
-                  />
-                  <div className="upvote-count">{reply.upvotes}</div>
-                </span>
-                {/* <span className="comments">
-                          <img
-                            className="comments-icon"
-                            src="../media/images/comments.svg"
-                          />
-                          <div className="comment-count">
-                            {reply.comments_count}
-                          </div>
-                        </span> */}
-              </div>
-              <div className="reply-buttons">
-                <div
-                  className="reply-reply-button"
-                  onClick={() =>
-                    handleReplyClick(parentComment.comment_id, reply.name, true)
-                  }
-                >
-                  Reply
-                </div>
-                {/*Add option to delete if user is the replier*/}
-                {isReplier && (
-                  <div
-                    className="reply-delete-button"
-                    onClick={() =>
-                      handleDeleteComment(
-                        reply.comment_id,
-                        reply.parent_comment_id
-                      )
-                    }
-                  >
-                    Delete
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-        {hasMoreReplies && (
-          <button onClick={() => fetchReplies()}>View More Replies</button>
-        )}
-      </div>
+      {/* map through repliesList and call <CommentCard /> */}
+      {!isReply && repliesList && (
+        <div className="all-replies">
+          {/* issue: when doing recursive call, it maps again, leading to infinite loop. add "!isReply" so that it ONLY maps ONCE when <CommentCard /> is a parent comment  */}
+          {repliesList.map((reply) => (
+            <CommentCard
+              key={reply.comment_id}
+              token={token}
+              postId={postId}
+              setMsg={setMsg}
+              parentComment={reply}
+              currentUser={currentUser}
+              navigate={navigate}
+              replyCommentId={replyCommentId}
+              replyText={replyText}
+              setReplyText={setReplyText}
+              setReplyCommentId={setReplyCommentId}
+              setRepliesList={setRepliesList}
+              setParentCommentsList={setParentCommentsList}
+              // setParentRepliesList={setParentRepliesList}
+              parentRepliesList={repliesList} //set parentRepliesList to repliesList to send existing repliesList in order to append replying to reply
+            />
+          ))}
+          {hasMoreReplies && (
+            <button onClick={() => fetchReplies()}>View More Replies</button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -298,7 +298,7 @@ function CommentCard({
 function Comments({ postId, currentUser, token }) {
   const [commentText, setCommentText] = useState("");
   const [replyText, setReplyText] = useState("");
-  const [parentCommentsList, setParentCommentsList] = useState([]);
+  const [parentCommentsList, setParentCommentsList] = useState([]); //contains parent comments and child replies
   const [replyCommentId, setReplyCommentId] = useState(null);
   const [msg, setMsg] = useState("");
   const [start, setStart] = useState(0); //for fetchComments()
@@ -307,6 +307,7 @@ function Comments({ postId, currentUser, token }) {
   const navigate = useNavigate();
 
   //cant put useEffect around this because fetchComments() is called when user clicks "view more"
+  //fetch parent comments once first load in or refresh
   async function fetchComments(reset = false) {
     try {
       const res = await fetch(
@@ -417,15 +418,17 @@ function Comments({ postId, currentUser, token }) {
           name: currentUser.username,
           comment: commentText, //data.commentText unnecessary
           pfp: currentUser.pfp,
+          parent_comment_id: null,
           upvotes: 0,
           comments_count: 0,
         };
         //only show newly created comment imemdiately on frontend if there are less than 5 comments OR no more comments left (view more button gone)
-        setParentCommentsList((prev) =>
-          !hasMoreComments || prev.length < limit
-            ? [...prev, { ...newComment, replies: [] }]
-            : prev
-        );
+        // setParentCommentsList((prev) =>
+        //   !hasMoreComments || prev.length < limit ? [...prev, newComment] : prev
+        // );
+
+        setParentCommentsList((prev) => [...prev, newComment]);
+
         if (parentCommentsList.length < limit) {
           setStart((prev) => prev + 1); //increase offset by 1 to prevent duplicates
         }
@@ -434,50 +437,6 @@ function Comments({ postId, currentUser, token }) {
       } else {
         alert(data.error);
         setMsg("");
-      }
-    } catch (err) {
-      alert("Error: " + err.message);
-    }
-  };
-
-  const handleDeleteComment = async (commentId, parentCommentId = null) => {
-    try {
-      const res = await fetch(`http://localhost:5000/delete_comment`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          comment_id: commentId,
-          post_id: postId,
-          parent_comment_id: parentCommentId,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setParentCommentsList((prevComments) =>
-          prevComments.filter((comment) => comment.comment_id !== commentId)
-        );
-
-        setParentCommentsList(
-          (prev) =>
-            prev.map((comment) =>
-              comment.comment_id === commentId
-                ? null //if deleting parent comment, delete entire comment (including replies)
-                : {
-                    //if deleting reply
-                    ...comment,
-                    replies: comment.replies?.filter(
-                      //go through each reply and keep the ones where commentId do not match (matching id's = delete)
-                      (reply) => reply.comment_id !== commentId
-                    ),
-                  }
-            )
-          // .filter(Boolean) //remove any null values from the list
-        );
-      } else {
-        alert(data.error);
       }
     } catch (err) {
       alert("Error: " + err.message);
@@ -501,11 +460,11 @@ function Comments({ postId, currentUser, token }) {
           </button>
         </form>
       ) : (
-        <div className="comment-login-msg">Log in to comment</div>
+        <div className="comment-login-msg">Sign in to comment</div>
       )}
 
       <div className="all-comments">
-        {/* Fetch from database to display comments of current post*/}
+        {/* Fetch from database to display parent comments of current post*/}
         {parentCommentsList.map((parentComment) => (
           <CommentCard
             key={parentComment.comment_id}
@@ -519,10 +478,9 @@ function Comments({ postId, currentUser, token }) {
             replyText={replyText}
             setReplyText={setReplyText}
             setReplyCommentId={setReplyCommentId}
-            // handleReplySubmit={handleReplySubmit}
-            // handleReplyClick={handleReplyClick}
-            handleDeleteComment={handleDeleteComment}
-            // fetchReplies={fetchReplies}
+            setParentCommentsList={setParentCommentsList}
+
+            // setParentRepliesList={setParentRepliesList}
           />
         ))}
       </div>

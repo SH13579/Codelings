@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { Link, useFetcher, useNavigate } from "react-router-dom";
 import "../styles/content.css";
 import Projects from "./Projects";
 import AskAndAnswers from "./AskAndAnswers";
 import ContentNavbar from "./ContentNavbar";
-import { displayLiked } from "../utils";
+import Loading from "./Loading";
+import { displayLiked, UIContext } from "../utils";
 
 export const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -104,8 +105,10 @@ async function fetchPostsHomePage(
   setHasMore,
   filter,
   limit,
+  setLoading,
   reset = false
 ) {
+  setLoading(true);
   const category = filter === "Best" ? "likes" : "post_date";
   try {
     const res = await fetch(
@@ -133,6 +136,8 @@ async function fetchPostsHomePage(
     }
   } catch (err) {
     alert("Error: " + err.message);
+  } finally {
+    setLoading(false);
   }
 }
 
@@ -146,7 +151,7 @@ async function fetchTags(setTags) {
   }
 }
 
-function displayTagsOnPage(setTags) {
+export function displayTagsOnPage(setTags) {
   useEffect(() => {
     fetchTags(setTags);
   }, []);
@@ -160,6 +165,7 @@ export default function Content() {
   const [start, setStart] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [postFilter, setPostFilter] = useState("Best");
+  const { loading, setLoading } = useContext(UIContext);
 
   displayLiked(setLikedPosts, "posts");
   displayTagsOnPage(setTags);
@@ -208,6 +214,7 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
+                setLoading,
                 true
               )
             }
@@ -220,6 +227,7 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
+                setLoading,
                 false
               )
             }
@@ -245,6 +253,7 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
+                setLoading,
                 true
               )
             }
@@ -258,6 +267,7 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
+                setLoading,
                 false
               )
             }
@@ -282,6 +292,7 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
+                setLoading,
                 true
               )
             }
@@ -294,6 +305,7 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
+                setLoading,
                 false
               )
             }

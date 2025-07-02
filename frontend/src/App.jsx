@@ -7,7 +7,7 @@ import Footer from "./components/Footer";
 import Profile from "./components/Profile";
 import Popup from "./components/Popup";
 import Search from "./components/Search";
-import { UserContext } from "./utils";
+import { UserContext, UIContext } from "./utils";
 import "./styles/App.css";
 
 function App() {
@@ -15,6 +15,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(token ? true : false);
   const [showPopup, setShowPopup] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   console.log("Rendering App");
 
@@ -77,22 +78,29 @@ function App() {
           setCurrentUser,
           isLoggedIn,
           setIsLoggedIn,
-          showPopup,
-          setShowPopup,
         }}
       >
-        <Header />
-        <div className="all-content-wrap">
-          <Routes>
-            <Route path="/" element={<Content />} />
-            <Route path="/profile/:username" element={<Profile />} />
-            <Route path="/post/:postId" element={<Post />} />
-            <Route path="/search/:searchTerm" element={<Search />} />
-          </Routes>
-        </div>
-        {showPopup && (
-          <Popup message={showPopup.message} buttons={showPopup.buttons} />
-        )}
+        <UIContext.Provider
+          value={{
+            showPopup,
+            setShowPopup,
+            loading,
+            setLoading,
+          }}
+        >
+          <Header />
+          <div className="all-content-wrap">
+            <Routes>
+              <Route path="/" element={<Content />} />
+              <Route path="/profile/:username" element={<Profile />} />
+              <Route path="/post/:postId" element={<Post />} />
+              <Route path="/search/:searchTerm" element={<Search />} />
+            </Routes>
+          </div>
+          {showPopup && (
+            <Popup message={showPopup.message} buttons={showPopup.buttons} />
+          )}
+        </UIContext.Provider>
       </UserContext.Provider>
       <Footer />
     </div>
