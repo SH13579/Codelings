@@ -92,6 +92,7 @@
   display: flex;
   justify-content: space-between;
   color: #0353A4;
+  align-items: center;
 }
 .comment-buttons .comment-reply-button{
   cursor: pointer;

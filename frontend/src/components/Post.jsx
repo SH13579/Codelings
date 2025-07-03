@@ -8,7 +8,7 @@ import React, {
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "../styles/post.css";
 import Profile from "./Profile";
-import { UserContext } from "../utils";
+import { UserContext, UIContext } from "../utils";
 import { handleNavigating } from "./Content";
 
 function CommentCard({
@@ -24,14 +24,16 @@ function CommentCard({
   setReplyCommentId,
   setParentCommentsList,
 
-  // setParentRepliesList,
+  //2 below are for recursive calls
+  //necesary for replying to reply to update existing repliesList
   parentRepliesList,
+  setParentRepliesList,
 }) {
   const isReply = parentComment.parent_comment_id !== null;
   const isCommenter =
     currentUser && currentUser.username === parentComment.name;
   const showReplyBox = replyCommentId === parentComment.comment_id; //
-  //if <CommentCard /> is parent, comment, set repliesList to []
+  //if <CommentCard /> is parent comment, set repliesList to []
   //if <CommentCard /> is reply, set repliesList to existing repliesList in order for replying to reply to work
   // const [repliesList, setRepliesList] = useState([]); //parent comment
   const [repliesList, setRepliesList] = useState(
@@ -42,58 +44,73 @@ function CommentCard({
     parentComment.has_replies
   );
   const limit = 5;
+  const { setShowPopup } = useContext(UIContext);
 
   const handleDeleteComment = async (commentId, parentCommentId = null) => {
-    try {
-      const res = await fetch(`http://localhost:5000/delete_comment`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          comment_id: commentId,
-          post_id: postId,
-          parent_comment_id: parentCommentId,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        //if reply, delete reply
-        if (isReply) {
-          setRepliesList((prev) =>
-            prev.filter((reply) => reply.comment_id !== commentId)
+    async function deleteComment() {
+      try {
+        const res = await fetch(`http://localhost:5000/delete_comment`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            comment_id: commentId,
+            post_id: postId,
+            parent_comment_id: parentCommentId,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          //if reply, delete reply
+          if (isReply) {
+            //use setParentRepliesList if deleting reply
+            setParentRepliesList((prev) => 
+              prev.filter((reply) => reply.comment_id !== commentId)
           );
-        }
-        //if parent comment, delete comment along with its replies
-        else {
-          setParentCommentsList((prev) => {
-            return prev.filter((comment) => comment.comment_id !== commentId);
-          });
-        }
+          }
+          //if parent comment, delete comment along with its replies
+          else {
+            setParentCommentsList((prev) => {
+              return prev.filter((comment) => comment.comment_id !== commentId);
+            });
+          }
+          setShowPopup(null)
 
-        // setParentCommentsList(
-        //   (prev) =>
-        //     prev.map((comment) =>
-        //       comment.comment_id === commentId
-        //         ? null //if deleting parent comment, delete entire comment (including replies)
-        //         : {
-        //             //if deleting reply
-        //             ...comment,
-        //             replies: comment.replies?.filter(
-        //               //go through each reply and keep the ones where commentId do not match (matching id's = delete)
-        //               (reply) => reply.comment_id !== commentId
-        //             ),
-        //           }
-        //     )
-        //   // .filter(Boolean) //remove any null values from the list
-        // );
-      } else {
-        alert(data.error);
+        } else {
+          alert(data.error);
+        }
+      } catch (err) {
+        alert("Error: " + err.message);
       }
-    } catch (err) {
-      alert("Error: " + err.message);
     }
+
+    const popupMessage = isReply ?(
+      <div>
+        <h3>Delete Reply?</h3>
+        <h4>This action cannot be undone.</h4>
+      </div>
+    ) : (
+      <div>
+        <h3>Delete Comment?</h3>
+        <h4>This action will delete your comment and all its replies.</h4>
+      </div>
+    )
+
+    setShowPopup({
+      message: popupMessage,
+      buttons: [
+        {
+          label: "Yes",
+          action: deleteComment,
+        },
+        {
+          label: "Cancel",
+          action: () => setShowPopup(null)
+        }
+      ]
+    })
   };
 
   const handleReplySubmit = async (e, parentCommentId) => {
@@ -126,20 +143,11 @@ function CommentCard({
           upvotes: 0,
           comments_count: 0,
         };
-        // setParentCommentsList((prev) =>
-        //   prev.map(
-        //     (
-        //       comment //go through each parent comment
-        //     ) =>
-        //       comment.comment_id === parentCommentId //find reply's parent comment and update the parent comment's replies list
-        //         ? {
-        //             ...comment,
-        //             replies: [...(comment.replies || []), newReply],
-        //           }
-        //         : comment //if parent comment is not parent of reply, leave it unchanged
-        //   )
-        // );
-        setRepliesList((prev) => [...prev, newReply]);
+
+        //to update frontend immediately after posting reply
+        if (!hasMoreReplies) {
+          setRepliesList((prev) => [...prev, newReply]);
+        }
 
         setReplyText("");
         setReplyCommentId(null);
@@ -209,10 +217,12 @@ function CommentCard({
           <img className="upvote-icon" src="../media/images/thumbs-up.svg" />
           <div className="upvote-count">{parentComment.upvotes}</div>
         </span>
-        <span className="comments">
-          <img className="comments-icon" src="../media/images/comments.svg" />
-          <div className="comment-count">{parentComment.comments_count}</div>
-        </span>
+        {!isReply && (
+          <span className="comments">
+            <img className="comments-icon" src="../media/images/comments.svg" />
+            <div className="comment-count">{parentComment.comments_count}</div>
+          </span>
+        )}
         <div className="comment-buttons">
           <div
             className="comment-reply-button"
@@ -230,9 +240,12 @@ function CommentCard({
           {isCommenter && (
             <div
               className="comment-delete-button"
-              onClick={() => handleDeleteComment(parentComment.comment_id)}
+              onClick={() => handleDeleteComment(parentComment.comment_id, parentComment.parent_comment_id)}
             >
-              Delete
+              <img
+                  className="delete-icon"
+                  src="../media/images/delete-icon.svg"
+                />
             </div>
           )}
         </div>
@@ -282,8 +295,10 @@ function CommentCard({
               setReplyCommentId={setReplyCommentId}
               setRepliesList={setRepliesList}
               setParentCommentsList={setParentCommentsList}
-              // setParentRepliesList={setParentRepliesList}
-              parentRepliesList={repliesList} //set parentRepliesList to repliesList to send existing repliesList in order to append replying to reply
+
+              //create variable and function to keep track of the existing and correct repliesList in order to append reply and deleting that reply immediately
+              parentRepliesList={repliesList} 
+              setParentRepliesList={setRepliesList}
             />
           ))}
           {hasMoreReplies && (
@@ -423,13 +438,9 @@ function Comments({ postId, currentUser, token }) {
           comments_count: 0,
         };
         //only show newly created comment imemdiately on frontend if there are less than 5 comments OR no more comments left (view more button gone)
-        // setParentCommentsList((prev) =>
-        //   !hasMoreComments || prev.length < limit ? [...prev, newComment] : prev
-        // );
-
-        setParentCommentsList((prev) => [...prev, newComment]);
-
-        if (parentCommentsList.length < limit) {
+        //to update frontend immediately after submitting a comment
+        if (!hasMoreComments) {
+          setParentCommentsList((prev) => [...prev, newComment]);
           setStart((prev) => prev + 1); //increase offset by 1 to prevent duplicates
         }
         setCommentText(""); //empty input after adding comment
@@ -479,8 +490,6 @@ function Comments({ postId, currentUser, token }) {
             setReplyText={setReplyText}
             setReplyCommentId={setReplyCommentId}
             setParentCommentsList={setParentCommentsList}
-
-            // setParentRepliesList={setParentRepliesList}
           />
         ))}
       </div>
