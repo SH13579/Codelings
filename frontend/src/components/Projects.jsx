@@ -25,7 +25,6 @@ export default function Projects(props) {
       />
     );
   });
-
   return loading ? (
     <Loading />
   ) : (

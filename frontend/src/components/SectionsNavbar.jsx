@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function ContentNavbar(props) {
+export default function SectionsNavbar(props) {
   const all_sections = props.sections.map((item) => {
     const subsections =
       item.subsections &&
@@ -17,7 +17,7 @@ export default function ContentNavbar(props) {
         );
       });
     return (
-      <div>
+      <div className="navbar-section">
         <div
           onClick={() => props.setCurrentSection(item.sectionDbName)}
           className={
@@ -38,9 +38,12 @@ export default function ContentNavbar(props) {
     );
   });
   return (
-    <div>
-      {/* <div className="blur"></div> */}
-      <div className="content-navbar">{all_sections}</div>;
+    <div
+      className={
+        props.location === "home-page" ? "content-navbar" : "sections-navbar"
+      }
+    >
+      {all_sections}
     </div>
   );
 }

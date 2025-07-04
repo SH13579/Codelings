@@ -27,6 +27,7 @@
   font-size: 1.4rem;
   margin-left: auto;
   margin-right: auto;
+  margin-bottom: 0;
 }
 .search-wrapper{
   display: flex;
@@ -45,6 +46,7 @@
   background-repeat: no-repeat;
   background-position: 0.8rem;
   background-size: 1.2rem;
+  margin-top: 1rem;
 }
 .search-bar:focus{
   outline-color: #023E7D;
@@ -55,12 +57,12 @@
   gap: 1rem;
   width: 100%;
 }
-.content-navbar{
+.sections-navbar, .content-navbar{
   display: flex;
   flex-direction: column;
-  width: 16rem;
   padding-top: 3.5rem;
   background-color: white;
+  width: 16rem;
 }
 .navbar-label, .highlight{
   font-weight: 500;
@@ -70,17 +72,25 @@
   align-items: center;
   gap: 0.75rem;
   cursor: pointer;
+  white-space: nowrap;
 }
-.highlight, .highlight-sub{
+.highlight{
   background-color: rgba(239, 239, 239, 0.725);
+}
+.highlight-sub{
+  background-color: #edf4fe;
+}
+.sections-navbar img{
+  filter: brightness(0) saturate(100%) invert(21%) sepia(73%) saturate(2783%) hue-rotate(198deg) brightness(86%) contrast(98%);
 }
 .content-navbar img{
   filter: brightness(0) saturate(100%) invert(21%) sepia(73%) saturate(2783%) hue-rotate(198deg) brightness(86%) contrast(98%);
 }
 .subsections-wrapper{
   height: 20rem;
-  overflow: scroll;
+  overflow: auto;
   overflow-x: hidden;
+  scroll-snap-align: center;
   display: flex;
   flex-direction: column;
 }
@@ -91,7 +101,7 @@
 }
 .sub-section:hover{
   cursor: pointer;
-  background-color: rgba(239, 239, 239, 0.725);
+  background-color: #edf4fe;
   transition: background-color 0.2s ease;
 }
 .ask-answer-logo{
@@ -325,9 +335,11 @@
 }
 .loader-wrapper{
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   flex: 1;
+  min-height: 20rem;
 }
 .loader {
     color: #cecece;
@@ -346,7 +358,6 @@
     display: inline-block;
     animation: pulse 0.4s 0.3s alternate infinite ease-in-out;
   }
-
   @keyframes pulse {
     to {
       transform: scale(0.8);
@@ -354,15 +365,27 @@
     }
   }
   
-  @media(48.9rem > width) {
+  @media(51rem > width) {
     .content-navbar{
-      position: absolute;
+      flex-direction: row;
       padding-top: 0;
-      background-color: rgb(255, 255, 255);
-      left:50%;
-      transform: translateX(-50%);
-      width: 25rem;
-      z-index: 2000;
-      border-radius: 7.5px;
+      gap: 0.5rem;
+      width: 100%;
+      margin-bottom: 3rem;
     }
+    .content-navbar .subsections-wrapper{
+      overflow-x: auto;
+      flex-direction: row;
+      height: 3.5rem;
+      white-space: nowrap;
+      position: absolute;
+      top: 100;
+      width: calc(100vw - 3rem);
+    }
+      .sections-navbar{
+      flex-direction: row;
+      padding-top: 0;
+      gap: 0.5rem;
+      width: 100%;
+      }
   }

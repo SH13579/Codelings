@@ -16,6 +16,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(token ? true : false);
   const [showPopup, setShowPopup] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
   console.log("Rendering App");
 
@@ -78,6 +79,8 @@ function App() {
           setCurrentUser,
           isLoggedIn,
           setIsLoggedIn,
+          showLogin,
+          setShowLogin,
         }}
       >
         <UIContext.Provider

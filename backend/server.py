@@ -36,11 +36,14 @@ except Exception as e:
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.headers.get("Authorization")
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split()[1]
+
         if not token:
             return jsonify({"error": "Missing token"}), 401
+
         try:
-            token = token.split()[1]
             decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         except jwt.ExpiredSignatureError:
             return jsonify({"error": "Token expired"}), 401
@@ -117,10 +120,13 @@ def login():
 
     try:
         with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
+            cursor.execute(
+                "SELECT id, username, password FROM users WHERE username=%s",
+                (username,),
+            )
             user = cursor.fetchone()
             if user and check_password_hash(
-                user[3], password
+                user[2], password
             ):  # check if username and hashed password is same as password inserted
                 token = jwt.encode(
                     {
@@ -458,7 +464,22 @@ def delete_post(decoded):
 def get_specific_post():
     if not conn:
         return jsonify({"error": "Database connection not established"}), 500
+
     post_id = request.args.get("post_id")
+    user_id = None
+
+    # checking to see if there is a current user logged in to fetch if post is liked
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        try:
+            decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = decoded["user_id"]
+        except jwt.ExpiredSignatureError:
+            pass
+        except jwt.InvalidTokenError:
+            pass
+
     try:
         # post_type???
         with conn.cursor() as cursor:
@@ -475,12 +496,20 @@ def get_specific_post():
         posts.likes, 
         posts.comments, 
         users.username, 
-        users.profile_picture
+        users.profile_picture,
+        array_agg(tags.tag_name) AS tag_name,
+        %s IS NOT NULL AND EXISTS (
+            SELECT 1 FROM likes WHERE user_id = %s AND target_id = %s AND type = 'posts'
+        ) AS user_liked_post
       FROM posts
       JOIN users ON posts.user_id = users.id
+      LEFT JOIN post_tags ON post_tags.post_id = posts.id
+      LEFT JOIN tags ON post_tags.tag_id = tags.id
       WHERE posts.id = %s
+      GROUP BY posts.id, posts.post_date, posts.post_type, posts.title, posts.post_description, posts.post_body, posts.video_file_path,
+      posts.likes, posts.comments, users.username, users.profile_picture
       """,
-                (post_id,),
+                (user_id, user_id, post_id, post_id),
             )
 
             row = cursor.fetchone()  # returns 1 row
@@ -498,6 +527,8 @@ def get_specific_post():
             "comments_count",
             "name",
             "pfp",
+            "tags",
+            "liked",
         ]
 
         posts = get_posts_helper([row], columns)
@@ -812,10 +843,14 @@ def search_posts():
                       posts.likes,
                       posts.comments,
                       users.username,
-                      users.profile_picture
+                      users.profile_picture,
+                      array_agg(tags.tag_name) AS tag_name
                     FROM posts
                     JOIN users ON posts.user_id = users.id
+                    LEFT JOIN post_tags ON post_tags.post_id = posts.id
+                    LEFT JOIN tags ON post_tags.tag_id = tags.id
                     WHERE posts.title LIKE %s AND posts.post_type = %s
+                    GROUP BY posts.id, posts.post_date, posts.post_type, posts.title, posts.post_description, posts.likes, posts.comments, users.username, users.profile_picture
                     LIMIT %s OFFSET %s
                   """
             search_str = f"%{search_term}%"
@@ -832,6 +867,7 @@ def search_posts():
                 "comments_count",
                 "name",
                 "pfp",
+                "tags",
             ]
 
             posts_arr = get_posts_helper(posts, columns)

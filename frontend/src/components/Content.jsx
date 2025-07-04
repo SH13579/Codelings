@@ -3,7 +3,7 @@ import { Link, useFetcher, useNavigate } from "react-router-dom";
 import "../styles/content.css";
 import Projects from "./Projects";
 import AskAndAnswers from "./AskAndAnswers";
-import ContentNavbar from "./ContentNavbar";
+import SectionsNavbar from "./SectionsNavbar";
 import Loading from "./Loading";
 import { displayLiked, UIContext } from "../utils";
 
@@ -60,8 +60,10 @@ async function fetchSpecificTag(
   setHasMore,
   filter,
   limit,
+  setLoading,
   reset = false
 ) {
+  setLoading(true);
   const category = filter === "Best" ? "likes" : "post_date";
   try {
     const res = await fetch(
@@ -82,6 +84,8 @@ async function fetchSpecificTag(
     }
   } catch (err) {
     alert("Error: " + err.message);
+  } finally {
+    setLoading(false);
   }
 }
 
@@ -165,22 +169,23 @@ export default function Content() {
   const [start, setStart] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [postFilter, setPostFilter] = useState("Best");
+  const location = "home-page";
   const { loading, setLoading } = useContext(UIContext);
 
-  displayLiked(setLikedPosts, "posts");
+  displayLiked(setLikedPosts, "posts", setLoading);
   displayTagsOnPage(setTags);
 
   const navbar_sections = [
     {
       sectionDbName: "project",
       imagePath: "../media/images/projects-logo.svg",
-      sectionName: "Projects",
+      sectionName: "All Projects",
       subsections: fetchTagsForPostType(tags, "project"),
     },
     {
       sectionDbName: "qna",
       imagePath: "../media/images/askAnswer.svg",
-      sectionName: "Ask & Answer",
+      sectionName: "All Ask & Answers",
       subsections: fetchTagsForPostType(tags, "qna"),
     },
   ];
@@ -198,12 +203,13 @@ export default function Content() {
     <section className="content-wrapper">
       <AboutUs />
       <div className="content-grid">
-        <ContentNavbar
+        <SectionsNavbar //render sections navbar
           sections={navbar_sections}
           setCurrentSection={setCurrentSection}
           currentSection={currentSection}
+          location={location}
         />
-        {currentSection === "project" && (
+        {currentSection === "project" && ( //fetch posts for projects
           <Projects
             displaySectionPosts={() =>
               fetchPostsHomePage(
@@ -233,7 +239,7 @@ export default function Content() {
             }
             projects={posts}
             setProjectFilter={setPostFilter}
-            location="home-page"
+            location={location}
             likedPosts={likedPosts}
             currentSection={currentSection}
             setHasMoreProject={setHasMore}
@@ -241,7 +247,7 @@ export default function Content() {
             projectFilter={postFilter}
           />
         )}
-        {fetchTagsForPostType(tags, "project").includes(currentSection) && (
+        {fetchTagsForPostType(tags, "project").includes(currentSection) && ( //fetch tag posts for projects
           <Projects
             displaySectionPosts={() =>
               fetchSpecificTag(
@@ -273,7 +279,7 @@ export default function Content() {
             }
             projects={posts}
             setProjectFilter={setPostFilter}
-            location="home-page"
+            location={location}
             likedPosts={likedPosts}
             currentSection={currentSection}
             setHasMoreProject={setHasMore}
@@ -281,7 +287,7 @@ export default function Content() {
             projectFilter={postFilter}
           />
         )}
-        {currentSection === "qna" && (
+        {currentSection === "qna" && ( //fetch posts for ask&answers
           <AskAndAnswers
             displaySectionPosts={() =>
               fetchPostsHomePage(
@@ -311,7 +317,7 @@ export default function Content() {
             }
             askAndAnswers={posts}
             setQnaFilter={setPostFilter}
-            location="home-page"
+            location={location}
             likedPosts={likedPosts}
             currentSection={currentSection}
             setHasMoreQna={setHasMore}

@@ -52,7 +52,8 @@ export const EmptyContainer = () => {
   );
 };
 
-export async function fetchLiked(setLiked, type, token) {
+export async function fetchLiked(setLiked, type, token, setLoading) {
+  setLoading(true);
   try {
     const res = await fetch(`http://localhost:5000/fetch_likes?type=${type}`, {
       method: "GET",
@@ -66,14 +67,16 @@ export async function fetchLiked(setLiked, type, token) {
     setLiked(data.likes_arr);
   } catch (err) {
     alert("Error: " + err.message);
+  } finally {
+    setLoading(false);
   }
 }
 
-export function displayLiked(setLiked, type) {
+export function displayLiked(setLiked, type, setLoading) {
   const token = sessionStorage.getItem("token");
   useEffect(() => {
     if (token) {
-      fetchLiked(setLiked, type, token);
+      fetchLiked(setLiked, type, token, setLoading);
     } else {
       setLiked([]);
     }
@@ -81,15 +84,12 @@ export function displayLiked(setLiked, type) {
 }
 
 export async function likeUnlike(
-  e,
   target_id,
   type,
   liked,
   setLiked,
   setLikeCount
 ) {
-  e.preventDefault();
-  e.stopPropagation();
   liked ? setLikeCount((prev) => prev - 1) : setLikeCount((prev) => prev + 1);
   setLiked(!liked);
   const token = sessionStorage.getItem("token");
@@ -107,13 +107,23 @@ export async function likeUnlike(
 
     if (!res.ok) {
       liked
-        ? setLikeCount((prev) => prev - 1)
-        : setLikeCount((prev) => prev + 1);
+        ? setLikeCount((prev) => prev + 1)
+        : setLikeCount((prev) => prev - 1);
       setLiked(!liked);
     }
   } catch (err) {
     alert("Error: " + err.message);
   }
+}
+
+export function handleLikePost(e, currentUser, setShowLogin, likeUnlike) {
+  e.preventDefault();
+  e.stopPropagation();
+  if (!currentUser) {
+    setShowLogin(true);
+    return;
+  }
+  likeUnlike();
 }
 
 export function handleFilter(
@@ -153,50 +163,6 @@ export function displaySectionPosts(
       username //only for profile section
     );
   }, [postFilter, postType]);
-}
-
-export function infiniteScrolling() {
-  useEffect(() => {
-    let timeout;
-    const handleInfiniteScroll = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        const bottomOfPage =
-          document.documentElement.scrollHeight - window.innerHeight;
-        if (window.scrollY + 300 >= bottomOfPage) {
-          console.log(startProject);
-          if (hasMoreQna) {
-            fetchPostsByCategory(
-              "qna",
-              setAskAndAnswers,
-              startQna,
-              setStartQna,
-              setHasMoreQna,
-              qnaFilter,
-              12
-            );
-          }
-          if (hasMoreProject) {
-            fetchPostsByCategory(
-              "project",
-              setProjects,
-              startProject,
-              setStartProject,
-              setHasMoreProject,
-              projectFilter,
-              10
-            );
-          }
-        }
-      }, 250);
-    };
-
-    window.addEventListener("scroll", handleInfiniteScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleInfiniteScroll);
-    };
-  }, [startQna, startProject, hasMoreQna, hasMoreProject]);
 }
 
 export const UserContext = createContext(null);

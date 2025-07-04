@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { SearchBar } from "./Content";
 import { handleNavigating } from "./Content";
-import ContentNavbar from "./ContentNavbar";
+import SectionsNavbar from "./SectionsNavbar";
 import Projects from "./Projects";
 import AskAndAnswers from "./AskAndAnswers";
 import Loading from "./Loading";
 import "../styles/search.css";
-import { displayLiked, UIContext } from "../utils";
+import { displayLiked, UIContext, EmptyContainer } from "../utils";
 
 const SearchProfileCard = (props) => {
   const navigate = useNavigate();
@@ -37,7 +37,11 @@ const SearchProfiles = (props) => {
   ) : (
     <div className="searched-profiles-wrapper">
       <h2 className="post-label">Profiles</h2>
-      <div className="searched-profiles">{profilesReturned}</div>
+      {props.profiles.length > 0 ? (
+        <div className="searched-profiles">{profilesReturned}</div>
+      ) : (
+        <EmptyContainer />
+      )}
       {props.hasMore && <button onClick={props.fetchMore}>View More</button>}
     </div>
   );
@@ -52,6 +56,7 @@ export default function Search() {
   const limit = 10;
   const [hasMore, setHasMore] = useState(true);
   const { loading, setLoading } = useContext(UIContext);
+  const location = "search-page";
 
   displayLiked(setLikedPosts, "posts");
 
@@ -154,7 +159,7 @@ export default function Search() {
     <section className="content-wrapper">
       <SearchBar />
       <div className="search-results">
-        <ContentNavbar
+        <SectionsNavbar
           sections={navbar_sections}
           setCurrentSection={setCurrentSection}
           currentSection={currentSection}
@@ -183,7 +188,7 @@ export default function Search() {
               search_posts(start, setHasMore, setPosts, setStart, false)
             }
             projects={posts}
-            location="search-page"
+            location={location}
             likedPosts={likedPosts}
             currentSection={currentSection}
             setHasMoreProject={setHasMore}
@@ -200,7 +205,7 @@ export default function Search() {
               search_posts(start, setHasMore, setPosts, setStart, false)
             }
             askAndAnswers={posts}
-            location="search-page"
+            location={location}
             likedPosts={likedPosts}
             currentSection={currentSection}
             setHasMoreQna={setHasMore}

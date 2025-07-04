@@ -31,30 +31,35 @@ export default function AskAndAnswers(props) {
     <div className="ask-and-answers">
       <div className="post-header">
         <h2 className="post-label">Ask & Answer</h2>
-        <div className="filter-wrapper">
-          <div className="current-filter">
-            {props.qnaFilter}
-            <img
-              className="dropdown-arrow"
-              src="../media/images/dropdown-arrow.svg"
-            ></img>
+        {props.qnaFilter && (
+          <div className="filter-wrapper">
+            <div className="current-filter">
+              {props.qnaFilter}
+              <img
+                className="dropdown-arrow"
+                src="../media/images/dropdown-arrow.svg"
+              ></img>
+            </div>
+            <div className="filter-dropdown">
+              {props.qnaFilter !== "Best" && (
+                <div
+                  onClick={() => props.setQnaFilter("Best")}
+                  className="filter"
+                >
+                  Best
+                </div>
+              )}
+              {props.qnaFilter !== "New" && (
+                <div
+                  onClick={() => props.setQnaFilter("New")}
+                  className="filter"
+                >
+                  New
+                </div>
+              )}
+            </div>
           </div>
-          <div className="filter-dropdown">
-            {props.qnaFilter !== "Best" && (
-              <div
-                onClick={() => props.setQnaFilter("Best")}
-                className="filter"
-              >
-                Best
-              </div>
-            )}
-            {props.qnaFilter !== "New" && (
-              <div onClick={() => props.setQnaFilter("New")} className="filter">
-                New
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
       {props.askAndAnswers.length > 0 ? all_askAndAnswers : <EmptyContainer />}
       {props.hasMoreQna && (

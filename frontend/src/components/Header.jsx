@@ -5,13 +5,18 @@ import "../styles/header.css";
 import { UserContext } from "../utils";
 import { useExitListener } from "../utils";
 import { Link } from "react-router-dom";
-import ContentNavbar from "./ContentNavbar";
+import SectionsNavbar from "./SectionsNavbar";
 
 export default function Header() {
-  const { currentUser, isLoggedIn, setCurrentUser, setIsLoggedIn } =
-    useContext(UserContext);
+  const {
+    currentUser,
+    isLoggedIn,
+    setCurrentUser,
+    setIsLoggedIn,
+    showLogin,
+    setShowLogin,
+  } = useContext(UserContext);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
   const [clickCreatePost, setClickCreatePost] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef(null);

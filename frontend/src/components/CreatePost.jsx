@@ -120,13 +120,8 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
     }));
   };
 
-  useEffect(() => {
-    console.log(projectPost);
-  }, [projectPost]);
-
   //handles submitting the post
   const handleSubmit = async (e) => {
-    console.log(selectedTags);
     e.preventDefault();
     try {
       const res = await fetch("http://localhost:5000/create_post", {

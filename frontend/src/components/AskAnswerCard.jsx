@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { handleNavigating } from "./Content";
-import { likeUnlike, UserContext, UIContext } from "../utils";
+import { likeUnlike, UserContext, UIContext, handleLikePost } from "../utils";
 
 export default function AskAnswerCard(props) {
   const [deleted, setDeleted] = useState(false);
   const [liked, setLiked] = useState(null);
   const [likeCount, setLikeCount] = useState(null);
   const navigate = useNavigate();
-  const { currentUser } = useContext(UserContext);
+  const { currentUser, setShowLogin } = useContext(UserContext);
   const { setShowPopup } = useContext(UIContext);
 
   useEffect(() => {
@@ -42,13 +42,8 @@ export default function AskAnswerCard(props) {
           <span className="upvotes">
             <img
               onClick={(e) =>
-                likeUnlike(
-                  e,
-                  props.id,
-                  "posts",
-                  likeCount,
-                  setLiked,
-                  setLikeCount
+                handleLikePost(e, currentUser, setShowLogin, () =>
+                  likeUnlike(props.id, "posts", liked, setLiked, setLikeCount)
                 )
               }
               className={liked ? "upvote-icon-liked" : "upvote-icon"}

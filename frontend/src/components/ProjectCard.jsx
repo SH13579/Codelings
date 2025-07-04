@@ -1,7 +1,8 @@
 import React, { useState, useRef, useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { handleNavigating } from "./Content";
-import { UserContext, likeUnlike, UIContext } from "../utils";
+import { UserContext, likeUnlike, UIContext, handleLikePost } from "../utils";
+import Tags from "./Tags";
 
 //each individual project component
 export default function ProjectCard(props) {
@@ -13,7 +14,7 @@ export default function ProjectCard(props) {
     e.preventDefault();
   };
 
-  const { currentUser } = useContext(UserContext);
+  const { currentUser, setShowLogin } = useContext(UserContext);
   const { setShowPopup } = useContext(UIContext);
 
   const navigate = useNavigate();
@@ -48,16 +49,6 @@ export default function ProjectCard(props) {
     );
   };
 
-  const Tags = () => {
-    if (props.tags[0] === null) {
-      return;
-    }
-    const all_tags = props.tags.map((item) => {
-      return <div className="post-tag">#{item}</div>;
-    });
-    return <div className="post-tags">{all_tags}</div>;
-  };
-
   useEffect(() => {
     setLikeCount(props.upvotes);
   }, [props.upvotes]);
@@ -86,12 +77,14 @@ export default function ProjectCard(props) {
         </div>
         <h3 className="post-title">{props.title}</h3>
         <div className="post-desc">{props.description}</div>
-        {props.tags && <Tags />}
+        <Tags tags={props.tags} />
         <div className="upvotes-comments-wrapper">
           <span className="upvotes">
             <img
               onClick={(e) =>
-                likeUnlike(e, props.id, "posts", liked, setLiked, setLikeCount)
+                handleLikePost(e, currentUser, setShowLogin, () =>
+                  likeUnlike(props.id, "posts", liked, setLiked, setLikeCount)
+                )
               }
               className={liked ? "upvote-icon-liked" : "upvote-icon"}
               src="../media/images/thumbs-up.svg"

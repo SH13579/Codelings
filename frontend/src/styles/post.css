@@ -1,12 +1,13 @@
-.no-hover{
-  margin-top: 0.5rem;
-}
 .no-hover .post-wrapper{
   cursor: default;
 }
 .no-hover .post-wrapper:hover{
   background-color: transparent;
   transition: none;
+}
+.comment-top-row{
+  display: flex;
+  align-items: center;
 }
 .user-info{
   cursor: pointer;
@@ -30,7 +31,7 @@
   margin-bottom: 0.05rem;
 }
 .all-replies{
-  padding-left: 1.25rem
+  padding-left: 1.25rem;
 }
 .comment-input{
   height: 5rem;
@@ -96,10 +97,19 @@
 }
 .comment-buttons .comment-reply-button{
   cursor: pointer;
-  padding-left: 2rem;
+  margin-left: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+.comment-reply-button:hover{
+  background-color: lightblue;
+  border-radius: 0.5rem;
 }
 .comment-delete-button{
   cursor: pointer;
+}
+.comment-delete-button:hover{
+  opacity: 0.7;
 }
 .comment-reply-box{
   position: relative;
@@ -166,6 +176,24 @@
 }
 .view-more-button{
   width: 100%;
+}
+.view-more-replies-button{
+  width: 11rem;
+  display: flex;
+  justify-content: center;
+  color: #0353A4;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  align-items: center;
+}
+.view-more-replies-button img{
+  width: 1.75rem;
+  object-fit: contain;
+  display: block;
+}
+.view-more-replies-button:hover{
+  background-color: lightblue;
+  border-radius: 1rem;
 }
 .horizontal-line {
   height: 1px;

@@ -1,319 +1,16 @@
-import React, {
-  useCallback,
-  useState,
-  useEffect,
-  useContext,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "../styles/post.css";
-import Profile from "./Profile";
-import { UserContext, UIContext } from "../utils";
+import { UserContext, UIContext, handleLikePost, likeUnlike } from "../utils";
 import { handleNavigating } from "./Content";
-
-function CommentCard({
-  token,
-  postId,
-  setMsg,
-  parentComment,
-  currentUser,
-  navigate,
-  replyCommentId,
-  replyText,
-  setReplyText,
-  setReplyCommentId,
-  setParentCommentsList,
-
-  //2 below are for recursive calls
-  //necesary for replying to reply to update existing repliesList
-  parentRepliesList,
-  setParentRepliesList,
-}) {
-  const isReply = parentComment.parent_comment_id !== null;
-  const isCommenter =
-    currentUser && currentUser.username === parentComment.name;
-  const showReplyBox = replyCommentId === parentComment.comment_id; //
-  //if <CommentCard /> is parent comment, set repliesList to []
-  //if <CommentCard /> is reply, set repliesList to existing repliesList in order for replying to reply to work
-  // const [repliesList, setRepliesList] = useState([]); //parent comment
-  const [repliesList, setRepliesList] = useState(
-    isReply ? parentRepliesList || [] : []
-  );
-  const [replyStart, setReplyStart] = useState(0);
-  const [hasMoreReplies, setHasMoreReplies] = useState(
-    parentComment.has_replies
-  );
-  const limit = 5;
-  const { setShowPopup } = useContext(UIContext);
-
-  const handleDeleteComment = async (commentId, parentCommentId = null) => {
-    async function deleteComment() {
-      try {
-        const res = await fetch(`http://localhost:5000/delete_comment`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            comment_id: commentId,
-            post_id: postId,
-            parent_comment_id: parentCommentId,
-          }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          //if reply, delete reply
-          if (isReply) {
-            //use setParentRepliesList if deleting reply
-            setParentRepliesList((prev) => 
-              prev.filter((reply) => reply.comment_id !== commentId)
-          );
-          }
-          //if parent comment, delete comment along with its replies
-          else {
-            setParentCommentsList((prev) => {
-              return prev.filter((comment) => comment.comment_id !== commentId);
-            });
-          }
-          setShowPopup(null)
-
-        } else {
-          alert(data.error);
-        }
-      } catch (err) {
-        alert("Error: " + err.message);
-      }
-    }
-
-    const popupMessage = isReply ?(
-      <div>
-        <h3>Delete Reply?</h3>
-        <h4>This action cannot be undone.</h4>
-      </div>
-    ) : (
-      <div>
-        <h3>Delete Comment?</h3>
-        <h4>This action will delete your comment and all its replies.</h4>
-      </div>
-    )
-
-    setShowPopup({
-      message: popupMessage,
-      buttons: [
-        {
-          label: "Yes",
-          action: deleteComment,
-        },
-        {
-          label: "Cancel",
-          action: () => setShowPopup(null)
-        }
-      ]
-    })
-  };
-
-  const handleReplySubmit = async (e, parentCommentId) => {
-    e.preventDefault();
-    try {
-      //call the same route, but send different data (include parent_comment_id)
-      const res = await fetch("http://localhost:5000/post_comment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          post_id: postId,
-          comment_text: replyText,
-          parent_comment_id: parentCommentId,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        const newReply = {
-          comment_id: data.commentId,
-          date: "Just now",
-          name: currentUser.username,
-          comment: replyText,
-          pfp: currentUser.pfp,
-          parent_comment_id: parentCommentId,
-          upvotes: 0,
-          comments_count: 0,
-        };
-
-        //to update frontend immediately after posting reply
-        if (!hasMoreReplies) {
-          setRepliesList((prev) => [...prev, newReply]);
-        }
-
-        setReplyText("");
-        setReplyCommentId(null);
-        setMsg(data.success);
-      } else {
-        setMsg("");
-      }
-    } catch (err) {
-      alert("Error: " + err.message);
-    }
-  };
-
-  const handleReplyClick = (commentId, username, isReplyingToReply) => {
-    //still a bit confused on parentId
-    const parentId = isReplyingToReply
-      ? parentComment.parent_comment_id //connect to reply's parent_comment_id
-      : parentComment.comment_id; //connect to parent_comment's id
-    setReplyCommentId(currentUser ? parentId : null); //if not logged in, do not show textarea
-    setReplyText(
-      isReplyingToReply && username !== currentUser.username
-        ? `@${username} `
-        : ""
-    ); //if replying to reply, @username. Refer to showReplyBox below
-  };
-
-  const fetchReplies = async (reset = false) => {
-    try {
-      const start = reset ? 0 : replyStart;
-      const res = await fetch(
-        `http://localhost:5000/get_replies?parent_comment_id=${parentComment.comment_id}&start=${start}&limit=${limit}`
-      );
-      const data = await res.json();
-      if (res.ok) {
-        const fetchedReplies = data.replies;
-        setRepliesList((prev) =>
-          reset ? fetchedReplies : [...prev, ...fetchedReplies]
-        );
-        setHasMoreReplies(
-          fetchedReplies.length > 0 && fetchedReplies.length === limit
-        );
-        setReplyStart((prev) => prev + limit);
-      } else {
-        alert(data.error);
-      }
-    } catch (err) {
-      alert("Error: " + err.message);
-    }
-  };
-
-  return (
-    //REMINDER: change to reply if commentcard is reply (unnecessary?)
-    <div className={`comment ${isReply ? "reply" : ""}`}>
-      <div
-        className="user-info"
-        onClick={(e) => handleNavigating(e, navigate, parentComment.name)}
-      >
-        <img className="pfp" src={`../media/images/${parentComment.pfp}`} />
-        <div className="user-name">{parentComment.name}</div>
-        <div className="post-date">
-          <span className="post-date-dot">&#8226;</span>
-          {parentComment.date}
-        </div>
-      </div>
-      <div className="comment-text">{parentComment.comment}</div>
-      <div className="upvotes-comments-wrapper">
-        <span className="upvotes">
-          <img className="upvote-icon" src="../media/images/thumbs-up.svg" />
-          <div className="upvote-count">{parentComment.upvotes}</div>
-        </span>
-        {!isReply && (
-          <span className="comments">
-            <img className="comments-icon" src="../media/images/comments.svg" />
-            <div className="comment-count">{parentComment.comments_count}</div>
-          </span>
-        )}
-        <div className="comment-buttons">
-          <div
-            className="comment-reply-button"
-            onClick={() =>
-              handleReplyClick(
-                parentComment.comment_id,
-                parentComment.name,
-                isReply //check if <CommentCard /> is reply
-              )
-            }
-          >
-            Reply
-          </div>
-          {/*Add option to delete if user is the commenter*/}
-          {isCommenter && (
-            <div
-              className="comment-delete-button"
-              onClick={() => handleDeleteComment(parentComment.comment_id, parentComment.parent_comment_id)}
-            >
-              <img
-                  className="delete-icon"
-                  src="../media/images/delete-icon.svg"
-                />
-            </div>
-          )}
-        </div>
-      </div>
-      {/* show reply box when click "Reply" */}
-      {showReplyBox && (
-        <form onSubmit={(e) => handleReplySubmit(e, parentComment.comment_id)}>
-          <div className="comment-reply-box">
-            <textarea
-              className="reply-input"
-              value={replyText}
-              placeholder="Write your reply here..."
-              onChange={(e) => setReplyText(e.target.value)}
-            />
-            <button className="comment-submit-icon-reply" type="submit">
-              <img src="../media/images/enter.svg" />
-            </button>
-            <button
-              className="cancel-button"
-              type="button"
-              onClick={() => {
-                setReplyCommentId(null);
-                setReplyText("");
-              }}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      )}
-      {/* map through repliesList and call <CommentCard /> */}
-      {!isReply && repliesList && (
-        <div className="all-replies">
-          {/* issue: when doing recursive call, it maps again, leading to infinite loop. add "!isReply" so that it ONLY maps ONCE when <CommentCard /> is a parent comment  */}
-          {repliesList.map((reply) => (
-            <CommentCard
-              key={reply.comment_id}
-              token={token}
-              postId={postId}
-              setMsg={setMsg}
-              parentComment={reply}
-              currentUser={currentUser}
-              navigate={navigate}
-              replyCommentId={replyCommentId}
-              replyText={replyText}
-              setReplyText={setReplyText}
-              setReplyCommentId={setReplyCommentId}
-              setRepliesList={setRepliesList}
-              setParentCommentsList={setParentCommentsList}
-
-              //create variable and function to keep track of the existing and correct repliesList in order to append reply and deleting that reply immediately
-              parentRepliesList={repliesList} 
-              setParentRepliesList={setRepliesList}
-            />
-          ))}
-          {hasMoreReplies && (
-            <button onClick={() => fetchReplies()}>View More Replies</button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+import CommentCard from "./CommentCard";
+import Tags from "./Tags";
+import Loading from "./Loading";
 
 function Comments({ postId, currentUser, token }) {
   const [commentText, setCommentText] = useState("");
   const [replyText, setReplyText] = useState("");
-  const [parentCommentsList, setParentCommentsList] = useState([]); //contains parent comments and child replies
+  const [parentCommentsList, setParentCommentsList] = useState([]);
   const [replyCommentId, setReplyCommentId] = useState(null);
   const [msg, setMsg] = useState("");
   const [start, setStart] = useState(0); //for fetchComments()
@@ -358,51 +55,6 @@ function Comments({ postId, currentUser, token }) {
   useEffect(() => {
     fetchComments(true);
   }, []);
-
-  //
-  // async function fetchReplies(parentId, reset = false) {
-  //   try {
-  //     const currentComment = parentCommentsList.find(
-  //       (comment) => comment.comment_id === parentId
-  //     );
-  //     const currentStart = reset ? 0 : currentComment?.replyStart || 0;
-  //     const res = await fetch(
-  //       `http://localhost:5000/get_replies?parent_comment_id=${parentId}&start=${
-  //         reset ? 0 : currentStart
-  //       }&limit=${limit}`,
-  //       {
-  //         method: "GET",
-  //         headers: { Accept: "application/json" },
-  //       }
-  //     );
-  //     const data = await res.json();
-  //     //keep track of start and hasMoreReplies for each parent comment
-  //     if (res.ok) {
-  //       const replies = data.replies;
-  //       setParentCommentsList((prev) =>
-  //         //go through every parent comment
-  //         prev.map((comment) =>
-  //           comment.comment_id === parentId
-  //             ? {
-  //                 ...comment,
-  //                 replies: reset
-  //                   ? replies
-  //                   : [...(comment.replies || []), ...replies],
-  //                 // replyStart: currentStart + replies.length, //why not + limit?
-  //                 // hasMoreReplies: replies.length === limit,
-  //               }
-  //             : comment
-  //         )
-  //       );
-  //     } else {
-  //       alert(data.error);
-  //       console.log(data.error);
-  //     }
-  //     console.log(data);
-  //   } catch (err) {
-  //     alert("Error: " + err.message);
-  //   }
-  // }
 
   useEffect(() => {
     console.log(start);
@@ -490,6 +142,7 @@ function Comments({ postId, currentUser, token }) {
             setReplyText={setReplyText}
             setReplyCommentId={setReplyCommentId}
             setParentCommentsList={setParentCommentsList}
+            setStart={setStart}
           />
         ))}
       </div>
@@ -506,7 +159,10 @@ export default function Post() {
   const token = sessionStorage.getItem("token");
   // const { state: post } = useLocation(); //useLocation gives access to the current route's location object (including any state/props passed via <Link>)
   const [postInfo, setPostInfo] = useState({});
-  const { currentUser } = useContext(UserContext);
+  const { currentUser, setShowLogin } = useContext(UserContext);
+  const { loading, setLoading } = useContext(UIContext);
+  const [likeCount, setLikeCount] = useState(null);
+  const [liked, setLiked] = useState(false);
   const navigate = useNavigate();
   const { postId } = useParams();
 
@@ -517,32 +173,46 @@ export default function Post() {
 
   //fetch post's info
   useEffect(() => {
+    setLoading(true);
     const fetchPost = async () => {
       try {
         const res = await fetch(
           `http://localhost:5000/get_specific_post?post_id=${postId}`,
           {
             method: "GET",
-            headers: { Accept: "application/json" },
+            headers: {
+              Accept: "application/json",
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
         const data = await res.json();
         if (res.ok) {
-          // console.log(userCreatedPost);
-          setPostInfo(data.posts[0]);
+          const post = data.posts[0];
+          setPostInfo(post);
+          setLikeCount(post.upvotes);
+          setLiked(post.liked);
         } else {
           console.log("FAILED TO FETCH: " + data.error);
         }
       } catch (err) {
         alert("Error: " + err.message);
+      } finally {
+        setLoading(false);
       }
     };
     fetchPost();
   }, [postId]);
 
+  useEffect(() => {
+    console.log(postInfo);
+  }, [postInfo]);
+
   console.log("Rendering Post");
 
-  return (
+  return loading ? (
+    <Loading />
+  ) : (
     <div className="content-wrapper no-hover">
       <div className="post-wrapper">
         <div className="project-first-row">
@@ -563,6 +233,7 @@ export default function Post() {
         </div>
         <h2 className="post-title">{postInfo.title}</h2>
         <h4 className="post-desc-post">{postInfo.description}</h4>
+        <Tags tags={postInfo.tags} />
         <div className="post-video">
           {/* reminder to remove video for ask & answer section */}
           <video controls>
@@ -576,8 +247,16 @@ export default function Post() {
         <div className="post-body">{postInfo.body}</div>
         <div className="upvotes-comments-wrapper">
           <span className="upvotes">
-            <img className="upvote-icon" src="../media/images/thumbs-up.svg" />
-            <div className="upvote-count">{postInfo.upvotes}</div>
+            <img
+              onClick={(e) =>
+                handleLikePost(e, currentUser, setShowLogin, () =>
+                  likeUnlike(postId, "posts", liked, setLiked, setLikeCount)
+                )
+              }
+              className={liked ? "upvote-icon-liked" : "upvote-icon"}
+              src="../media/images/thumbs-up.svg"
+            />
+            <div className="upvote-count">{likeCount}</div>
           </span>
           <span className="comments">
             <img className="comments-icon" src="../media/images/comments.svg" />

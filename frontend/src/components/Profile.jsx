@@ -1,10 +1,10 @@
 import React, { useState, useContext, useEffect } from "react";
 import "../styles/profile.css";
-import { UserContext, displayLiked } from "../utils";
+import { UserContext, displayLiked, UIContext } from "../utils";
 import { useParams } from "react-router-dom";
 import Projects from "./Projects";
 import AskAndAnswers from "./AskAndAnswers";
-import ContentNavbar from "./ContentNavbar";
+import SectionsNavbar from "./SectionsNavbar";
 
 export function showDeletePopup(e, post_id, setDeleted, setShowPopup) {
   e.preventDefault();
@@ -110,7 +110,7 @@ export default function Profile() {
   const [start, setStart] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [postFilter, setPostFilter] = useState("Best");
-  const [tags, setTags] = useState([]);
+  const location = "profile";
   const { username } = useParams();
 
   const navbar_sections = [
@@ -148,7 +148,7 @@ export default function Profile() {
         </div>
         <div className="horizontal-line"></div>
         <div className="content-grid">
-          <ContentNavbar
+          <SectionsNavbar
             sections={navbar_sections}
             setCurrentSection={setCurrentSection}
             currentSection={currentSection}
@@ -184,7 +184,7 @@ export default function Profile() {
               projects={posts}
               setProjectFilter={setPostFilter}
               username={username}
-              location="profile"
+              location={location}
               likedPosts={likedPosts}
               currentSection={currentSection}
               setHasMoreProject={setHasMore}
@@ -223,7 +223,7 @@ export default function Profile() {
               askAndAnswers={posts}
               setQnaFilter={setPostFilter}
               username={username}
-              location="profile"
+              location={location}
               likedPosts={likedPosts}
               currentSection={currentSection}
               setHasMoreQna={setHasMore}
