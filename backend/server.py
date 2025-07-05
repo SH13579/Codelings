@@ -742,14 +742,17 @@ def get_replies():
             # get parents comments
             cursor.execute(
                 """
-                SELECT comments.id, comments.comment_date, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username
+                SELECT comments.id, comments.comment_date, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username,
+                %s IS NOT NULL AND EXISTS (
+                    SELECT 1 FROM likes WHERE user_id = %s AND target_id = comments.id AND type = 'comments'
+                ) AS user_liked_reply
                 FROM comments
                 JOIN users ON comments.user_id = users.id
                 WHERE comments.parent_comment_id = %s
                 ORDER BY comments.id ASC
                 LIMIT %s OFFSET %s
             """,
-                (parent_comment_id, limit, start),
+                (user_id, user_id, parent_comment_id, limit, start),
             )
             replies = cursor.fetchall()
             columns = [
@@ -760,6 +763,7 @@ def get_replies():
                 "upvotes",
                 "comments_count",
                 "name",
+                "liked",
             ]
             replies_list = get_posts_helper(replies, columns)
 

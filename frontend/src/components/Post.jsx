@@ -30,8 +30,8 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
           method: "GET",
           headers: {
             Accept: "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          Authorization: `Bearer ${token}`,
         }
       );
       const data = await res.json();
@@ -91,6 +91,7 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
           parent_comment_id: null,
           upvotes: 0,
           comments_count: 0,
+          liked: false,
         };
         //only show newly created comment imemdiately on frontend if there are less than 5 comments OR no more comments left (view more button gone)
         //to update frontend immediately after submitting a comment
@@ -164,7 +165,7 @@ export default function Post() {
   // const { state: post } = useLocation(); //useLocation gives access to the current route's location object (including any state/props passed via <Link>)
   const [postInfo, setPostInfo] = useState({});
   const { currentUser, setShowLogin } = useContext(UserContext);
-  const { loading, setLoading } = useContext(UIContext);
+  const { loading, setLoading, displayLiked } = useContext(UIContext);
   const [likeCount, setLikeCount] = useState(null);
   const [liked, setLiked] = useState(false);
   const navigate = useNavigate();

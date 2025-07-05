@@ -161,6 +161,7 @@ export default function CommentCard({
           parent_comment_id: parentCommentId,
           upvotes: 0,
           comments_count: 0,
+          likes: false
         };
 
         //to update frontend immediately after posting reply
@@ -201,8 +202,8 @@ export default function CommentCard({
           method: "GET",
           headers: {
             Accept: "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          Authorization: `Bearer ${token}`,
         }
       );
       const data = await res.json();
