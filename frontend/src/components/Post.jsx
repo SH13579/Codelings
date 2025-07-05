@@ -7,7 +7,7 @@ import CommentCard from "./CommentCard";
 import Tags from "./Tags";
 import Loading from "./Loading";
 
-function Comments({ postId, currentUser, token }) {
+function Comments({ postId, currentUser, setShowLogin, token }) {
   const [commentText, setCommentText] = useState("");
   const [replyText, setReplyText] = useState("");
   const [parentCommentsList, setParentCommentsList] = useState([]);
@@ -28,7 +28,10 @@ function Comments({ postId, currentUser, token }) {
         }&limit=${limit}`,
         {
           method: "GET",
-          headers: { Accept: "application/json" },
+          headers: {
+            Accept: "application/json",
+          },
+          Authorization: `Bearer ${token}`,
         }
       );
       const data = await res.json();
@@ -136,6 +139,7 @@ function Comments({ postId, currentUser, token }) {
             setMsg={setMsg}
             parentComment={parentComment}
             currentUser={currentUser}
+            setShowLogin={setShowLogin}
             navigate={navigate}
             replyCommentId={replyCommentId}
             replyText={replyText}
@@ -264,7 +268,14 @@ export default function Post() {
           </span>
         </div>
         <div className="horizontal-line"></div>
-        {<Comments postId={postId} currentUser={currentUser} token={token} />}
+        {
+          <Comments
+            postId={postId}
+            currentUser={currentUser}
+            setShowLogin={setShowLogin}
+            token={token}
+          />
+        }
       </div>
     </div>
   );

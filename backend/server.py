@@ -659,20 +659,37 @@ def get_comments():
     start = int(request.args.get("start"))
     limit = int(request.args.get("limit"))
     post_id = request.args.get("post_id")
+    user_id = None
+
+    # checking to see if there is a current user logged in to fetch if comment is liked
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        try:
+            decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = decoded["user_id"]
+        except jwt.ExpiredSignatureError:
+            pass
+        except jwt.InvalidTokenError:
+            pass
+
     try:
 
         with conn.cursor() as cursor:
             # get parents comments
             cursor.execute(
                 """
-                SELECT comments.id, comments.comment_date, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username
+                SELECT comments.id, comments.comment_date, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username,
+                %s IS NOT NULL AND EXISTS (
+                    SELECT 1 FROM likes WHERE user_id = %s AND target_id = comments.id AND type = 'comments'
+                ) AS user_liked_comment
                 FROM comments
                 JOIN users ON comments.user_id = users.id
                 WHERE comments.post_id = %s AND comments.parent_comment_id IS NULL
                 ORDER BY comments.id ASC
                 LIMIT %s OFFSET %s
             """,
-                (post_id, limit, start),
+                (user_id, user_id, post_id, limit, start),
             )
             parents = cursor.fetchall()
             columns = [
@@ -683,6 +700,7 @@ def get_comments():
                 "upvotes",
                 "comments_count",
                 "name",
+                "liked",
             ]
             parents_list = get_posts_helper(parents, columns)
             for parent in parents_list:
@@ -704,6 +722,19 @@ def get_replies():
     start = int(request.args.get("start"))
     limit = int(request.args.get("limit"))
     parent_comment_id = request.args.get("parent_comment_id")
+    user_id = None
+
+    # checking to see if there is a current user logged in to fetch if comment is liked
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        try:
+            decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            user_id = decoded["user_id"]
+        except jwt.ExpiredSignatureError:
+            pass
+        except jwt.InvalidTokenError:
+            pass
 
     try:
 
@@ -766,9 +797,10 @@ def like_unlike_post(decoded):
                     "DELETE FROM likes WHERE user_id = %s AND target_id = %s AND type = %s",
                     (user_id, target_id, type),
                 )
+                likes_column = "likes" if type == "posts" else "likes_count"
                 query = f"""
                 UPDATE {type}
-                SET likes = likes - 1
+                SET {likes_column} = {likes_column} - 1
                 WHERE id = %s
                 """
                 cursor.execute(query, (target_id,))
@@ -778,9 +810,10 @@ def like_unlike_post(decoded):
                     "INSERT INTO likes (user_id, type, target_id) VALUES (%s, %s, %s)",
                     (user_id, type, target_id),
                 )
+                likes_column = "likes" if type == "posts" else "likes_count"
                 query = f"""
                 UPDATE {type}
-                SET likes = likes + 1
+                SET {likes_column} = {likes_column} + 1
                 WHERE id = %s
                 """
                 cursor.execute(query, (target_id,))
@@ -816,6 +849,61 @@ def fetch_likes(decoded):
             likes_arr.append(like[0])
 
         return jsonify({"likes_arr": likes_arr})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# fetch all the posts the user liked
+@app.route("/fetch_liked_posts", methods=["GET"])
+@token_required
+def fetch_liked_posts(decoded):
+
+    limit = request.args.get("limit")
+    offset = request.args.get("offset")
+    user_id = decoded["user_id"]
+    try:
+        with conn.cursor() as cursor:
+            query = f"""
+                SELECT
+                    posts.id,
+                    posts.post_date,
+                    posts.post_type,
+                    posts.title,
+                    posts.post_description,
+                    posts.likes,
+                    posts.comments,
+                    users.username,
+                    users.profile_picture,
+                    array_agg(tags.tag_name) AS tag_name
+                FROM posts
+                JOIN users ON posts.user_id = users.id
+                JOIN likes ON posts.id = likes.target_id
+                LEFT JOIN post_tags ON posts.id = post_tags.post_id
+                LEFT JOIN tags ON post_tags.tag_id = tags.id
+                WHERE likes.user_id = %s AND likes.type = 'posts'
+                GROUP BY posts.id, posts.post_date, posts.post_type, posts.user_id, posts.title, posts.post_description, posts.likes, posts.comments, users.username, users.profile_picture
+                LIMIT %s OFFSET %s
+            """
+            cursor.execute(query, (user_id, limit, offset))
+            liked_posts = cursor.fetchall()
+
+        columns = [
+            "id",
+            "date",
+            "type",
+            "title",
+            "description",
+            "upvotes",
+            "comments_count",
+            "name",
+            "pfp",
+            "tags",
+        ]
+
+        liked_posts_arr = get_posts_helper(liked_posts, columns)
+
+        return jsonify({"liked_posts": liked_posts_arr})
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -857,20 +945,20 @@ def search_posts():
             cursor.execute(query, (search_str, post_type, limit, offset))
             posts = cursor.fetchall()
 
-            columns = [
-                "id",
-                "date",
-                "type",
-                "title",
-                "description",
-                "upvotes",
-                "comments_count",
-                "name",
-                "pfp",
-                "tags",
-            ]
+        columns = [
+            "id",
+            "date",
+            "type",
+            "title",
+            "description",
+            "upvotes",
+            "comments_count",
+            "name",
+            "pfp",
+            "tags",
+        ]
 
-            posts_arr = get_posts_helper(posts, columns)
+        posts_arr = get_posts_helper(posts, columns)
 
         return jsonify({"posts": posts_arr})
 

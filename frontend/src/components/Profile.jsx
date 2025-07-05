@@ -2,9 +2,8 @@ import React, { useState, useContext, useEffect } from "react";
 import "../styles/profile.css";
 import { UserContext, displayLiked, UIContext } from "../utils";
 import { useParams } from "react-router-dom";
-import Projects from "./Projects";
-import AskAndAnswers from "./AskAndAnswers";
 import SectionsNavbar from "./SectionsNavbar";
+import Posts from "./Posts";
 
 export function showDeletePopup(e, post_id, setDeleted, setShowPopup) {
   e.preventDefault();
@@ -29,7 +28,6 @@ export function showDeletePopup(e, post_id, setDeleted, setShowPopup) {
         return;
       }
       if (res.ok) {
-        console.log(data.success);
         setDeleted(true);
         setShowPopup(null);
       }
@@ -57,18 +55,60 @@ export function showDeletePopup(e, post_id, setDeleted, setShowPopup) {
   });
 }
 
+async function fetchLikedPosts(
+  start,
+  setStart,
+  setPosts,
+  setHasMore,
+  limit,
+  reset = false,
+  setLoading,
+  token
+) {
+  setLoading(true);
+  try {
+    const res = await fetch(
+      `http://localhost:5000/fetch_liked_posts?limit=${limit}&offset=${
+        reset ? 0 : start
+      }`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const data = await res.json();
+    if (data.liked_posts.length < limit) {
+      setHasMore(false);
+    }
+    if (reset) {
+      setStart(data.liked_posts.length);
+      setPosts(data.liked_posts);
+    } else {
+      setStart((prev) => prev + limit);
+      setPosts((prev) => [...prev, ...data.liked_posts]);
+    }
+  } catch (err) {
+    alert("Error: " + err.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
 async function fetchPostsProfile(
   postType,
-  setPostType,
+  setPosts,
   start,
   setStart,
   setHasMore,
   filter,
   limit,
   reset = false,
-  username
+  username,
+  setLoading
 ) {
   const category = filter === "Best" ? "likes" : "post_date";
+  setLoading(true);
   try {
     const res = await fetch(
       `http://localhost:5000/get_posts_byUserAndCategory?username=${encodeURIComponent(
@@ -77,7 +117,6 @@ async function fetchPostsProfile(
         reset ? 0 : start
       }&limit=${limit}`,
       {
-        method: "GET",
         headers: { Accept: "application/json" },
       }
     );
@@ -87,23 +126,24 @@ async function fetchPostsProfile(
       setHasMore(false);
     }
     if (reset) {
-      setPostType(data.posts);
+      setPosts(data.posts);
       setStart(data.posts.length);
     } else {
       //update all the posts displayed
-      setPostType((prev) => [...prev, ...data.posts]);
+      setPosts((prev) => [...prev, ...data.posts]);
       //increment the offset to fetch the next batch of 10 posts
       setStart((prev) => prev + limit);
     }
   } catch (err) {
     alert("Error: " + err.message);
+  } finally {
+    setLoading(false);
   }
 }
 
 export default function Profile() {
   const token = sessionStorage.getItem("token");
-  const [clickChat, setClickChat] = useState(false);
-  const { currentUser, setCurrentUser } = useContext(UserContext);
+  const { loading, setLoading } = useContext(UIContext);
   const [likedPosts, setLikedPosts] = useState([]);
   const [currentSection, setCurrentSection] = useState("project");
   const [posts, setPosts] = useState([]);
@@ -124,15 +164,22 @@ export default function Profile() {
       imagePath: "../media/images/askAnswer.svg",
       sectionName: "Ask & Answer",
     },
+    {
+      sectionDbName: "liked_posts",
+      imagePath: "../media/images/liked_section_icon.svg",
+      sectionName: "Liked Posts",
+    },
   ];
 
-  console.log("Rendering Profile");
+  displayLiked(setLikedPosts, "posts", setLoading);
 
-  displayLiked(setLikedPosts, "posts");
+  // useEffect(() => {
+  //   console.log(likedPosts);
+  // }, [likedPosts]);
 
-  useEffect(() => {
-    console.log(posts);
-  }, [posts]);
+  // useEffect(() => {
+  //   console.log(posts);
+  // }, [posts]);
 
   return (
     <div className="profile-wrapper">
@@ -154,7 +201,7 @@ export default function Profile() {
             currentSection={currentSection}
           />
           {currentSection === "project" && (
-            <Projects
+            <Posts
               displaySectionPosts={() =>
                 fetchPostsProfile(
                   currentSection,
@@ -165,7 +212,8 @@ export default function Profile() {
                   postFilter,
                   10,
                   true,
-                  username
+                  username,
+                  setLoading
                 )
               }
               fetchMorePosts={() =>
@@ -178,22 +226,24 @@ export default function Profile() {
                   postFilter,
                   10,
                   false,
-                  username
+                  username,
+                  setLoading
                 )
               }
-              projects={posts}
-              setProjectFilter={setPostFilter}
-              username={username}
-              location={location}
-              likedPosts={likedPosts}
               currentSection={currentSection}
-              setHasMoreProject={setHasMore}
-              hasMoreProject={hasMore}
-              projectFilter={postFilter}
+              location={location}
+              username={username}
+              postLabel="Projects"
+              posts={posts}
+              likedPosts={likedPosts}
+              hasMorePosts={hasMore}
+              setHasMorePosts={setHasMore}
+              filter={postFilter}
+              setFilter={setPostFilter}
             />
           )}
           {currentSection === "qna" && (
-            <AskAndAnswers
+            <Posts
               displaySectionPosts={() =>
                 fetchPostsProfile(
                   currentSection,
@@ -204,7 +254,8 @@ export default function Profile() {
                   postFilter,
                   10,
                   true,
-                  username
+                  username,
+                  setLoading
                 )
               }
               fetchMorePosts={() =>
@@ -217,18 +268,56 @@ export default function Profile() {
                   postFilter,
                   10,
                   false,
-                  username
+                  username,
+                  setLoading
                 )
               }
-              askAndAnswers={posts}
-              setQnaFilter={setPostFilter}
-              username={username}
-              location={location}
-              likedPosts={likedPosts}
               currentSection={currentSection}
-              setHasMoreQna={setHasMore}
-              hasMoreQna={hasMore}
-              qnaFilter={postFilter}
+              location={location}
+              username={username}
+              postLabel="Ask & Answers"
+              posts={posts}
+              likedPosts={likedPosts}
+              hasMorePosts={hasMore}
+              setHasMorePosts={setHasMore}
+              filter={postFilter}
+              setFilter={setPostFilter}
+            />
+          )}
+          {currentSection === "liked_posts" && (
+            <Posts
+              displaySectionPosts={() =>
+                fetchLikedPosts(
+                  start,
+                  setStart,
+                  setPosts,
+                  setHasMore,
+                  10,
+                  true,
+                  setLoading,
+                  token
+                )
+              }
+              fetchMorePosts={() =>
+                fetchLikedPosts(
+                  start,
+                  setStart,
+                  setPosts,
+                  setHasMore,
+                  10,
+                  false,
+                  setLoading,
+                  token
+                )
+              }
+              currentSection={currentSection}
+              location={location}
+              username={username}
+              postLabel="Liked Posts"
+              posts={posts}
+              likedPosts={likedPosts}
+              hasMorePosts={hasMore}
+              setHasMorePosts={setHasMore}
             />
           )}
         </div>

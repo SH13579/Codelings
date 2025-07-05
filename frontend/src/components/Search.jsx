@@ -3,8 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { SearchBar } from "./Content";
 import { handleNavigating } from "./Content";
 import SectionsNavbar from "./SectionsNavbar";
-import Projects from "./Projects";
-import AskAndAnswers from "./AskAndAnswers";
+import Posts from "./Posts";
 import Loading from "./Loading";
 import "../styles/search.css";
 import { displayLiked, UIContext, EmptyContainer } from "../utils";
@@ -180,37 +179,39 @@ export default function Search() {
           />
         )}
         {currentSection === "project" && (
-          <Projects
+          <Posts
             displaySectionPosts={() =>
               search_posts(start, setHasMore, setPosts, setStart, true)
             }
             fetchMorePosts={() =>
               search_posts(start, setHasMore, setPosts, setStart, false)
             }
-            projects={posts}
+            postLabel="Projects"
             location={location}
-            likedPosts={likedPosts}
             currentSection={currentSection}
-            setHasMoreProject={setHasMore}
-            hasMoreProject={hasMore}
             searchTerm={searchTerm}
+            posts={posts}
+            likedPosts={likedPosts}
+            hasMorePosts={hasMore}
+            setHasMorePosts={setHasMore}
           />
         )}
         {currentSection === "qna" && (
-          <AskAndAnswers
+          <Posts
             displaySectionPosts={() =>
               search_posts(start, setHasMore, setPosts, setStart, true)
             }
             fetchMorePosts={() =>
               search_posts(start, setHasMore, setPosts, setStart, false)
             }
-            askAndAnswers={posts}
+            postLabel="Ask & Answers"
             location={location}
-            likedPosts={likedPosts}
             currentSection={currentSection}
-            setHasMoreQna={setHasMore}
-            hasMoreQna={hasMore}
             searchTerm={searchTerm}
+            posts={posts}
+            likedPosts={likedPosts}
+            hasMorePosts={hasMore}
+            setHasMorePosts={setHasMore}
           />
         )}
       </div>

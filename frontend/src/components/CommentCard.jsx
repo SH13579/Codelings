@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import "../styles/post.css";
-import { UIContext } from "../utils";
+import { UIContext, handleLikePost, likeUnlike } from "../utils";
 import { handleNavigating } from "./Content";
 
 function ReplyBox({ onSubmit, replyText, setReplyText, onCancel }) {
@@ -30,6 +30,7 @@ export default function CommentCard({
   setMsg,
   parentComment,
   currentUser,
+  setShowLogin,
   navigate,
   replyCommentId,
   replyText,
@@ -58,6 +59,8 @@ export default function CommentCard({
   const [hasMoreReplies, setHasMoreReplies] = useState(
     parentComment.has_replies
   );
+  const [likeCount, setLikeCount] = useState(parentComment.upvotes);
+  const [liked, setLiked] = useState(parentComment.liked);
   const limit = 5;
   const { setShowPopup } = useContext(UIContext);
 
@@ -193,7 +196,14 @@ export default function CommentCard({
     try {
       const start = reset ? 0 : replyStart;
       const res = await fetch(
-        `http://localhost:5000/get_replies?parent_comment_id=${parentComment.comment_id}&start=${start}&limit=${limit}`
+        `http://localhost:5000/get_replies?parent_comment_id=${parentComment.comment_id}&start=${start}&limit=${limit}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+          Authorization: `Bearer ${token}`,
+        }
       );
       const data = await res.json();
       if (res.ok) {
@@ -232,8 +242,22 @@ export default function CommentCard({
       <div className="comment-text">{parentComment.comment}</div>
       <div className="upvotes-comments-wrapper">
         <span className="upvotes">
-          <img className="upvote-icon" src="../media/images/thumbs-up.svg" />
-          <div className="upvote-count">{parentComment.upvotes}</div>
+          <img
+            onClick={(e) =>
+              handleLikePost(e, currentUser, setShowLogin, () =>
+                likeUnlike(
+                  parentComment.comment_id,
+                  "comments",
+                  liked,
+                  setLiked,
+                  setLikeCount
+                )
+              )
+            }
+            className={liked ? "upvote-icon-liked" : "upvote-icon"}
+            src="../media/images/thumbs-up.svg"
+          />
+          <div className="upvote-count">{likeCount}</div>
         </span>
         {!isReply && (
           <span className="comments">

@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useContext } from "react";
 import { Link, useFetcher, useNavigate } from "react-router-dom";
 import "../styles/content.css";
-import Projects from "./Projects";
-import AskAndAnswers from "./AskAndAnswers";
 import SectionsNavbar from "./SectionsNavbar";
-import Loading from "./Loading";
+import Posts from "./Posts";
 import { displayLiked, UIContext } from "../utils";
 
 export const SearchBar = () => {
@@ -190,13 +188,6 @@ export default function Content() {
     },
   ];
 
-  useEffect(() => {
-    console.log(start);
-    console.log(hasMore);
-    console.log(postFilter);
-    console.log(currentSection);
-  }, [start, hasMore, postFilter, currentSection]);
-
   console.log("Rendering Content");
 
   return (
@@ -210,7 +201,7 @@ export default function Content() {
           location={location}
         />
         {currentSection === "project" && ( //fetch posts for projects
-          <Projects
+          <Posts
             displaySectionPosts={() =>
               fetchPostsHomePage(
                 currentSection,
@@ -237,18 +228,19 @@ export default function Content() {
                 false
               )
             }
-            projects={posts}
-            setProjectFilter={setPostFilter}
-            location={location}
-            likedPosts={likedPosts}
             currentSection={currentSection}
-            setHasMoreProject={setHasMore}
-            hasMoreProject={hasMore}
-            projectFilter={postFilter}
+            location={location}
+            postLabel="Projects"
+            posts={posts}
+            likedPosts={likedPosts}
+            hasMorePosts={hasMore}
+            setHasMorePosts={setHasMore}
+            filter={postFilter}
+            setFilter={setPostFilter}
           />
         )}
         {fetchTagsForPostType(tags, "project").includes(currentSection) && ( //fetch tag posts for projects
-          <Projects
+          <Posts
             displaySectionPosts={() =>
               fetchSpecificTag(
                 currentSection,
@@ -277,18 +269,19 @@ export default function Content() {
                 false
               )
             }
-            projects={posts}
-            setProjectFilter={setPostFilter}
-            location={location}
-            likedPosts={likedPosts}
             currentSection={currentSection}
-            setHasMoreProject={setHasMore}
-            hasMoreProject={hasMore}
-            projectFilter={postFilter}
+            location={location}
+            postLabel="Projects"
+            posts={posts}
+            likedPosts={likedPosts}
+            hasMorePosts={hasMore}
+            setHasMorePosts={setHasMore}
+            filter={postFilter}
+            setFilter={setPostFilter}
           />
         )}
         {currentSection === "qna" && ( //fetch posts for ask&answers
-          <AskAndAnswers
+          <Posts
             displaySectionPosts={() =>
               fetchPostsHomePage(
                 currentSection,
@@ -315,14 +308,15 @@ export default function Content() {
                 false
               )
             }
-            askAndAnswers={posts}
-            setQnaFilter={setPostFilter}
-            location={location}
-            likedPosts={likedPosts}
             currentSection={currentSection}
-            setHasMoreQna={setHasMore}
-            hasMoreQna={hasMore}
-            qnaFilter={postFilter}
+            location={location}
+            postLabel="Ask & Answers"
+            posts={posts}
+            likedPosts={likedPosts}
+            hasMorePosts={hasMore}
+            setHasMorePosts={setHasMore}
+            filter={postFilter}
+            setFilter={setPostFilter}
           />
         )}
       </div>
