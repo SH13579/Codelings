@@ -1,13 +1,13 @@
 import React, { useContext, useEffect } from "react";
 import { UIContext } from "../utils";
-import Loading from "./Loading";
+import Loading, { ViewMoreLoading } from "./Loading";
 import { EmptyContainer } from "../utils";
 import { showDeletePopup } from "./Profile";
 import ProjectCard from "./ProjectCard";
 import AskAnswerCard from "./AskAnswerCard";
 
 export default function Posts(props) {
-  const { loading } = useContext(UIContext);
+  const { loading, viewMoreLoading } = useContext(UIContext);
 
   useEffect(() => {
     props.setHasMorePosts(true);
@@ -23,7 +23,6 @@ export default function Posts(props) {
         showDeletePopup={showDeletePopup} //only for profile section
         key={item.id}
         user={props.username} //only for profile section
-        liked={props.likedPosts.includes(item.id)}
         {...item}
       />
     );
@@ -59,9 +58,11 @@ export default function Posts(props) {
           </div>
         )}
       </div>
-      {!loading && props.posts.length > 0 ? all_posts : <EmptyContainer />}
+      {props.posts.length > 0 ? all_posts : <EmptyContainer />}
       {props.hasMorePosts && (
-        <button onClick={props.fetchMorePosts}>View More</button>
+        <button className="view-more-button" onClick={props.fetchMorePosts}>
+          {viewMoreLoading ? <ViewMoreLoading /> : "View More"}
+        </button>
       )}
     </div>
   );

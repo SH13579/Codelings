@@ -216,3 +216,22 @@
 .post-wrapper .horizontal-line{
   margin-top: 1.4rem;
 }
+.post-kebab-menu-wrapper{
+  position: relative;
+  margin-left: auto;
+  /* cursor: pointer; */
+  /* font-size: 1.5rem; */
+}
+.kebab-menu{
+  cursor: pointer;
+}
+.kebab-menu-dropdown{
+  position: absolute;
+  right: 0;
+  /* top: 4rem; */
+  width: 10rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}

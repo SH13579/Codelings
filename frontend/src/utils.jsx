@@ -52,37 +52,6 @@ export const EmptyContainer = () => {
   );
 };
 
-export async function fetchLiked(setLiked, type, token, setLoading) {
-  setLoading(true);
-  try {
-    const res = await fetch(`http://localhost:5000/fetch_likes?type=${type}`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await res.json();
-    setLiked(data.likes_arr);
-  } catch (err) {
-    alert("Error: " + err.message);
-  } finally {
-    setLoading(false);
-  }
-}
-
-export function displayLiked(setLiked, type, setLoading) {
-  const token = sessionStorage.getItem("token");
-  useEffect(() => {
-    if (token) {
-      fetchLiked(setLiked, type, token, setLoading);
-    } else {
-      setLiked([]);
-    }
-  }, [token]);
-}
-
 export async function likeUnlike(
   target_id,
   type,

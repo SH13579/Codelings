@@ -333,39 +333,11 @@
   border-radius: 5px;
   font-size: 0.8rem;
 }
-.loader-wrapper{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-  min-height: 20rem;
-}
-.loader {
-    color: #cecece;
-    font-family: Consolas, Menlo, Monaco, monospace;
-    font-weight: bold;
-    font-size: 4rem;
-    opacity: 0.8;
-  }
-  .loader:before {
-    content: "{";
-    display: inline-block;
-    animation: pulse 0.4s alternate infinite ease-in-out;
-  }
-  .loader:after {
-    content: "}";
-    display: inline-block;
-    animation: pulse 0.4s 0.3s alternate infinite ease-in-out;
-  }
-  @keyframes pulse {
-    to {
-      transform: scale(0.8);
-      opacity: 0.5;
-    }
-  }
   
   @media(51rem > width) {
+    .sections-navbar, .content-navbar{
+      overflow-x: auto;
+    }
     .content-navbar{
       flex-direction: row;
       padding-top: 0;

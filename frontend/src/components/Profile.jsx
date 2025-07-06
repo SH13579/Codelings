@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import "../styles/profile.css";
-import { UserContext, displayLiked, UIContext } from "../utils";
+import { UserContext, UIContext } from "../utils";
 import { useParams } from "react-router-dom";
 import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
@@ -63,9 +63,10 @@ async function fetchLikedPosts(
   limit,
   reset = false,
   setLoading,
-  token
+  token,
+  setViewMoreLoading
 ) {
-  setLoading(true);
+  reset ? setLoading(true) : setViewMoreLoading(true);
   try {
     const res = await fetch(
       `http://localhost:5000/fetch_liked_posts?limit=${limit}&offset=${
@@ -91,7 +92,7 @@ async function fetchLikedPosts(
   } catch (err) {
     alert("Error: " + err.message);
   } finally {
-    setLoading(false);
+    reset ? setLoading(false) : setViewMoreLoading(false);
   }
 }
 
@@ -105,10 +106,12 @@ async function fetchPostsProfile(
   limit,
   reset = false,
   username,
-  setLoading
+  setLoading,
+  setViewMoreLoading,
+  token
 ) {
   const category = filter === "Best" ? "likes" : "post_date";
-  setLoading(true);
+  reset ? setLoading(true) : setViewMoreLoading(true);
   try {
     const res = await fetch(
       `http://localhost:5000/get_posts_byUserAndCategory?username=${encodeURIComponent(
@@ -117,7 +120,10 @@ async function fetchPostsProfile(
         reset ? 0 : start
       }&limit=${limit}`,
       {
-        headers: { Accept: "application/json" },
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       }
     );
     const data = await res.json();
@@ -137,14 +143,14 @@ async function fetchPostsProfile(
   } catch (err) {
     alert("Error: " + err.message);
   } finally {
-    setLoading(false);
+    reset ? setLoading(false) : setViewMoreLoading(false);
   }
 }
 
 export default function Profile() {
   const token = sessionStorage.getItem("token");
-  const { loading, setLoading } = useContext(UIContext);
-  const [likedPosts, setLikedPosts] = useState([]);
+  const { setLoading, setViewMoreLoading } = useContext(UIContext);
+  const { currentUser } = useContext(UserContext);
   const [currentSection, setCurrentSection] = useState("project");
   const [posts, setPosts] = useState([]);
   const [start, setStart] = useState(0);
@@ -168,18 +174,9 @@ export default function Profile() {
       sectionDbName: "liked_posts",
       imagePath: "../media/images/liked_section_icon.svg",
       sectionName: "Liked Posts",
+      condition: Boolean(currentUser && currentUser.username === username),
     },
   ];
-
-  displayLiked(setLikedPosts, "posts", setLoading);
-
-  // useEffect(() => {
-  //   console.log(likedPosts);
-  // }, [likedPosts]);
-
-  // useEffect(() => {
-  //   console.log(posts);
-  // }, [posts]);
 
   return (
     <div className="profile-wrapper">
@@ -213,7 +210,9 @@ export default function Profile() {
                   10,
                   true,
                   username,
-                  setLoading
+                  setLoading,
+                  setViewMoreLoading,
+                  token
                 )
               }
               fetchMorePosts={() =>
@@ -227,7 +226,9 @@ export default function Profile() {
                   10,
                   false,
                   username,
-                  setLoading
+                  setLoading,
+                  setViewMoreLoading,
+                  token
                 )
               }
               currentSection={currentSection}
@@ -235,7 +236,6 @@ export default function Profile() {
               username={username}
               postLabel="Projects"
               posts={posts}
-              likedPosts={likedPosts}
               hasMorePosts={hasMore}
               setHasMorePosts={setHasMore}
               filter={postFilter}
@@ -255,7 +255,9 @@ export default function Profile() {
                   10,
                   true,
                   username,
-                  setLoading
+                  setLoading,
+                  setViewMoreLoading,
+                  token
                 )
               }
               fetchMorePosts={() =>
@@ -269,7 +271,9 @@ export default function Profile() {
                   10,
                   false,
                   username,
-                  setLoading
+                  setLoading,
+                  setViewMoreLoading,
+                  token
                 )
               }
               currentSection={currentSection}
@@ -277,7 +281,6 @@ export default function Profile() {
               username={username}
               postLabel="Ask & Answers"
               posts={posts}
-              likedPosts={likedPosts}
               hasMorePosts={hasMore}
               setHasMorePosts={setHasMore}
               filter={postFilter}
@@ -295,7 +298,8 @@ export default function Profile() {
                   10,
                   true,
                   setLoading,
-                  token
+                  token,
+                  setViewMoreLoading
                 )
               }
               fetchMorePosts={() =>
@@ -307,7 +311,8 @@ export default function Profile() {
                   10,
                   false,
                   setLoading,
-                  token
+                  token,
+                  setViewMoreLoading
                 )
               }
               currentSection={currentSection}
@@ -315,7 +320,6 @@ export default function Profile() {
               username={username}
               postLabel="Liked Posts"
               posts={posts}
-              likedPosts={likedPosts}
               hasMorePosts={hasMore}
               setHasMorePosts={setHasMore}
             />

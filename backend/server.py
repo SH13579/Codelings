@@ -54,6 +54,31 @@ def token_required(f):
     return decorated
 
 
+def token_optional(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        decoded = None
+        auth_header = request.headers.get("Authorization")
+        token = None
+
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split()[1]
+        else:
+            return
+
+        if token:
+            try:
+                decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            except jwt.ExpiredSignatureError:
+                pass
+            except jwt.InvalidTokenError:
+                pass
+
+        return f(decoded, *args, **kwargs)
+
+    return decorated
+
+
 # route to handle registration
 @app.route("/register", methods=["POST"])
 def register():
@@ -293,7 +318,8 @@ def get_posts_helper(rows, columns):
 
 # route to fetch projects from database to display on Content.jsx
 @app.route("/get_postsByCategory", methods=["GET"])
-def get_posts():
+@token_optional
+def get_posts(decoded):
     if not conn:
         return jsonify({"error": "Database connection not established"}), 500
 
@@ -301,6 +327,7 @@ def get_posts():
     start = request.args.get("start")
     limit = request.args.get("limit")
     category = request.args.get("category")
+    user_id = decoded["user_id"] if decoded else None
 
     if not post_type:
         return jsonify({"error": "Missing post type"}), 400
@@ -321,7 +348,10 @@ def get_posts():
           posts.comments,
           users.username,
           users.profile_picture,
-          array_agg(tags.tag_name) AS tag_name
+          array_agg(tags.tag_name) AS tag_name,
+          %s IS NOT NULL AND EXISTS (
+            SELECT 1 FROM likes WHERE user_id = %s AND target_id = posts.id AND type = 'posts'
+          ) AS user_liked_post
         FROM posts
         JOIN users ON posts.user_id = users.id
         LEFT JOIN post_tags ON posts.id = post_tags.post_id
@@ -332,7 +362,7 @@ def get_posts():
         ORDER BY posts.{category} DESC
         LIMIT %s OFFSET %s
       """
-            cursor.execute(query, (post_type, limit, start))
+            cursor.execute(query, (user_id, user_id, post_type, limit, start))
 
             rows = cursor.fetchall()  # returns list of tuples;
 
@@ -347,6 +377,7 @@ def get_posts():
             "name",
             "pfp",
             "tags",
+            "liked",
         ]
 
         posts = get_posts_helper(rows, columns)
@@ -358,7 +389,8 @@ def get_posts():
 
 # used to fetch the posts for a specific user on a profile
 @app.route("/get_posts_byUserAndCategory", methods=["GET"])
-def get_posts_byUser():
+@token_optional
+def get_posts_byUser(decoded):
     if not conn:
         return jsonify({"error": "Database connection not established"}), 500
 
@@ -367,6 +399,7 @@ def get_posts_byUser():
     start = request.args.get("start")
     limit = request.args.get("limit")
     category = request.args.get("category")
+    user_id = decoded["user_id"] if decoded else None
 
     # shouldn't directly inject column names or SQL keywords unless safely controlling what's allowed to prevent SQL injection
     if category not in {"post_date", "likes"}:
@@ -390,7 +423,10 @@ def get_posts_byUser():
           posts.comments,
           users.username,
           users.profile_picture,
-          array_agg(tags.tag_name) AS tag_name
+          array_agg(tags.tag_name) AS tag_name,
+          %s IS NOT NULL AND EXISTS (
+            SELECT 1 FROM likes WHERE user_id = %s AND target_id = posts.id AND type = 'posts'
+        ) AS user_liked_post
         FROM posts 
         JOIN users on posts.user_id = users.id
         LEFT JOIN post_tags ON posts.id = post_tags.post_id
@@ -401,7 +437,7 @@ def get_posts_byUser():
         ORDER BY posts.{category} DESC
         LIMIT %s OFFSET %s 
       """
-            cursor.execute(query, (username, post_type, limit, start))
+            cursor.execute(query, (user_id, user_id, username, post_type, limit, start))
 
             rows = cursor.fetchall()
             print(rows)
@@ -417,6 +453,7 @@ def get_posts_byUser():
             "name",
             "pfp",
             "tags",
+            "liked",
         ]
 
         posts = get_posts_helper(rows, columns)
@@ -461,24 +498,13 @@ def delete_post(decoded):
 
 # route to get a specific post (after clicking a post in Content.jsx)
 @app.route("/get_specific_post", methods=["GET"])
-def get_specific_post():
+@token_optional
+def get_specific_post(decoded):
     if not conn:
         return jsonify({"error": "Database connection not established"}), 500
 
     post_id = request.args.get("post_id")
-    user_id = None
-
-    # checking to see if there is a current user logged in to fetch if post is liked
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header.split(" ")[1]
-        try:
-            decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-            user_id = decoded["user_id"]
-        except jwt.ExpiredSignatureError:
-            pass
-        except jwt.InvalidTokenError:
-            pass
+    user_id = decoded["user_id"] if decoded else None
 
     try:
         # post_type???
@@ -652,29 +678,17 @@ def delete_comment(decoded):
 
 # route to get comments from a post
 @app.route("/get_comments", methods=["GET"])
-def get_comments():
+@token_optional
+def get_comments(decoded):
     if not conn:
         return jsonify({"error": "Database connection not established"}), 500
 
     start = int(request.args.get("start"))
     limit = int(request.args.get("limit"))
     post_id = request.args.get("post_id")
-    user_id = None
-
-    # checking to see if there is a current user logged in to fetch if comment is liked
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header.split(" ")[1]
-        try:
-            decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-            user_id = decoded["user_id"]
-        except jwt.ExpiredSignatureError:
-            pass
-        except jwt.InvalidTokenError:
-            pass
+    user_id = decoded["user_id"] if decoded else None
 
     try:
-
         with conn.cursor() as cursor:
             # get parents comments
             cursor.execute(
@@ -715,26 +729,15 @@ def get_comments():
 
 # route to get replies from a comment
 @app.route("/get_replies", methods=["GET"])
-def get_replies():
+@token_optional
+def get_replies(decoded):
     if not conn:
         return jsonify({"error": "Database connection not established"}), 500
 
     start = int(request.args.get("start"))
     limit = int(request.args.get("limit"))
     parent_comment_id = request.args.get("parent_comment_id")
-    user_id = None
-
-    # checking to see if there is a current user logged in to fetch if comment is liked
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header.split(" ")[1]
-        try:
-            decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-            user_id = decoded["user_id"]
-        except jwt.ExpiredSignatureError:
-            pass
-        except jwt.InvalidTokenError:
-            pass
+    user_id = decoded["user_id"] if decoded else None
 
     try:
 
@@ -830,33 +833,6 @@ def like_unlike_post(decoded):
         return jsonify({"error": str(e)}), 500
 
 
-# fetch all the liked posts the current user has
-@app.route("/fetch_likes", methods=["GET"])
-@token_required
-def fetch_likes(decoded):
-    if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
-
-    user_id = decoded["user_id"]
-    type = request.args.get("type")
-
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT target_id FROM likes WHERE user_id = %s AND type = %s",
-                (user_id, type),
-            )
-            likes = cursor.fetchall()
-
-        likes_arr = []
-        for like in likes:
-            likes_arr.append(like[0])
-
-        return jsonify({"likes_arr": likes_arr})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
 # fetch all the posts the user liked
 @app.route("/fetch_liked_posts", methods=["GET"])
 @token_required
@@ -914,7 +890,8 @@ def fetch_liked_posts(decoded):
 
 # fetches the posts that contains the keyword the user entered
 @app.route("/search_posts", methods=["GET"])
-def search_posts():
+@token_optional
+def search_posts(decoded):
     if not conn:
         return jsonify({"error": "Database connection not established"}), 500
 
@@ -922,6 +899,7 @@ def search_posts():
     limit = request.args.get("limit")
     offset = request.args.get("offset")
     post_type = request.args.get("post_type")
+    user_id = decoded["user_id"] if decoded else None
 
     try:
         with conn.cursor() as cursor:
@@ -936,7 +914,10 @@ def search_posts():
                       posts.comments,
                       users.username,
                       users.profile_picture,
-                      array_agg(tags.tag_name) AS tag_name
+                      array_agg(tags.tag_name) AS tag_name,
+                      %s IS NOT NULL AND EXISTS (
+                        SELECT 1 FROM likes WHERE user_id = %s AND target_id = posts.id AND type = 'posts'
+                    ) AS user_liked_post
                     FROM posts
                     JOIN users ON posts.user_id = users.id
                     LEFT JOIN post_tags ON post_tags.post_id = posts.id
@@ -946,7 +927,9 @@ def search_posts():
                     LIMIT %s OFFSET %s
                   """
             search_str = f"%{search_term}%"
-            cursor.execute(query, (search_str, post_type, limit, offset))
+            cursor.execute(
+                query, (user_id, user_id, search_str, post_type, limit, offset)
+            )
             posts = cursor.fetchall()
 
         columns = [
@@ -960,6 +943,7 @@ def search_posts():
             "name",
             "pfp",
             "tags",
+            "liked",
         ]
 
         posts_arr = get_posts_helper(posts, columns)
@@ -1026,7 +1010,8 @@ def fetch_tags():
 
 # fetch all the posts for a specific tag
 @app.route("/fetch_specific_tag", methods=["GET"])
-def fetch_specific_tag():
+@token_optional
+def fetch_specific_tag(decoded):
     if not conn:
         return jsonify({"error": "Database connection not established"}), 500
 
@@ -1034,6 +1019,7 @@ def fetch_specific_tag():
     post_type = request.args.get("post_type")
     start = request.args.get("start")
     limit = request.args.get("limit")
+    user_id = decoded["user_id"] if decoded else None
     category = request.args.get("category")
     categories = ["likes", "post_date"]
     if category not in categories:
@@ -1051,7 +1037,10 @@ def fetch_specific_tag():
                         posts.comments,
                         users.username,
                         users.profile_picture,
-                        array_agg(tags.tag_name) AS tag_name
+                        array_agg(tags.tag_name) AS tag_name,
+                        %s IS NOT NULL AND EXISTS (
+                            SELECT 1 FROM likes WHERE user_id = %s AND target_id = posts.id AND type = 'posts'
+                        ) AS user_liked_post
                         FROM posts
                         JOIN users ON posts.user_id = users.id
                         LEFT JOIN post_tags ON posts.id = post_tags.post_id
@@ -1065,7 +1054,7 @@ def fetch_specific_tag():
                         LIMIT %s OFFSET %s"""
             cursor.execute(
                 query,
-                (post_type, target_tag, limit, start),
+                (user_id, user_id, post_type, target_tag, limit, start),
             )
             posts = cursor.fetchall()
             columns = [
@@ -1079,6 +1068,7 @@ def fetch_specific_tag():
                 "name",
                 "pfp",
                 "tags",
+                "liked",
             ]
             posts_arr = get_posts_helper(posts, columns)
             return jsonify({"posts": posts_arr})

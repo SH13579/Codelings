@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useContext } from "react";
-import { Link, useFetcher, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "../styles/content.css";
 import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
-import { displayLiked, UIContext } from "../utils";
+import { UIContext } from "../utils";
 
 export const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,15 +59,22 @@ async function fetchSpecificTag(
   filter,
   limit,
   setLoading,
-  reset = false
+  setViewMoreLoading,
+  reset = false,
+  token
 ) {
-  setLoading(true);
+  reset ? setLoading(true) : setViewMoreLoading(true);
   const category = filter === "Best" ? "likes" : "post_date";
   try {
     const res = await fetch(
       `http://localhost:5000/fetch_specific_tag?target_tag=${currentSection}&post_type=${post_type}&category=${category}&start=${
         reset ? 0 : start
-      }&limit=${limit}`
+      }&limit=${limit}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
     );
     const data = await res.json();
     if (data.posts.length < limit) {
@@ -83,7 +90,7 @@ async function fetchSpecificTag(
   } catch (err) {
     alert("Error: " + err.message);
   } finally {
-    setLoading(false);
+    reset ? setLoading(false) : setViewMoreLoading(false);
   }
 }
 
@@ -108,9 +115,11 @@ async function fetchPostsHomePage(
   filter,
   limit,
   setLoading,
-  reset = false
+  setViewMoreLoading,
+  reset = false,
+  token
 ) {
-  setLoading(true);
+  reset ? setLoading(true) : setViewMoreLoading(true);
   const category = filter === "Best" ? "likes" : "post_date";
   try {
     const res = await fetch(
@@ -119,7 +128,10 @@ async function fetchPostsHomePage(
       )}&category=${category}&start=${reset ? 0 : start}&limit=${limit}`,
       {
         method: "GET",
-        headers: { Accept: "application/json" },
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       }
     );
     const data = await res.json();
@@ -139,7 +151,7 @@ async function fetchPostsHomePage(
   } catch (err) {
     alert("Error: " + err.message);
   } finally {
-    setLoading(false);
+    reset ? setLoading(false) : setViewMoreLoading(false);
   }
 }
 
@@ -160,6 +172,7 @@ export function displayTagsOnPage(setTags) {
 }
 
 export default function Content() {
+  const token = sessionStorage.getItem("token");
   const [likedPosts, setLikedPosts] = useState([]);
   const [currentSection, setCurrentSection] = useState("project");
   const [tags, setTags] = useState([]);
@@ -168,11 +181,16 @@ export default function Content() {
   const [hasMore, setHasMore] = useState(true);
   const [postFilter, setPostFilter] = useState("Best");
   const location = "home-page";
-  const { loading, setLoading } = useContext(UIContext);
+  const { loading, setLoading, setViewMoreLoading } = useContext(UIContext);
 
-  displayLiked(setLikedPosts, "posts", setLoading);
+  //display avaliable tags for sections in the navbar
   displayTagsOnPage(setTags);
 
+  useEffect(() => {
+    console.log(loading);
+  }, [loading]);
+
+  //sections to insert into the navbar for this page
   const navbar_sections = [
     {
       sectionDbName: "project",
@@ -194,13 +212,15 @@ export default function Content() {
     <section className="content-wrapper">
       <AboutUs />
       <div className="content-grid">
-        <SectionsNavbar //render sections navbar
+        {/* render sections navbar */}
+        <SectionsNavbar
           sections={navbar_sections}
           setCurrentSection={setCurrentSection}
           currentSection={currentSection}
           location={location}
         />
-        {currentSection === "project" && ( //fetch posts for projects
+        {/* fetch posts for projects */}
+        {currentSection === "project" && (
           <Posts
             displaySectionPosts={() =>
               fetchPostsHomePage(
@@ -212,7 +232,9 @@ export default function Content() {
                 postFilter,
                 10,
                 setLoading,
-                true
+                setViewMoreLoading,
+                true,
+                token
               )
             }
             fetchMorePosts={() =>
@@ -225,21 +247,23 @@ export default function Content() {
                 postFilter,
                 10,
                 setLoading,
-                false
+                setViewMoreLoading,
+                false,
+                token
               )
             }
             currentSection={currentSection}
             location={location}
             postLabel="Projects"
             posts={posts}
-            likedPosts={likedPosts}
             hasMorePosts={hasMore}
             setHasMorePosts={setHasMore}
             filter={postFilter}
             setFilter={setPostFilter}
           />
         )}
-        {fetchTagsForPostType(tags, "project").includes(currentSection) && ( //fetch tag posts for projects
+        {/* fetch tag posts for projects */}
+        {fetchTagsForPostType(tags, "project").includes(currentSection) && (
           <Posts
             displaySectionPosts={() =>
               fetchSpecificTag(
@@ -252,7 +276,9 @@ export default function Content() {
                 postFilter,
                 10,
                 setLoading,
-                true
+                setViewMoreLoading,
+                true,
+                token
               )
             }
             fetchMorePosts={() =>
@@ -266,21 +292,23 @@ export default function Content() {
                 postFilter,
                 10,
                 setLoading,
-                false
+                setViewMoreLoading,
+                false,
+                token
               )
             }
             currentSection={currentSection}
             location={location}
             postLabel="Projects"
             posts={posts}
-            likedPosts={likedPosts}
             hasMorePosts={hasMore}
             setHasMorePosts={setHasMore}
             filter={postFilter}
             setFilter={setPostFilter}
           />
         )}
-        {currentSection === "qna" && ( //fetch posts for ask&answers
+        {/* fetch posts for ask and answers */}
+        {currentSection === "qna" && (
           <Posts
             displaySectionPosts={() =>
               fetchPostsHomePage(
@@ -292,7 +320,9 @@ export default function Content() {
                 postFilter,
                 10,
                 setLoading,
-                true
+                setViewMoreLoading,
+                true,
+                token
               )
             }
             fetchMorePosts={() =>
@@ -305,14 +335,15 @@ export default function Content() {
                 postFilter,
                 10,
                 setLoading,
-                false
+                setViewMoreLoading,
+                false,
+                token
               )
             }
             currentSection={currentSection}
             location={location}
             postLabel="Ask & Answers"
             posts={posts}
-            likedPosts={likedPosts}
             hasMorePosts={hasMore}
             setHasMorePosts={setHasMore}
             filter={postFilter}

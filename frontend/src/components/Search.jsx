@@ -6,7 +6,7 @@ import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
 import Loading from "./Loading";
 import "../styles/search.css";
-import { displayLiked, UIContext, EmptyContainer } from "../utils";
+import { UIContext, EmptyContainer } from "../utils";
 
 const SearchProfileCard = (props) => {
   const navigate = useNavigate();
@@ -47,17 +47,15 @@ const SearchProfiles = (props) => {
 };
 
 export default function Search() {
+  const token = sessionStorage.getItem("token");
   const { searchTerm } = useParams();
   const [currentSection, setCurrentSection] = useState("project");
-  const [likedPosts, setLikedPosts] = useState([]);
   const [start, setStart] = useState(0);
   const [posts, setPosts] = useState([]);
   const limit = 10;
   const [hasMore, setHasMore] = useState(true);
   const { loading, setLoading } = useContext(UIContext);
   const location = "search-page";
-
-  displayLiked(setLikedPosts, "posts");
 
   const navbar_sections = [
     {
@@ -82,7 +80,8 @@ export default function Search() {
     setPostsHasMore,
     setSearchPosts,
     setPostStart,
-    reset = false
+    reset = false,
+    token
   ) {
     setLoading(true);
     try {
@@ -94,6 +93,7 @@ export default function Search() {
           method: "GET",
           headers: {
             Accept: "application/json",
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -181,17 +181,16 @@ export default function Search() {
         {currentSection === "project" && (
           <Posts
             displaySectionPosts={() =>
-              search_posts(start, setHasMore, setPosts, setStart, true)
+              search_posts(start, setHasMore, setPosts, setStart, true, token)
             }
             fetchMorePosts={() =>
-              search_posts(start, setHasMore, setPosts, setStart, false)
+              search_posts(start, setHasMore, setPosts, setStart, false, token)
             }
             postLabel="Projects"
             location={location}
             currentSection={currentSection}
             searchTerm={searchTerm}
             posts={posts}
-            likedPosts={likedPosts}
             hasMorePosts={hasMore}
             setHasMorePosts={setHasMore}
           />
@@ -199,17 +198,16 @@ export default function Search() {
         {currentSection === "qna" && (
           <Posts
             displaySectionPosts={() =>
-              search_posts(start, setHasMore, setPosts, setStart, true)
+              search_posts(start, setHasMore, setPosts, setStart, true, token)
             }
             fetchMorePosts={() =>
-              search_posts(start, setHasMore, setPosts, setStart, false)
+              search_posts(start, setHasMore, setPosts, setStart, false, token)
             }
             postLabel="Ask & Answers"
             location={location}
             currentSection={currentSection}
             searchTerm={searchTerm}
             posts={posts}
-            likedPosts={likedPosts}
             hasMorePosts={hasMore}
             setHasMorePosts={setHasMore}
           />

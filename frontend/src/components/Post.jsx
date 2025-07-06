@@ -168,6 +168,9 @@ export default function Post() {
   const { loading, setLoading, displayLiked } = useContext(UIContext);
   const [likeCount, setLikeCount] = useState(null);
   const [liked, setLiked] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [edited, setEdited] = useState("");
   const navigate = useNavigate();
   const { postId } = useParams();
 
@@ -209,6 +212,20 @@ export default function Post() {
     fetchPost();
   }, [postId]);
 
+  const handleEdit = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/edit_post", {
+        method: "",
+        headers: {},
+        body: {},
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+      } else {
+      }
+    } catch {}
+  };
   useEffect(() => {
     console.log(postInfo);
   }, [postInfo]);
@@ -235,6 +252,22 @@ export default function Post() {
             <span className="post-date-dot">&#8226;</span>
             {postInfo.date}
           </div>
+          {currentUser && currentUser.username === postInfo.name && (
+            <div className="post-kebab-menu-wrapper">
+              <div
+                className="kebab-menu"
+                onClick={() => setMenuOpen((prev) => !prev)}
+              >
+                &#8942;
+              </div>
+              {menuOpen && (
+                <div className="kebab-menu-dropdown">
+                  <div>Edit</div>
+                  <div>Delete</div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <h2 className="post-title">{postInfo.title}</h2>
         <h4 className="post-desc-post">{postInfo.description}</h4>
@@ -249,7 +282,7 @@ export default function Post() {
             Your browser does not support the video tag.
           </video>
         </div>
-        <div className="post-body">{postInfo.body}</div>
+        <div className="post-body"></div>
         <div className="upvotes-comments-wrapper">
           <span className="upvotes">
             <img

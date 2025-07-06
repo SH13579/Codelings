@@ -1,7 +1,11 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 export default function SectionsNavbar(props) {
+  useEffect(() => {
+    console.log(props.sections);
+  }, [props.sections]);
   const all_sections = props.sections.map((item) => {
+    //render any subsections such as tags associated with the main section
     const subsections =
       item.subsections &&
       item.subsections.map((item) => {
@@ -16,7 +20,8 @@ export default function SectionsNavbar(props) {
           </div>
         );
       });
-    return (
+    //render the actual main section
+    const renderSection = (
       <div className="navbar-section">
         <div
           onClick={() => props.setCurrentSection(item.sectionDbName)}
@@ -36,6 +41,10 @@ export default function SectionsNavbar(props) {
           )}
       </div>
     );
+    //if no condition is specified, just render the section, else render the section only if the condition is satisfied
+    return item.condition === undefined
+      ? renderSection
+      : item.condition && renderSection;
   });
   return (
     <div

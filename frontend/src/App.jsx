@@ -16,6 +16,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(token ? true : false);
   const [showPopup, setShowPopup] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [viewMoreLoading, setViewMoreLoading] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
 
   console.log("Rendering App");
@@ -26,6 +27,7 @@ function App() {
     }
     const controller = new AbortController();
     const signal = controller.signal;
+    setLoading(true);
 
     const getCurrentUser = async () => {
       try {
@@ -58,6 +60,8 @@ function App() {
           setCurrentUser(null);
           setIsLoggedIn(false);
         }
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -65,10 +69,6 @@ function App() {
 
     return () => controller.abort();
   }, [isLoggedIn]);
-
-  useEffect(() => {
-    console.log(currentUser);
-  }, [currentUser]);
 
   return (
     <div className="site">
@@ -89,6 +89,8 @@ function App() {
             setShowPopup,
             loading,
             setLoading,
+            viewMoreLoading,
+            setViewMoreLoading,
           }}
         >
           <Header />
