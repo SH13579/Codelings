@@ -168,9 +168,9 @@ export default function Post() {
   const { loading, setLoading, displayLiked } = useContext(UIContext);
   const [likeCount, setLikeCount] = useState(null);
   const [liked, setLiked] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [edited, setEdited] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false); //
+  const [isEditing, setIsEditing] = useState(false);
+  const [existingBody, setExistingBody] = useState("");
   const navigate = useNavigate();
   const { postId } = useParams();
 
@@ -212,20 +212,34 @@ export default function Post() {
     fetchPost();
   }, [postId]);
 
+  //edit post
   const handleEdit = async () => {
     try {
-      const res = await fetch("http://localhost:5000/edit_post", {
-        method: "",
-        headers: {},
-        body: {},
+      const res = await fetch(`http://localhost:5000/edit_post?post_id=${postId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ new_post_body: existingBody })
       });
 
       const data = await res.json();
       if (res.ok) {
+        setPostInfo((prev) => ({
+          ...prev,
+          body: existingBody,
+        }));
+        setIsEditing(false);
+        // alert(data.success)
       } else {
+        alert(data.error)
       }
-    } catch {}
+    } catch (err) {
+        alert("Error: " + err.message)
+    }
   };
+
   useEffect(() => {
     console.log(postInfo);
   }, [postInfo]);
@@ -252,6 +266,7 @@ export default function Post() {
             <span className="post-date-dot">&#8226;</span>
             {postInfo.date}
           </div>
+          {/* kebab-menu */}
           {currentUser && currentUser.username === postInfo.name && (
             <div className="post-kebab-menu-wrapper">
               <div
@@ -262,7 +277,12 @@ export default function Post() {
               </div>
               {menuOpen && (
                 <div className="kebab-menu-dropdown">
-                  <div>Edit</div>
+                  <div onClick={() => {
+                    setIsEditing(true);
+                    setMenuOpen(false);
+                  }}>
+                    Edit
+                  </div>
                   <div>Delete</div>
                 </div>
               )}
@@ -282,7 +302,24 @@ export default function Post() {
             Your browser does not support the video tag.
           </video>
         </div>
-        <div className="post-body"></div>
+        <div className="post-body">
+          {/* if editing, replace body of post with textarea */}
+          {isEditing ? (
+            <div>
+              <textarea 
+                className=""
+                value={existingBody}
+                onChange={(e) => setExistingBody(e.target.value)}
+              />
+              <div>
+                <button onClick={handleEdit}>Save</button>
+                <button onClick={() => setIsEditing(false)}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            postInfo.body
+          )}
+        </div>
         <div className="upvotes-comments-wrapper">
           <span className="upvotes">
             <img

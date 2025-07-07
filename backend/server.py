@@ -564,6 +564,39 @@ def get_specific_post(decoded):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+#route to edit the body of a post
+@app.route("/edit_post", methods=["POST"])
+@token_optional
+def edit_post(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 500
+    
+    data = request.get_json()
+    new_post_body = data.get("new_post_body")
+    post_id = request.args.get("post_id")
+    user_id = decoded["user_id"] if decoded else None
+
+    try:
+        if len(new_post_body) > 4000:
+            return jsonify({"error": "Post body cannot be over 4000 characters"}), 400
+        
+        with conn.cursor() as cursor:
+            cursor.execute(
+                '''
+                UPDATE posts 
+                SET post_body = %s 
+                WHERE id = %s AND user_id = %s
+                ''',
+                (new_post_body, post_id, user_id)
+            )
+            
+            conn.commit()
+            return jsonify({"success": "Post edited!"})
+    
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+
 
 # -------------------- routes related to comments below ------------------------
 
