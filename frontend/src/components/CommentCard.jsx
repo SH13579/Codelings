@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useRef } from "react";
 import "../styles/post.css";
 import { UIContext, handleLikePost, likeUnlike } from "../utils";
 import { handleNavigating } from "./Content";
+import KebabMenu from "./KebabMenu";
 
 function ReplyBox({ onSubmit, replyText, setReplyText, onCancel }) {
   return (
@@ -61,6 +62,9 @@ export default function CommentCard({
   );
   const [likeCount, setLikeCount] = useState(parentComment.upvotes);
   const [liked, setLiked] = useState(parentComment.liked);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [existingComment, setExistingComment] = useState("");
   const limit = 5;
   const { setShowPopup } = useContext(UIContext);
 
@@ -132,6 +136,49 @@ export default function CommentCard({
     });
   };
 
+  const handleEditComment = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/edit_comment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          comment_id: parentComment.comment_id,
+          new_comment: existingComment,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsEditing(false);
+        if (isReply) {
+          //when replacing
+          setParentRepliesList((prev) =>
+            //parentComment = {reply}
+            prev.map((reply) =>
+              reply.comment_id === parentComment.comment_id
+                ? { ...reply, comment: existingComment }
+                : reply
+            )
+          );
+        } else {
+          setParentCommentsList((prev) =>
+            prev.map((comment) =>
+              comment.comment_id === parentComment.comment_id
+                ? { ...comment, comment: existingComment }
+                : comment
+            )
+          );
+        }
+      } else {
+        alert(data.error);
+      }
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
+
   const handleReplySubmit = async (e, parentCommentId) => {
     e.preventDefault();
     try {
@@ -161,7 +208,7 @@ export default function CommentCard({
           parent_comment_id: parentCommentId,
           upvotes: 0,
           comments_count: 0,
-          likes: false
+          likes: false,
         };
 
         //to update frontend immediately after posting reply
@@ -240,7 +287,21 @@ export default function CommentCard({
           {parentComment.date}
         </div>
       </div>
-      <div className="comment-text">{parentComment.comment}</div>
+      {isEditing ? (
+        <div>
+          <textarea
+            className=""
+            value={existingComment}
+            onChange={(e) => setExistingComment(e.target.value)}
+          />
+          <div>
+            <button onClick={handleEditComment}>Save</button>
+            <button onClick={() => setIsEditing(false)}>Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <div className="comment-text">{parentComment.comment}</div>
+      )}
       <div className="upvotes-comments-wrapper">
         <span className="upvotes">
           <img
@@ -281,20 +342,18 @@ export default function CommentCard({
           </div>
           {/*Add option to delete if user is the commenter*/}
           {isCommenter && (
-            <div
-              className="comment-delete-button"
-              onClick={() =>
+            <KebabMenu
+              onEdit={() => {
+                setIsEditing(true);
+                setExistingComment(parentComment.comment);
+              }}
+              onDelete={() => {
                 handleDeleteComment(
                   parentComment.comment_id,
                   parentComment.parent_comment_id
-                )
-              }
-            >
-              <img
-                className="delete-icon"
-                src="../media/images/delete-icon.svg"
-              />
-            </div>
+                );
+              }}
+            />
           )}
         </div>
       </div>
@@ -320,7 +379,7 @@ export default function CommentCard({
               token={token}
               postId={postId}
               setMsg={setMsg}
-              parentComment={reply}
+              parentComment={reply} //rename?
               currentUser={currentUser}
               navigate={navigate}
               replyCommentId={replyCommentId}

@@ -7,6 +7,7 @@ import Footer from "./components/Footer";
 import Profile from "./components/Profile";
 import Popup from "./components/Popup";
 import Search from "./components/Search";
+import EditProfile from "./components/EditProfile";
 import { UserContext, UIContext } from "./utils";
 import "./styles/App.css";
 
@@ -98,6 +99,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Content />} />
               <Route path="/profile/:username" element={<Profile />} />
+              <Route path="/edit-profile/:username" element={<EditProfile />} />
               <Route path="/post/:postId" element={<Post />} />
               <Route path="/search/:searchTerm" element={<Search />} />
             </Routes>

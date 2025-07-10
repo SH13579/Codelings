@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import "../styles/profile.css";
 import { UserContext, UIContext } from "../utils";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
 
@@ -147,6 +147,34 @@ async function fetchPostsProfile(
   }
 }
 
+export function fetchProfileInfo(username, setProfileInfo) {
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await fetch(
+          `http://localhost:5000/fetch_profile?username=${encodeURIComponent(
+            username
+          )}`
+        );
+
+        const data = await res.json();
+        const profile = data.profile;
+        setProfileInfo({
+          about_me: profile.about_me || "",
+          email: profile.email || "",
+          github_link: profile.github_link || "",
+          pfp: profile.pfp || null,
+          year_of_study: profile.year_of_study || "",
+        });
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
+    }
+
+    fetchProfile();
+  }, [username]);
+}
+
 export default function Profile() {
   const token = sessionStorage.getItem("token");
   const { setLoading, setViewMoreLoading } = useContext(UIContext);
@@ -156,6 +184,7 @@ export default function Profile() {
   const [start, setStart] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [postFilter, setPostFilter] = useState("Best");
+  const [profileInfo, setProfileInfo] = useState(null);
   const location = "profile";
   const { username } = useParams();
 
@@ -178,17 +207,63 @@ export default function Profile() {
     },
   ];
 
+  fetchProfileInfo(username, setProfileInfo);
+
+  useEffect(() => {
+    console.log(profileInfo);
+  }, [profileInfo]);
+
   return (
     <div className="profile-wrapper">
       <div className="profile">
         <div className="profile-info">
+          {currentUser && currentUser.username === username && (
+            <Link to={`/edit-profile/${username}`}>
+              <button className="edit-profile">Edit Profile</button>
+            </Link>
+          )}
           <img className="profile-pfp" src="../media/images/doggy.png" />
           <h2 className="profile-name">@{username}</h2>
-          <div className="profile-about">
-            AboutUsAboutUsAbout UsAboutU sAboutUsAboutUsAboutU AboutUsAboutU
-            sAboutUsAbo utUsAboutUsAbout UsAboutUsAboutU sAboutU sAboutU
-            sAboutUs AboutUsAb ou tUsAboutUs
-          </div>
+          {profileInfo && (
+            <div className="profile-details-wrap">
+              {profileInfo.about_me && (
+                <div className="profile-about">{profileInfo.about_me}</div>
+              )}
+              <div className="profile-details">
+                {profileInfo.email && (
+                  <span className="profile-email">
+                    <img
+                      className="profile-email-logo"
+                      src="../media/images/email-logo.svg"
+                    />
+                    {profileInfo.email}
+                  </span>
+                )}
+                {profileInfo.year_of_study && (
+                  <span className="profile-yos">
+                    <img
+                      className="profile-yos-logo"
+                      src="../media/images/year-study-logo.svg"
+                    />
+                    {profileInfo.year_of_study}
+                  </span>
+                )}
+                {profileInfo.github_link && (
+                  <a
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    href={profileInfo.github_link}
+                    className="profile-github"
+                  >
+                    <img
+                      className="profile-github-logo"
+                      src="../media/images/github-logo.svg"
+                    />
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         <div className="horizontal-line"></div>
         <div className="content-grid">

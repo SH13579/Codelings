@@ -170,9 +170,10 @@ def login():
         return jsonify({"error": str(e)}), 500
 
 
+# fetch the profile of the logged in user
 @app.route("/fetch_user_profile", methods=["GET"])
 @token_required
-def fetch_profile(decoded):
+def fetch_user_profile(decoded):
     if not conn:
         return jsonify({"error": "Database connection is not established"}), 500
 
@@ -184,8 +185,79 @@ def fetch_profile(decoded):
                 (username,),
             )
             user = cursor.fetchone()
-            return jsonify({"username": user[0], "email": user[1], "pfp": user[2]})
+        return jsonify({"username": user[0], "email": user[1], "pfp": user[2]})
     except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# fetch the profile details of any user
+@app.route("/fetch_profile", methods=["GET"])
+def fetch_profile():
+    if not conn:
+        return jsonify({"error": "Database connection is not established"}), 500
+
+    username = request.args.get("username")
+
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                    SELECT 
+                    profiles.about_me, 
+                    profiles.github_link, 
+                    profiles.year_of_study, 
+                    users.profile_picture, 
+                    users.email 
+                    FROM profiles
+                    RIGHT JOIN users ON profiles.user_id = users.id
+                    WHERE users.username = %s
+                    """,
+                (username,),
+            )
+            profile = cursor.fetchone()
+            print(profile)
+
+        columns = ["about_me", "github_link", "year_of_study", "pfp", "email"]
+        profile_dict = dict(zip(columns, profile))
+        return jsonify({"profile": profile_dict})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/edit_profile", methods=["POST"])
+@token_required
+def edit_profile(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection is not established"}), 500
+    user_id = decoded["user_id"]
+    data = request.json
+    about_me = data.get("about_me")
+    email = data.get("email")
+    github_link = data.get("github_link")
+    year_of_study = data.get("year_of_study")
+    pfp = data.get("pfp")
+
+    try:
+        if len(about_me) > 1000:
+            return jsonify({"error": "About Me cannot be over 1000 characters!"}), 409
+        elif not github_link.startswith("https://github.com/"):
+            return jsonify({"error": "Invalid Github link"}), 409
+        else:
+            with conn.cursor() as cursor:
+
+                cursor.execute(
+                    "UPDATE users SET email = %s, profile_picture = %s WHERE id = %s",
+                    (email, pfp, user_id),
+                )
+                cursor.execute(
+                    "UPDATE profiles SET about_me = %s, github_link = %s, year_of_study = %s WHERE user_id = %s",
+                    (about_me, github_link, year_of_study, user_id),
+                )
+            conn.commit()
+            return jsonify({"success": "Your profile has been updated!"}), 201
+    except Exception as e:
+        conn.rollback()
         return jsonify({"error": str(e)}), 500
 
 
@@ -440,7 +512,6 @@ def get_posts_byUser(decoded):
             cursor.execute(query, (user_id, user_id, username, post_type, limit, start))
 
             rows = cursor.fetchall()
-            print(rows)
 
         columns = [
             "id",
@@ -564,13 +635,14 @@ def get_specific_post(decoded):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-#route to edit the body of a post
+
+# route to edit the body of a post
 @app.route("/edit_post", methods=["POST"])
 @token_optional
 def edit_post(decoded):
     if not conn:
         return jsonify({"error": "Database connection not established"}), 500
-    
+
     data = request.get_json()
     new_post_body = data.get("new_post_body")
     post_id = request.args.get("post_id")
@@ -579,23 +651,23 @@ def edit_post(decoded):
     try:
         if len(new_post_body) > 4000:
             return jsonify({"error": "Post body cannot be over 4000 characters"}), 400
-        
+
         with conn.cursor() as cursor:
             cursor.execute(
-                '''
+                """
                 UPDATE posts 
                 SET post_body = %s 
                 WHERE id = %s AND user_id = %s
-                ''',
-                (new_post_body, post_id, user_id)
+                """,
+                (new_post_body, post_id, user_id),
             )
-            
+
             conn.commit()
             return jsonify({"success": "Post edited!"})
-    
+
     except Exception as e:
         conn.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 # -------------------- routes related to comments below ------------------------
@@ -810,6 +882,38 @@ def get_replies(decoded):
         return jsonify({"error": str(e)}), 500
 
 
+# route to edit a comment
+@app.route("/edit_comment", methods=["POST"])
+@token_optional
+def edit_comment(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 500
+
+    data = request.get_json()
+    comment_id = data.get("comment_id")
+    new_comment = data.get("new_comment")
+    # post_id = request.args.get("post_id")
+    user_id = decoded["user_id"] if decoded else None
+
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE comments
+                SET comment = %s
+                WHERE id = %s AND user_id = %s
+                """,
+                (new_comment, comment_id, user_id),
+            )
+
+            conn.commit()
+            return jsonify({"success": "Comment edited!"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
 # allows the user to like and unlike a post
 @app.route("/like_unlike", methods=["POST"])
 @token_required
@@ -1012,8 +1116,6 @@ def search_profiles():
             for profile in profiles:
                 profiles_dict = dict(zip(columns, profile))
                 profiles_arr.append(profiles_dict)
-
-        print(profiles_arr)
 
         return jsonify({"profiles": profiles_arr})
 

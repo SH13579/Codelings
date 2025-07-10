@@ -1,7 +1,5 @@
 .profile-wrapper{
-  width: 65rem;
-  max-width: calc(100% - 2rem);
-  margin: auto;
+  width: 100%;
   margin-top: 0.5rem;
 }
 .profile{
@@ -9,7 +7,6 @@
   flex-direction: column;
   flex-wrap: wrap;
   gap: 1rem;
-  max-width: 100%;
 }
 .profile-info{
   gap: 0.75rem;
@@ -17,9 +14,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: auto;
-  width: 45rem;
+  width: 65rem;
   max-width: 100%;
+  position: relative;
 }
 .profile-pfp{
   height: 6rem;
@@ -42,4 +39,104 @@
 }
 .profile-pfp-name{
   text-align: center;
+}
+.edit-profile{
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 0.9rem;
+}
+.edit-profile-wrap{
+  width: 100%;
+}
+.edit-profile-sec{
+  display: flex;
+  gap: 6rem;
+  margin-top: 3rem;
+  flex-wrap: wrap;
+}
+.edit-pfp{
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.edit-profile-pfp-file{
+}
+.edit-profile-wrap .profile-pfp{
+  width: 8rem;
+  height: 8rem;
+}
+.edit-profile-info{
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+  font-weight: 500;
+}
+.edit-profile-col{
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  gap: 0.5rem;
+  outline-color: #023E7D;
+}
+.edit-profile-save{
+  width: 7.5rem;
+}
+.profile-about-box{
+  padding: 1rem;
+  font-size: 0.9rem;
+}
+.profile-github-box, .profile-email-box{
+  height: 1.75rem;
+  font-size: 0.9rem;
+  outline-color: #023E7D;
+  padding: 0.5rem 0.85rem 0.5rem 0.85rem;
+}
+.yos-dropdown{
+  outline-color: #023E7D;
+  height: 2.25rem;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+}
+.profile-details-wrap{
+  width: 45rem;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+.profile-details{
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  font-size: 0.9rem;
+  filter: brightness(0) saturate(100%) invert(44%) sepia(0%) saturate(0%) hue-rotate(290deg) brightness(92%) contrast(89%);
+}
+.profile-github{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-github-logo{
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.profile-email{
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.profile-yos{
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.profile-email-logo{
+  width: 1.5rem;
+}
+.profile-yos-logo{
+  width: 1.55rem;
 }

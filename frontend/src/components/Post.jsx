@@ -6,6 +6,7 @@ import { handleNavigating } from "./Content";
 import CommentCard from "./CommentCard";
 import Tags from "./Tags";
 import Loading from "./Loading";
+import KebabMenu from "./KebabMenu";
 
 function Comments({ postId, currentUser, setShowLogin, token }) {
   const [commentText, setCommentText] = useState("");
@@ -168,7 +169,7 @@ export default function Post() {
   const { loading, setLoading, displayLiked } = useContext(UIContext);
   const [likeCount, setLikeCount] = useState(null);
   const [liked, setLiked] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false); //
+  const [menuOpen, setMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [existingBody, setExistingBody] = useState("");
   const navigate = useNavigate();
@@ -215,14 +216,17 @@ export default function Post() {
   //edit post
   const handleEdit = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/edit_post?post_id=${postId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ new_post_body: existingBody })
-      });
+      const res = await fetch(
+        `http://localhost:5000/edit_post?post_id=${postId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ new_post_body: existingBody }),
+        }
+      );
 
       const data = await res.json();
       if (res.ok) {
@@ -233,10 +237,10 @@ export default function Post() {
         setIsEditing(false);
         // alert(data.success)
       } else {
-        alert(data.error)
+        alert(data.error);
       }
     } catch (err) {
-        alert("Error: " + err.message)
+      alert("Error: " + err.message);
     }
   };
 
@@ -268,25 +272,15 @@ export default function Post() {
           </div>
           {/* kebab-menu */}
           {currentUser && currentUser.username === postInfo.name && (
-            <div className="post-kebab-menu-wrapper">
-              <div
-                className="kebab-menu"
-                onClick={() => setMenuOpen((prev) => !prev)}
-              >
-                &#8942;
-              </div>
-              {menuOpen && (
-                <div className="kebab-menu-dropdown">
-                  <div onClick={() => {
-                    setIsEditing(true);
-                    setMenuOpen(false);
-                  }}>
-                    Edit
-                  </div>
-                  <div>Delete</div>
-                </div>
-              )}
-            </div>
+            <KebabMenu
+              onEdit={() => {
+                setIsEditing(true);
+                setExistingBody(postInfo.body);
+              }}
+              // onDelete={() => {
+              //   //REMINDER:implement delete post
+              // }}
+            />
           )}
         </div>
         <h2 className="post-title">{postInfo.title}</h2>
@@ -306,7 +300,7 @@ export default function Post() {
           {/* if editing, replace body of post with textarea */}
           {isEditing ? (
             <div>
-              <textarea 
+              <textarea
                 className=""
                 value={existingBody}
                 onChange={(e) => setExistingBody(e.target.value)}

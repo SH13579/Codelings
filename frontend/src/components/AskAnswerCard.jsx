@@ -6,14 +6,14 @@ import { likeUnlike, UserContext, UIContext, handleLikePost } from "../utils";
 export default function AskAnswerCard(props) {
   const [deleted, setDeleted] = useState(false);
   const [liked, setLiked] = useState(props.liked);
-  const [likeCount, setLikeCount] = useState(null);
+  const [likeCount, setLikeCount] = useState(props.upvotes);
   const navigate = useNavigate();
   const { currentUser, setShowLogin } = useContext(UserContext);
   const { setShowPopup } = useContext(UIContext);
 
-  useEffect(() => {
-    setLikeCount(props.upvotes);
-  }, [props.upvotes]);
+  // useEffect(() => {
+  //   setLikeCount(props.upvotes);
+  // }, [props.upvotes]);
 
   return !deleted ? (
     <Link to={`/post/${props.id}`} className="ask-ans-wrapper">

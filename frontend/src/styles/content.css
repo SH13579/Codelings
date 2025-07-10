@@ -1,15 +1,12 @@
 .content-wrapper{
   width: 65rem;
-  margin: auto;
-  max-width: calc(100% - 2rem);
+  max-width: 100%;
 }
 .about-us{
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 3rem;
-  padding-left: 1rem;
-  padding-right: 1rem;
 }
 .about-us-wrapper{
   width: 40rem;

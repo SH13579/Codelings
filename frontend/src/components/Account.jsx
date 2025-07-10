@@ -77,8 +77,6 @@ function LoginPage({ setLoginOrRegister, setShowLogin }) {
             onChange={handleChange}
             placeholder="Username"
           />
-          {/* <label>Email</label>
-          <input type="email" name="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter Email"/> */}
           <input
             type="password"
             name="password"

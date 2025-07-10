@@ -49,10 +49,6 @@ export default function ProjectCard(props) {
     );
   };
 
-  useEffect(() => {
-    setLikeCount(props.upvotes);
-  }, [props.upvotes]);
-
   return !deleted ? (
     <Link to={`/post/${props.id}`} className="project-wrapper">
       <div className="project">

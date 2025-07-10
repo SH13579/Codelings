@@ -223,15 +223,56 @@
   /* font-size: 1.5rem; */
 }
 .kebab-menu{
+  width: 2rem;
+  /* height: 2rem; */
   cursor: pointer;
+  text-align: center;
+}
+.kebab-menu:hover{
+  background-color: rgba(239, 239, 239, 0.725);
+  transition: background-color 0.2s ease-in-out;
+  border-radius: 50%;
 }
 .kebab-menu-dropdown{
+  /* background-color: lightblue; */
   position: absolute;
   right: 0;
-  /* top: 4rem; */
-  width: 10rem;
+  border: 2px solid rgba(227, 227, 227, 0.888);
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  border-top: none;
+  width: 8rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center; 
+  color: #0353A4;
+  font-weight: normal;
+  gap: 0.5rem;
+}
+.edit-icon{
+  width: 1.5rem;
+  /* margin-right: 0.5rem; */
+}
+.kebab-menu-edit-button{
+  width: 100%;
+  display: flex;
+  justify-content: center;
   align-items: center;
+  cursor: pointer;
+}
+.kebab-menu-edit-button:hover{
+  background-color: rgba(239, 239, 239, 0.725);
+  transition: background-color 0.2s ease-in-out;
+}
+.kebab-menu-delete-button{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.kebab-menu-delete-button:hover{
+  background-color: rgba(239, 239, 239, 0.725);
+  transition: background-color 0.2s ease-in-out;
 }
