@@ -745,6 +745,7 @@ def delete_comment(decoded):
     comment_id = data.get("comment_id")
     post_id = data.get("post_id")
     parent_comment_id = data.get("parent_comment_id")
+    replies_count = data.get("replies_length")
 
     try:
         with conn.cursor() as cursor:
@@ -991,14 +992,15 @@ def fetch_liked_posts(decoded):
                     posts.comments,
                     users.username,
                     users.profile_picture,
-                    array_agg(tags.tag_name) AS tag_name
+                    array_agg(DISTINCT tags.tag_name) AS tag_name,
+                    true AS user_liked_post
                 FROM posts
                 JOIN users ON posts.user_id = users.id
                 JOIN likes ON posts.id = likes.target_id
                 LEFT JOIN post_tags ON posts.id = post_tags.post_id
                 LEFT JOIN tags ON post_tags.tag_id = tags.id
                 WHERE likes.user_id = %s AND likes.type = 'posts'
-                GROUP BY posts.id, posts.post_date, posts.post_type, posts.user_id, posts.title, posts.post_description, posts.likes, posts.comments, users.username, users.profile_picture
+                GROUP BY posts.id, users.username, users.profile_picture
                 LIMIT %s OFFSET %s
             """
             cursor.execute(query, (user_id, limit, offset))
@@ -1015,6 +1017,7 @@ def fetch_liked_posts(decoded):
             "name",
             "pfp",
             "tags",
+            "liked",
         ]
 
         liked_posts_arr = get_posts_helper(liked_posts, columns)

@@ -20,57 +20,6 @@ function App() {
   const [viewMoreLoading, setViewMoreLoading] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
 
-  console.log("Rendering App");
-
-  useEffect(() => {
-    if (!isLoggedIn) {
-      return;
-    }
-    const controller = new AbortController();
-    const signal = controller.signal;
-    setLoading(true);
-
-    const getCurrentUser = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/fetch_user_profile", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          signal: signal,
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          setIsLoggedIn(true);
-          setCurrentUser({
-            username: data.username,
-            email: data.email,
-            pfp: data.pfp,
-          });
-        } else {
-          sessionStorage.removeItem("token");
-          setCurrentUser(null);
-          setIsLoggedIn(false);
-        }
-      } catch (err) {
-        if (err.name !== "AbortError") {
-          alert("Error: " + err.message);
-          sessionStorage.removeItem("token");
-          setCurrentUser(null);
-          setIsLoggedIn(false);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getCurrentUser();
-
-    return () => controller.abort();
-  }, [isLoggedIn]);
-
   return (
     <div className="site">
       <UserContext.Provider

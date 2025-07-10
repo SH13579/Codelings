@@ -12,7 +12,7 @@ export default function Posts(props) {
   useEffect(() => {
     props.setHasMorePosts(true);
     props.displaySectionPosts();
-  }, [props.filter, props.currentSection, props.searchTerm]);
+  }, [props.filter, props.currentSection, props.searchTerm, props.currentUser]);
 
   //map through all the projects
   const all_posts = props.posts.map((item) => {

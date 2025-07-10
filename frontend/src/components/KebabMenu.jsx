@@ -30,8 +30,8 @@ export default function KebabMenu({ onEdit, onDelete }) {
           </div>
           <div
             className="kebab-menu-delete-button"
-            onClick={() => {
-              onDelete();
+            onClick={(e) => {
+              onDelete(e);
               setMenuOpen(false);
             }}
           >

@@ -131,6 +131,9 @@ export default function EditProfile() {
               name="year_of_study"
               onChange={(e) => handleChange(e)}
             >
+              <option value="" disabled hidden>
+                Select Year
+              </option>
               <option value="Freshman">Freshman</option>
               <option value="Sophomore">Sophomore</option>
               <option value="Junior">Junior</option>
@@ -141,7 +144,7 @@ export default function EditProfile() {
           </span>
 
           <button className="edit-profile-save" type="submit">
-            Save
+            Save Changes
           </button>
         </form>
       </div>

@@ -81,6 +81,7 @@ export default function CommentCard({
             comment_id: commentId,
             post_id: postId,
             parent_comment_id: parentCommentId,
+            replies_count: repliesList.length,
           }),
         });
         const data = await res.json();

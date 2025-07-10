@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import "../styles/account.css";
 import "../styles/createpost.css";
+import { useNavigate } from "react-router-dom";
 import { useExitListener } from "../utils";
 import { UserContext } from "../utils";
 
@@ -8,6 +9,7 @@ function LoginPage({ setLoginOrRegister, setShowLogin }) {
   const [msg, setMsg] = useState(null);
   const loginRef = useRef(null);
   const { setIsLoggedIn } = useContext(UserContext);
+  const navigate = useNavigate();
 
   //click anywhere outside of the box and it will exit out
   useExitListener(setShowLogin, loginRef);
@@ -44,8 +46,8 @@ function LoginPage({ setLoginOrRegister, setShowLogin }) {
         sessionStorage.setItem("token", data.token);
         setIsLoggedIn(true);
         setShowLogin(false);
+        navigate("/");
       } else {
-        //!res.ok (Login unsuccessful)
         //codes 400(bad request), 401(invalid credentials), 409(conflict, info already taken), 500(server error)
         setMsg(data.error);
       }

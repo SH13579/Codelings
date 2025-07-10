@@ -19,19 +19,18 @@
   cursor: pointer;
  }
 .comment{
-  /* border: 1px solid rgb(228, 227, 227); */
   border-radius: 10px;
-  padding: 1.25rem 1.25rem 1.25rem 0rem;
 }
-/* .comment.reply{
-  margin-left: 1rem;
-} */
 .comment-input-wrapper{
   position: relative;
   margin-bottom: 0.05rem;
 }
 .all-replies{
-  padding-left: 1.25rem;
+  margin-left: 2.5rem;
+  margin-top: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 .comment-input{
   height: 5rem;
@@ -71,13 +70,14 @@
 .all-comments{
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
+  margin-top: 1.25rem;
 }
 /* for some reason, can't do .all-comment .all-replies */
 .all-replies{
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1.5rem;
 }
 .comment-login-msg{
   background-color: #edf4fe;
@@ -178,13 +178,11 @@
   width: 100%;
 }
 .view-more-replies-button{
-  width: 11rem;
-  display: flex;
-  justify-content: center;
+  display: inline-flex;
   color: #0353A4;
   cursor: pointer;
-  margin-top: 0.5rem;
   align-items: center;
+  margin-right: auto;
 }
 .view-more-replies-button img{
   width: 1.75rem;
@@ -192,8 +190,8 @@
   display: block;
 }
 .view-more-replies-button:hover{
-  background-color: lightblue;
-  border-radius: 1rem;
+  color: #5C677D;
+  transition: color 0.2s ease;
 }
 .horizontal-line {
   height: 1px;
@@ -223,10 +221,14 @@
   /* font-size: 1.5rem; */
 }
 .kebab-menu{
+  font-size: 1.5rem;
   width: 2rem;
-  /* height: 2rem; */
+  height: 2rem;
   cursor: pointer;
   text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .kebab-menu:hover{
   background-color: rgba(239, 239, 239, 0.725);
@@ -276,3 +278,21 @@
   background-color: rgba(239, 239, 239, 0.725);
   transition: background-color 0.2s ease-in-out;
 }
+
+.post-deleted-msg{
+  /* background-color: lightblue; */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #023E7D;
+}
+
+  /* color: #023E7D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.15rem;
+  padding-top: 1.25rem;
+  padding-bottom: 1.25rem; */

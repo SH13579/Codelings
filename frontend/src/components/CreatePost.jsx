@@ -68,7 +68,11 @@ const MultiselectDropdown = ({
   return (
     <div ref={dropdownRef} className="multi-select">
       <div
-        onClick={() => setShowDropdown(!showDropdown)}
+        onClick={() =>
+          tags.length === 0
+            ? setShowDropdown(false)
+            : setShowDropdown(!showDropdown)
+        }
         className="select-box"
       >
         <DisplaySelectedTags />
@@ -85,7 +89,11 @@ const MultiselectDropdown = ({
         <img
           className="dropdown-arrow"
           src="../media/images/dropdown-arrow.svg"
-          onClick={() => setShowDropdown(!showDropdown)}
+          onClick={() =>
+            tags.length === 0
+              ? setShowDropdown(false)
+              : setShowDropdown(!showDropdown)
+          }
         ></img>
       </div>
       <div className={showDropdown ? "multi-select-drop" : "display-none"}>
@@ -106,6 +114,7 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
   });
   const postFormRef = useRef(null);
   const [tags, setTags] = useState([]);
+  const [allowedTags, setAllowedTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [alertMsg, setAlertMsg] = useState(null);
@@ -114,6 +123,9 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
   useExitListenerWithAlert(setAlertMsg, postFormRef);
   //set the states of all form values
   const handleChange = (e) => {
+    if (e.target.name === "post_type") {
+      setAllowedTags(tags.filter((tag) => tag.post_type === e.target.value));
+    }
     setProjectPost((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -186,7 +198,7 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
         </select>
         <label>Tags</label>
         <MultiselectDropdown
-          tags={tags}
+          tags={allowedTags}
           selectedTags={selectedTags}
           setSelectedTags={setSelectedTags}
           showDropdown={showDropdown}
@@ -247,6 +259,7 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
   );
 };
 
+//Popup alert that warns the user that progress will not be saved when the user wants to exit
 const AlertMsg = ({ setAlertMsg, setClickCreatePost }) => {
   return (
     <div>
@@ -275,6 +288,7 @@ const AlertMsg = ({ setAlertMsg, setClickCreatePost }) => {
   );
 };
 
+//Message showing that the post has been successfully posted
 const PostedMessage = ({ setClickCreatePost }) => {
   const postMsgRef = useRef(null);
   useExitListener(setClickCreatePost, postMsgRef);

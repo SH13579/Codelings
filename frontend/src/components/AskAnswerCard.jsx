@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { handleNavigating } from "./Content";
 import { likeUnlike, UserContext, UIContext, handleLikePost } from "../utils";
+import Tags from "./Tags";
 
 export default function AskAnswerCard(props) {
   const [deleted, setDeleted] = useState(false);
@@ -34,6 +35,7 @@ export default function AskAnswerCard(props) {
           </div>
         </div>
         <h3 className="post-title">{props.title}</h3>
+        <Tags tags={props.tags} />
         <div className="upvotes-comments-wrapper">
           <span className="upvotes">
             <img

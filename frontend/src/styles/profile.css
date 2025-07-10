@@ -51,16 +51,14 @@
 }
 .edit-profile-sec{
   display: flex;
-  gap: 6rem;
-  margin-top: 3rem;
+  gap: 3rem;
+  margin-top: 2rem;
   flex-wrap: wrap;
 }
 .edit-pfp{
   display: flex;
   flex-direction: column;
   gap: 2rem;
-}
-.edit-profile-pfp-file{
 }
 .edit-profile-wrap .profile-pfp{
   width: 8rem;
@@ -71,7 +69,12 @@
   flex-direction: column;
   gap: 1rem;
   flex: 1;
-  font-weight: 500;
+  min-width: 30rem;
+  font-weight: 700;
+}
+.edit-profile-info input, textarea, select{
+  border-radius: 7.5px;
+  border: 1px solid rgb(202, 202, 202);
 }
 .edit-profile-col{
   display: flex;
@@ -81,11 +84,13 @@
   outline-color: #023E7D;
 }
 .edit-profile-save{
-  width: 7.5rem;
+  margin-top: 0.5rem;
 }
 .profile-about-box{
   padding: 1rem;
   font-size: 0.9rem;
+  min-height: 4.5rem;
+  resize: vertical;
 }
 .profile-github-box, .profile-email-box{
   height: 1.75rem;

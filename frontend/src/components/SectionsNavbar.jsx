@@ -34,11 +34,9 @@ export default function SectionsNavbar(props) {
           <img className="projects-logo" src={item.imagePath} />
           <span>{item.sectionName}</span>
         </div>
-        {item.subsections &&
-          (props.currentSection === item.sectionDbName ||
-            item.subsections.includes(props.currentSection)) && (
-            <div className="subsections-wrapper">{subsections}</div>
-          )}
+        {item.subsections && (
+          <div className="subsections-wrapper">{subsections}</div>
+        )}
       </div>
     );
     //if no condition is specified, just render the section, else render the section only if the condition is satisfied
@@ -46,6 +44,7 @@ export default function SectionsNavbar(props) {
       ? renderSection
       : item.condition && renderSection;
   });
+  //different styling for the navbar in the home-page compared to everywhere else
   return (
     <div
       className={

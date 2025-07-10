@@ -2,12 +2,11 @@ import React, { useEffect, useState, useRef, useContext } from "react";
 import Account from "./Account";
 import CreatePost from "./CreatePost";
 import "../styles/header.css";
-import { UserContext } from "../utils";
-import { useExitListener } from "../utils";
-import { Link } from "react-router-dom";
-import SectionsNavbar from "./SectionsNavbar";
+import { useExitListener, UserContext, UIContext } from "../utils";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Header() {
+  const token = sessionStorage.getItem("token");
   const {
     currentUser,
     isLoggedIn,
@@ -16,12 +15,13 @@ export default function Header() {
     showLogin,
     setShowLogin,
   } = useContext(UserContext);
+  const { setLoading } = useContext(UIContext);
   const [isScrolled, setIsScrolled] = useState(false);
   const [clickCreatePost, setClickCreatePost] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
 
-  console.log("Rendering Header");
   //remove ability to scroll any content outside of the account component
   useEffect(() => {
     document.body.style.overflow =
@@ -45,56 +45,108 @@ export default function Header() {
     };
   }, []);
 
+  //Fetch profile picture, username and email of the current user
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+    const controller = new AbortController();
+    const signal = controller.signal;
+    setLoading(true);
+
+    const getCurrentUser = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/fetch_user_profile", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: signal,
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          setIsLoggedIn(true);
+          setCurrentUser({
+            username: data.username,
+            email: data.email,
+            pfp: data.pfp,
+          });
+        } else {
+          sessionStorage.removeItem("token");
+          setCurrentUser(null);
+          setIsLoggedIn(false);
+        }
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          alert("Error: " + err.message);
+          sessionStorage.removeItem("token");
+          setCurrentUser(null);
+          setIsLoggedIn(false);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getCurrentUser();
+
+    return () => controller.abort();
+  }, [isLoggedIn]);
+
   useExitListener(setShowProfileDropdown, dropdownRef);
 
+  //Only allow the user to create a post if they're logged in
   function checkLoggedIn() {
     isLoggedIn ? setClickCreatePost(true) : setShowLogin(true);
   }
 
   const ProfileDropdown = () => {
     return (
-      <div
-        onClick={() => setShowProfileDropdown(false)}
-        className="profile-dropdown"
-      >
-        <Link
-          to={`/profile/${currentUser.username}`}
-          className="dropdown-profile"
+      currentUser && (
+        <div
+          onClick={() => setShowProfileDropdown(false)}
+          className="profile-dropdown"
         >
-          <div className="dropdown-icons">
-            <img
-              className="header-pfp"
-              src={currentUser ? currentUser.pfp : "../media/images/doggy.png"}
-            />
-          </div>
-          <div>
-            <div className="view-profile">View Profile</div>
-            <div className="dropdown-user">
-              {currentUser && currentUser.username}
+          <Link
+            to={`/profile/${currentUser.username}`}
+            className="dropdown-profile"
+          >
+            <div className="dropdown-icons">
+              <img className="header-pfp" src={currentUser.pfp} />
             </div>
-          </div>
-        </Link>
-        <a onClick={signOut} className="dropdown-signout">
-          <div className="dropdown-icons">
-            <img className="sign-out-svg" src="../media/images/sign-out.svg" />
-          </div>
-          <div className="dropdown-logout">Sign Out</div>
-        </a>
-      </div>
+            <div>
+              <div className="view-profile">View Profile</div>
+              <div className="dropdown-user">{currentUser.username}</div>
+            </div>
+          </Link>
+          <a onClick={() => signOut(navigate)} className="dropdown-signout">
+            <div className="dropdown-icons">
+              <img
+                className="sign-out-svg"
+                src="../media/images/sign-out.svg"
+              />
+            </div>
+            <div className="dropdown-logout">Sign Out</div>
+          </a>
+        </div>
+      )
     );
   };
-
-  function signOut() {
-    sessionStorage.removeItem("token");
-    setCurrentUser(null);
-    setIsLoggedIn(null);
-    setShowProfileDropdown(false);
-  }
 
   function showOrHideDropdown() {
     showProfileDropdown
       ? setShowProfileDropdown(false)
       : setShowProfileDropdown(true);
+  }
+
+  function signOut(navigate) {
+    sessionStorage.removeItem("token");
+    setCurrentUser(null);
+    setIsLoggedIn(null);
+    setShowProfileDropdown(false);
+    navigate("/");
   }
 
   return (

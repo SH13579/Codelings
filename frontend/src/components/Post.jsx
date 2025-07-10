@@ -7,6 +7,7 @@ import CommentCard from "./CommentCard";
 import Tags from "./Tags";
 import Loading from "./Loading";
 import KebabMenu from "./KebabMenu";
+import { showDeletePopup } from "./Profile"; //delete post
 
 function Comments({ postId, currentUser, setShowLogin, token }) {
   const [commentText, setCommentText] = useState("");
@@ -172,8 +173,10 @@ export default function Post() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [existingBody, setExistingBody] = useState("");
+  const [deleted, setDeleted] = useState(false);
   const navigate = useNavigate();
   const { postId } = useParams();
+  const { setShowPopup } = useContext(UIContext);
 
   const handlePropagation = (e) => {
     e.stopPropagation();
@@ -252,7 +255,7 @@ export default function Post() {
 
   return loading ? (
     <Loading />
-  ) : (
+  ) : !deleted ? (
     <div className="content-wrapper no-hover">
       <div className="post-wrapper">
         <div className="project-first-row">
@@ -277,9 +280,9 @@ export default function Post() {
                 setIsEditing(true);
                 setExistingBody(postInfo.body);
               }}
-              // onDelete={() => {
-              //   //REMINDER:implement delete post
-              // }}
+              onDelete={(e) => {
+                showDeletePopup(e, postId, setDeleted, setShowPopup);
+              }}
             />
           )}
         </div>
@@ -343,5 +346,7 @@ export default function Post() {
         }
       </div>
     </div>
+  ) : (
+    <h1 className="post-deleted-msg">Post Deleted</h1>
   );
 }
