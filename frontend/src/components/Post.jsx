@@ -175,6 +175,8 @@ export default function Post() {
   const [existingBody, setExistingBody] = useState("");
   const [deleted, setDeleted] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const query = new URLSearchParams(location.search)
   const { postId } = useParams();
   const { setShowPopup } = useContext(UIContext);
 
@@ -215,6 +217,19 @@ export default function Post() {
     };
     fetchPost();
   }, [postId]);
+
+  //this is for clicking "Edit" in Profile
+  useEffect(() => {
+    if (query.get("edit") === "true") {
+      setIsEditing(true);
+      setExistingBody(postInfo.body);
+
+      // to remove "edit=true" on URL, uncomment code below (issue: existing body will be empty)
+      // navigate(location.pathname, { replace: true });
+    
+    }
+  }, [location.search, postInfo]);
+
 
   //edit post
   const handleEdit = async () => {

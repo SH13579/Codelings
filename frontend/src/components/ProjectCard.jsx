@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { handleNavigating } from "./Content";
 import { UserContext, likeUnlike, UIContext, handleLikePost } from "../utils";
 import Tags from "./Tags";
+import KebabMenu from "./KebabMenu";
 
 //each individual project component
 export default function ProjectCard(props) {
@@ -49,6 +50,10 @@ export default function ProjectCard(props) {
     );
   };
 
+  const handleEdit = () => {
+    navigate(`/post/${props.id}?edit=true`);
+  }
+
   return !deleted ? (
     <Link to={`/post/${props.id}`} className="project-wrapper">
       <div className="project">
@@ -90,20 +95,28 @@ export default function ProjectCard(props) {
           {props.location === "profile" &&
             currentUser &&
             currentUser.username === props.user && (
-              <span className="delete">
-                <img
-                  onClick={(e) => {
-                    props.showDeletePopup(
-                      e,
-                      props.id,
-                      setDeleted,
-                      setShowPopup
-                    );
-                  }}
-                  className="delete-icon"
-                  src="../media/images/delete-icon.svg"
-                />
-              </span>
+              <KebabMenu 
+                onEdit={() => {
+                  handleEdit() //navigates to Post
+                }}
+                onDelete={(e) => 
+                  props.showDeletePopup(e, props.id, setDeleted, setShowPopup)
+                }
+              />
+              // <span className="delete">
+              //   <img
+              //     onClick={(e) => {
+              //       props.showDeletePopup(
+              //         e,
+              //         props.id,
+              //         setDeleted,
+              //         setShowPopup
+              //       );
+              //     }}
+              //     className="delete-icon"
+              //     src="../media/images/delete-icon.svg"
+              //   />
+              // </span>
             )}
         </div>
       </div>

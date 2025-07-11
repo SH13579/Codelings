@@ -745,7 +745,8 @@ def delete_comment(decoded):
     comment_id = data.get("comment_id")
     post_id = data.get("post_id")
     parent_comment_id = data.get("parent_comment_id")
-    replies_count = data.get("replies_length")
+    replies_count = int(data.get("replies_count"))
+    decrement = 1
 
     try:
         with conn.cursor() as cursor:
@@ -762,13 +763,15 @@ def delete_comment(decoded):
 
             cursor.execute("DELETE FROM comments WHERE id = %s", (comment_id,))
 
-            # update number of comments in posts table
-            cursor.execute(
-                "UPDATE posts SET comments = comments - 1 WHERE id = %s", (post_id,)
-            )
+            #if deleting parent comment, include replies_count and update posts table
+            if parent_comment_id is None:
+                decrement = 1 + replies_count
+                cursor.execute(
+                    "UPDATE posts SET comments = comments - %s WHERE id = %s", (decrement, post_id)
+                )
 
-            # update number of comments in comments table
-            if parent_comment_id:
+            #if deleting reply, update comments table
+            elif parent_comment_id:
                 cursor.execute(
                     "UPDATE comments SET comments_count = comments_count - 1 WHERE id = %s",
                     (parent_comment_id,),

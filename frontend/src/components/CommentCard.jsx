@@ -68,7 +68,7 @@ export default function CommentCard({
   const limit = 5;
   const { setShowPopup } = useContext(UIContext);
 
-  const handleDeleteComment = async (commentId, parentCommentId = null) => {
+  const handleDeleteComment = async (commentId, parentCommentId = null, repliesCount) => {
     async function deleteComment() {
       try {
         const res = await fetch(`http://localhost:5000/delete_comment`, {
@@ -81,7 +81,7 @@ export default function CommentCard({
             comment_id: commentId,
             post_id: postId,
             parent_comment_id: parentCommentId,
-            replies_count: repliesList.length,
+            replies_count: repliesCount,
           }),
         });
         const data = await res.json();
@@ -351,7 +351,8 @@ export default function CommentCard({
               onDelete={() => {
                 handleDeleteComment(
                   parentComment.comment_id,
-                  parentComment.parent_comment_id
+                  parentComment.parent_comment_id,
+                  parentComment.comments_count
                 );
               }}
             />
@@ -402,7 +403,7 @@ export default function CommentCard({
               onClick={() => fetchReplies()}
             >
               <img src="../media/images/dropdown-arrow.svg" />
-              View More Replies
+              View More Replies (Testing Replies Count: {parentComment.comments_count - repliesList.length})
             </div>
           )}
         </div>

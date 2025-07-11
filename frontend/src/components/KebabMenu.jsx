@@ -12,7 +12,11 @@ export default function KebabMenu({ onEdit, onDelete }) {
 
   return (
     <div ref={menuRef} className="post-kebab-menu-wrapper">
-      <div className="kebab-menu" onClick={() => setMenuOpen((prev) => !prev)}>
+      <div className="kebab-menu" onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setMenuOpen((prev) => !prev)
+      }}>
         &#8942;
         {/* use svg instead */}
       </div>
@@ -20,7 +24,9 @@ export default function KebabMenu({ onEdit, onDelete }) {
         <div className="kebab-menu-dropdown">
           <div
             className="kebab-menu-edit-button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               onEdit();
               setMenuOpen(false);
             }}
@@ -31,6 +37,8 @@ export default function KebabMenu({ onEdit, onDelete }) {
           <div
             className="kebab-menu-delete-button"
             onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               onDelete(e);
               setMenuOpen(false);
             }}
