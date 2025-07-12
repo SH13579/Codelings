@@ -14,7 +14,6 @@ import "./styles/App.css";
 function App() {
   const token = sessionStorage.getItem("token");
   const [currentUser, setCurrentUser] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(token ? true : false);
   const [showPopup, setShowPopup] = useState(null);
   const [loading, setLoading] = useState(false);
   const [viewMoreLoading, setViewMoreLoading] = useState(false);
@@ -27,8 +26,6 @@ function App() {
           token,
           currentUser,
           setCurrentUser,
-          isLoggedIn,
-          setIsLoggedIn,
           showLogin,
           setShowLogin,
         }}

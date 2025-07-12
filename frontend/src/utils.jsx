@@ -85,10 +85,10 @@ export async function likeUnlike(
   }
 }
 
-export function handleLikePost(e, currentUser, setShowLogin, likeUnlike) {
+export function handleLikePost(e, token, setShowLogin, likeUnlike) {
   e.preventDefault();
   e.stopPropagation();
-  if (!currentUser) {
+  if (!token) {
     setShowLogin(true);
     return;
   }

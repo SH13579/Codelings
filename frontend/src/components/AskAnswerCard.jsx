@@ -3,18 +3,23 @@ import { Link, useNavigate } from "react-router-dom";
 import { handleNavigating } from "./Content";
 import { likeUnlike, UserContext, UIContext, handleLikePost } from "../utils";
 import Tags from "./Tags";
+import KebabMenu from "./KebabMenu";
 
 export default function AskAnswerCard(props) {
   const [deleted, setDeleted] = useState(false);
   const [liked, setLiked] = useState(props.liked);
   const [likeCount, setLikeCount] = useState(props.upvotes);
   const navigate = useNavigate();
-  const { currentUser, setShowLogin } = useContext(UserContext);
+  const { currentUser, setShowLogin, token } = useContext(UserContext);
   const { setShowPopup } = useContext(UIContext);
 
-  // useEffect(() => {
-  //   setLikeCount(props.upvotes);
-  // }, [props.upvotes]);
+  useEffect(() => {
+    setLiked(props.liked);
+  }, [props.liked]);
+
+  const handleEdit = () => {
+    navigate(`/post/${props.id}?edit=true`);
+  };
 
   return !deleted ? (
     <Link to={`/post/${props.id}`} className="ask-ans-wrapper">
@@ -40,7 +45,7 @@ export default function AskAnswerCard(props) {
           <span className="upvotes">
             <img
               onClick={(e) =>
-                handleLikePost(e, currentUser, setShowLogin, () =>
+                handleLikePost(e, token, setShowLogin, () =>
                   likeUnlike(props.id, "posts", liked, setLiked, setLikeCount)
                 )
               }
@@ -56,17 +61,14 @@ export default function AskAnswerCard(props) {
           {props.location === "profile" &&
             currentUser &&
             currentUser.username === props.user && (
-              <span
-                onClick={(e) => {
-                  props.showDeletePopup(e, props.id, setDeleted, setShowPopup);
+              <KebabMenu
+                onEdit={() => {
+                  handleEdit(); //navigates to Post
                 }}
-                className="delete"
-              >
-                <img
-                  className="delete-icon"
-                  src="../media/images/delete-icon.svg"
-                />
-              </span>
+                onDelete={(e) =>
+                  props.showDeletePopup(e, props.id, setDeleted, setShowPopup)
+                }
+              />
             )}
         </div>
       </div>

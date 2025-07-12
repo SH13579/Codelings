@@ -5,11 +5,12 @@ import { UserContext, UIContext, handleLikePost, likeUnlike } from "../utils";
 import { handleNavigating } from "./Content";
 import CommentCard from "./CommentCard";
 import Tags from "./Tags";
-import Loading from "./Loading";
+import Loading, { ViewMoreLoading } from "./Loading";
 import KebabMenu from "./KebabMenu";
 import { showDeletePopup } from "./Profile"; //delete post
 
 function Comments({ postId, currentUser, setShowLogin, token }) {
+  const { viewMoreLoading, setViewMoreLoading } = useContext(UIContext);
   const [commentText, setCommentText] = useState("");
   const [replyText, setReplyText] = useState("");
   const [parentCommentsList, setParentCommentsList] = useState([]);
@@ -23,6 +24,7 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
   //cant put useEffect around this because fetchComments() is called when user clicks "view more"
   //fetch parent comments once first load in or refresh
   async function fetchComments(reset = false) {
+    !reset && setViewMoreLoading(true);
     try {
       const res = await fetch(
         `http://localhost:5000/get_comments?post_id=${postId}&start=${
@@ -51,19 +53,17 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
       } else {
         alert(data.error);
       }
-      console.log(data);
     } catch (err) {
       alert("Error: " + err.message);
+    } finally {
+      !reset && setViewMoreLoading(false);
     }
   }
 
+  //initial batch of 10 comments
   useEffect(() => {
     fetchComments(true);
   }, []);
-
-  useEffect(() => {
-    console.log(start);
-  }, [start]);
 
   //post comment
   const handleCommentSubmit = async (e) => {
@@ -155,7 +155,7 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
       </div>
       {hasMoreComments && (
         <button className="view-more-button" onClick={() => fetchComments()}>
-          View More
+          {viewMoreLoading ? <ViewMoreLoading /> : "View More"}
         </button>
       )}
     </div>
@@ -163,10 +163,8 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
 }
 
 export default function Post() {
-  const token = sessionStorage.getItem("token");
-  // const { state: post } = useLocation(); //useLocation gives access to the current route's location object (including any state/props passed via <Link>)
   const [postInfo, setPostInfo] = useState({});
-  const { currentUser, setShowLogin } = useContext(UserContext);
+  const { currentUser, setShowLogin, token } = useContext(UserContext);
   const { loading, setLoading, displayLiked } = useContext(UIContext);
   const [likeCount, setLikeCount] = useState(null);
   const [liked, setLiked] = useState(false);
@@ -176,7 +174,7 @@ export default function Post() {
   const [deleted, setDeleted] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const query = new URLSearchParams(location.search)
+  const query = new URLSearchParams(location.search);
   const { postId } = useParams();
   const { setShowPopup } = useContext(UIContext);
 
@@ -206,8 +204,6 @@ export default function Post() {
           setPostInfo(post);
           setLikeCount(post.upvotes);
           setLiked(post.liked);
-        } else {
-          console.log("FAILED TO FETCH: " + data.error);
         }
       } catch (err) {
         alert("Error: " + err.message);
@@ -220,16 +216,16 @@ export default function Post() {
 
   //this is for clicking "Edit" in Profile
   useEffect(() => {
-    if (query.get("edit") === "true") {
+    if (query.get("edit") === "true" && postInfo.body) {
       setIsEditing(true);
       setExistingBody(postInfo.body);
-
-      // to remove "edit=true" on URL, uncomment code below (issue: existing body will be empty)
-      // navigate(location.pathname, { replace: true });
-    
+      navigate(location.pathname, { replace: true }); //remove "edit=true" from URL
     }
-  }, [location.search, postInfo]);
+  }, [postInfo.body]);
 
+  useEffect(() => {
+    console.log(existingBody);
+  }, [existingBody]);
 
   //edit post
   const handleEdit = async () => {
@@ -261,10 +257,6 @@ export default function Post() {
       alert("Error: " + err.message);
     }
   };
-
-  useEffect(() => {
-    console.log(postInfo);
-  }, [postInfo]);
 
   console.log("Rendering Post");
 
@@ -336,7 +328,7 @@ export default function Post() {
           <span className="upvotes">
             <img
               onClick={(e) =>
-                handleLikePost(e, currentUser, setShowLogin, () =>
+                handleLikePost(e, token, setShowLogin, () =>
                   likeUnlike(postId, "posts", liked, setLiked, setLikeCount)
                 )
               }
@@ -362,6 +354,6 @@ export default function Post() {
       </div>
     </div>
   ) : (
-    <h1 className="post-deleted-msg">Post Deleted</h1>
+    <h2 className="post-deleted-msg">Post has been deleted</h2>
   );
 }

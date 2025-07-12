@@ -3,13 +3,13 @@
   align-items: center;
   justify-content: center;
   flex: 1;
-  min-height: 20rem;
+  height: 25rem;
 }
 .loader {
     color: #cecece;
     font-family: Consolas, Menlo, Monaco, monospace;
     font-weight: bold;
-    font-size: 4rem;
+    font-size: 3rem;
     opacity: 0.8;
   }
   .loader:before {

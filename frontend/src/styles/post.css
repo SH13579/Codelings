@@ -8,12 +8,10 @@
 .comment-top-row{
   display: flex;
   align-items: center;
+  position: relative;
 }
 .user-info{
   cursor: pointer;
-}
-.upvotes-comments-wrapper{
-  
 }
  .upvotes-comments-wrapper img{
   cursor: pointer;
@@ -66,6 +64,7 @@
 }
 .comment-text{
   white-space: pre-line; /* allow users to go to new line */
+  margin-top: 0.5rem
 }
 .all-comments{
   display: flex;
@@ -102,8 +101,9 @@
   padding-right: 1rem;
 }
 .comment-reply-button:hover{
-  background-color: lightblue;
+  background-color: #d4dcef;
   border-radius: 0.5rem;
+  transition: background-color 0.2s ease;
 }
 .comment-delete-button{
   cursor: pointer;
@@ -175,19 +175,16 @@
   float: right;
 }
 .view-more-button{
+  margin-top: 1.5rem;
   width: 100%;
 }
 .view-more-replies-button{
   display: inline-flex;
+  gap: 0.3rem;
   color: #0353A4;
   cursor: pointer;
   align-items: center;
   margin-right: auto;
-}
-.view-more-replies-button img{
-  width: 1.75rem;
-  object-fit: contain;
-  display: block;
 }
 .view-more-replies-button:hover{
   color: #5C677D;
@@ -215,64 +212,68 @@
   margin-top: 1.4rem;
 }
 .post-kebab-menu-wrapper{
-  position: relative;
-  margin-left: auto;
-  /* cursor: pointer; */
-  /* font-size: 1.5rem; */
+  position: absolute;
+  right: 0;
 }
 .kebab-menu{
   font-size: 1.5rem;
   width: 2rem;
   height: 2rem;
   cursor: pointer;
-  text-align: center;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 .kebab-menu:hover{
-  background-color: rgba(239, 239, 239, 0.725);
+  background-color: #d4dcef;
   transition: background-color 0.2s ease-in-out;
   border-radius: 50%;
 }
 .kebab-menu-dropdown{
-  /* background-color: lightblue; */
   position: absolute;
   right: 0;
-  border: 2px solid rgba(227, 227, 227, 0.888);
-  border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
-  border-top: none;
-  width: 8rem;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 4px 6px rgba(0, 0, 0, 0.05),
+    0 12px 28px rgba(0, 0, 0, 0.1);
+  width: 7.5rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center; 
   color: #0353A4;
   font-weight: normal;
-  gap: 0.5rem;
+  border-radius: 7.5px;
+}
+.kebab-menu-dropdown div:hover{
+  background-color: #e6e6e6;
+  transition: background-color 0.2s ease;
+}
+.delete-icon{
+  width: 1.75rem;
+  filter: brightness(0) saturate(100%) invert(0%) sepia(84%) saturate(7500%) hue-rotate(333deg) brightness(111%) contrast(114%);
 }
 .edit-icon{
-  width: 1.5rem;
-  /* margin-right: 0.5rem; */
+  width: 1.75rem;
+  
 }
 .kebab-menu-edit-button{
-  width: 100%;
+  flex: 1;
   display: flex;
-  justify-content: center;
   align-items: center;
   cursor: pointer;
+  gap: 0.5rem;
+   padding : 0.5rem 0.75rem;
 }
 .kebab-menu-edit-button:hover{
   background-color: rgba(239, 239, 239, 0.725);
   transition: background-color 0.2s ease-in-out;
 }
 .kebab-menu-delete-button{
-  width: 100%;
+  flex: 1;
   display: flex;
-  justify-content: center;
   align-items: center;
   cursor: pointer;
+  gap: 0.5rem;
+  padding : 0.5rem 0.75rem;
 }
 .kebab-menu-delete-button:hover{
   background-color: rgba(239, 239, 239, 0.725);
@@ -285,6 +286,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  height: 25rem;
   color: #023E7D;
 }
 

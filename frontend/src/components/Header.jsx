@@ -6,15 +6,8 @@ import { useExitListener, UserContext, UIContext } from "../utils";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function Header() {
-  const token = sessionStorage.getItem("token");
-  const {
-    currentUser,
-    isLoggedIn,
-    setCurrentUser,
-    setIsLoggedIn,
-    showLogin,
-    setShowLogin,
-  } = useContext(UserContext);
+  const { currentUser, setCurrentUser, showLogin, setShowLogin, token } =
+    useContext(UserContext);
   const { setLoading } = useContext(UIContext);
   const [isScrolled, setIsScrolled] = useState(false);
   const [clickCreatePost, setClickCreatePost] = useState(false);
@@ -47,7 +40,7 @@ export default function Header() {
 
   //Fetch profile picture, username and email of the current user
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!token) {
       return;
     }
     const controller = new AbortController();
@@ -67,7 +60,6 @@ export default function Header() {
         const data = await res.json();
 
         if (res.ok) {
-          setIsLoggedIn(true);
           setCurrentUser({
             username: data.username,
             email: data.email,
@@ -76,14 +68,12 @@ export default function Header() {
         } else {
           sessionStorage.removeItem("token");
           setCurrentUser(null);
-          setIsLoggedIn(false);
         }
       } catch (err) {
         if (err.name !== "AbortError") {
           alert("Error: " + err.message);
           sessionStorage.removeItem("token");
           setCurrentUser(null);
-          setIsLoggedIn(false);
         }
       } finally {
         setLoading(false);
@@ -93,13 +83,13 @@ export default function Header() {
     getCurrentUser();
 
     return () => controller.abort();
-  }, [isLoggedIn]);
+  }, [token]);
 
   useExitListener(setShowProfileDropdown, dropdownRef);
 
   //Only allow the user to create a post if they're logged in
   function checkLoggedIn() {
-    isLoggedIn ? setClickCreatePost(true) : setShowLogin(true);
+    token ? setClickCreatePost(true) : setShowLogin(true);
   }
 
   const ProfileDropdown = () => {
@@ -144,7 +134,6 @@ export default function Header() {
   function signOut(navigate) {
     sessionStorage.removeItem("token");
     setCurrentUser(null);
-    setIsLoggedIn(null);
     setShowProfileDropdown(false);
     navigate("/");
   }
@@ -165,7 +154,7 @@ export default function Header() {
             Create Post
           </a>
           <div ref={dropdownRef} className="login-or-profile">
-            {isLoggedIn ? (
+            {token ? (
               <img
                 onClick={showOrHideDropdown}
                 className="header-pfp"

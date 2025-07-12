@@ -6,7 +6,7 @@ import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
 import Loading from "./Loading";
 import "../styles/search.css";
-import { UIContext, EmptyContainer } from "../utils";
+import { UIContext, EmptyContainer, UserContext } from "../utils";
 
 const SearchProfileCard = (props) => {
   const navigate = useNavigate();
@@ -47,7 +47,7 @@ const SearchProfiles = (props) => {
 };
 
 export default function Search() {
-  const token = sessionStorage.getItem("token");
+  const { token } = useContext(UserContext);
   const { searchTerm } = useParams();
   const [currentSection, setCurrentSection] = useState("project");
   const [start, setStart] = useState(0);

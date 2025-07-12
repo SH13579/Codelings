@@ -3,6 +3,7 @@ import "../styles/post.css";
 import { UIContext, handleLikePost, likeUnlike } from "../utils";
 import { handleNavigating } from "./Content";
 import KebabMenu from "./KebabMenu";
+import Loading from "./Loading";
 
 function ReplyBox({ onSubmit, replyText, setReplyText, onCancel }) {
   return (
@@ -62,13 +63,21 @@ export default function CommentCard({
   );
   const [likeCount, setLikeCount] = useState(parentComment.upvotes);
   const [liked, setLiked] = useState(parentComment.liked);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [existingComment, setExistingComment] = useState("");
   const limit = 5;
   const { setShowPopup } = useContext(UIContext);
+  const [viewMoreRepliesLoading, setViewMoreRepliesLoading] = useState(false);
 
-  const handleDeleteComment = async (commentId, parentCommentId = null, repliesCount) => {
+  useEffect(() => {
+    console.log(repliesList);
+  }, [repliesList]);
+
+  const handleDeleteComment = async (
+    commentId,
+    parentCommentId = null,
+    repliesCount
+  ) => {
     async function deleteComment() {
       try {
         const res = await fetch(`http://localhost:5000/delete_comment`, {
@@ -243,6 +252,7 @@ export default function CommentCard({
 
   const fetchReplies = async (reset = false) => {
     try {
+      !reset && setViewMoreRepliesLoading(true);
       const start = reset ? 0 : replyStart;
       const res = await fetch(
         `http://localhost:5000/get_replies?parent_comment_id=${parentComment.comment_id}&start=${start}&limit=${limit}`,
@@ -269,6 +279,8 @@ export default function CommentCard({
       }
     } catch (err) {
       alert("Error: " + err.message);
+    } finally {
+      !reset && setViewMoreRepliesLoading(false);
     }
   };
 
@@ -287,6 +299,22 @@ export default function CommentCard({
           <span className="post-date-dot">&#8226;</span>
           {parentComment.date}
         </div>
+        {/*Add option to delete if user is the commenter*/}
+        {isCommenter && (
+          <KebabMenu
+            onEdit={() => {
+              setIsEditing(true);
+              setExistingComment(parentComment.comment);
+            }}
+            onDelete={() => {
+              handleDeleteComment(
+                parentComment.comment_id,
+                parentComment.parent_comment_id,
+                parentComment.comments_count
+              );
+            }}
+          />
+        )}
       </div>
       {isEditing ? (
         <div>
@@ -307,7 +335,7 @@ export default function CommentCard({
         <span className="upvotes">
           <img
             onClick={(e) =>
-              handleLikePost(e, currentUser, setShowLogin, () =>
+              handleLikePost(e, token, setShowLogin, () =>
                 likeUnlike(
                   parentComment.comment_id,
                   "comments",
@@ -341,22 +369,6 @@ export default function CommentCard({
           >
             Reply
           </div>
-          {/*Add option to delete if user is the commenter*/}
-          {isCommenter && (
-            <KebabMenu
-              onEdit={() => {
-                setIsEditing(true);
-                setExistingComment(parentComment.comment);
-              }}
-              onDelete={() => {
-                handleDeleteComment(
-                  parentComment.comment_id,
-                  parentComment.parent_comment_id,
-                  parentComment.comments_count
-                );
-              }}
-            />
-          )}
         </div>
       </div>
       {/* show reply box when click "Reply" */}
@@ -372,9 +384,9 @@ export default function CommentCard({
         />
       )}
       {/* map through repliesList and call <CommentCard /> */}
-      {!isReply && repliesList && (
+      {!isReply && parentComment.comments_count > 0 && repliesList && (
         <div className="all-replies">
-          {/* issue: when doing recursive call, it maps again, leading to infinite loop. add "!isReply" so that it ONLY maps ONCE when <CommentCard /> is a parent comment  */}
+          {/* issue: when doing recursive call, it maps again, leading to infinite loop/recursive calls. add "!isReply" so that it ONLY maps ONCE when <CommentCard /> is a parent comment. avoid going through repliesList when it's a reply */}
           {repliesList.map((reply) => (
             <CommentCard
               key={reply.comment_id}
@@ -402,10 +414,28 @@ export default function CommentCard({
               className="view-more-replies-button"
               onClick={() => fetchReplies()}
             >
-              <img src="../media/images/dropdown-arrow.svg" />
-              View More Replies (Testing Replies Count: {parentComment.comments_count - repliesList.length})
+              <svg
+                className=""
+                width="22.5"
+                height="22.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+              <div>
+                {parentComment.comments_count - repliesList.length}
+                {parentComment.comments_count - repliesList.length === 1
+                  ? " Reply"
+                  : " Replies"}
+              </div>
             </div>
           )}
+          {viewMoreRepliesLoading && <Loading />}
         </div>
       )}
     </div>

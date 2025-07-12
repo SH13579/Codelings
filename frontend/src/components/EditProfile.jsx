@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useParams } from "react-router-dom";
 import "../styles/profile.css";
 import { fetchProfileInfo } from "./Profile";
+import { UserContext } from "../utils";
 
-async function handleEditProfile(e, profileInfo, setMsg) {
+async function handleEditProfile(e, token, profileInfo, setMsg) {
   e.preventDefault();
-  const token = sessionStorage.getItem("token");
   try {
     const res = await fetch("http://localhost:5000/edit_profile", {
       method: "POST",
@@ -34,6 +34,7 @@ async function handleEditProfile(e, profileInfo, setMsg) {
 
 export default function EditProfile() {
   const { username } = useParams();
+  const { token } = useContext(UserContext);
   const [profileInfo, setProfileInfo] = useState({
     about_me: "",
     email: "",
@@ -90,7 +91,7 @@ export default function EditProfile() {
           />
         </div>
         <form
-          onSubmit={(e) => handleEditProfile(e, profileInfo, setMsg)}
+          onSubmit={(e) => handleEditProfile(e, token, profileInfo, setMsg)}
           className="edit-profile-info"
         >
           {msg && <div className="edit-profile-msg">{msg}</div>}

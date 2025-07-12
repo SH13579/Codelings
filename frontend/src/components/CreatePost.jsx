@@ -313,7 +313,7 @@ const PostedMessage = ({ setClickCreatePost }) => {
 };
 
 export default function CreatePost({ setClickCreatePost }) {
-  const token = sessionStorage.getItem("token");
+  const { token } = useContext(UserContext);
   const [msg, setMsg] = useState("");
 
   console.log("Rendering Create Post");

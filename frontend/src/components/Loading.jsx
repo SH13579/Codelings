@@ -4,7 +4,7 @@ import "../styles/loader.css";
 export const ViewMoreLoading = () => {
   return (
     <div className="view-more-loader-wrapper">
-      <span class="view-more-loader"></span>
+      <span className="view-more-loader"></span>
       <span>Loading...</span>
     </div>
   );

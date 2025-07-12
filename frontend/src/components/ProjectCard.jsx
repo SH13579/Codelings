@@ -10,15 +10,19 @@ export default function ProjectCard(props) {
   const [deleted, setDeleted] = useState(false);
   const [liked, setLiked] = useState(props.liked);
   const [likeCount, setLikeCount] = useState(props.upvotes);
+  const { token } = useContext(UserContext);
+  const { currentUser, setShowLogin } = useContext(UserContext);
+  const { setShowPopup } = useContext(UIContext);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setLiked(props.liked);
+  }, [props.liked]);
+
   const handlePropagation = (e) => {
     e.stopPropagation();
     e.preventDefault();
   };
-
-  const { currentUser, setShowLogin } = useContext(UserContext);
-  const { setShowPopup } = useContext(UIContext);
-
-  const navigate = useNavigate();
 
   const ProjectVideo = () => {
     const videoRef = useRef(null);
@@ -52,7 +56,7 @@ export default function ProjectCard(props) {
 
   const handleEdit = () => {
     navigate(`/post/${props.id}?edit=true`);
-  }
+  };
 
   return !deleted ? (
     <Link to={`/post/${props.id}`} className="project-wrapper">
@@ -71,6 +75,18 @@ export default function ProjectCard(props) {
             <span className="post-date-dot">&#8226;</span>
             {props.date}
           </div>
+          {props.location === "profile" &&
+            currentUser &&
+            currentUser.username === props.user && (
+              <KebabMenu
+                onEdit={() => {
+                  handleEdit(); //navigates to Post
+                }}
+                onDelete={(e) =>
+                  props.showDeletePopup(e, props.id, setDeleted, setShowPopup)
+                }
+              />
+            )}
         </div>
         <h3 className="post-title">{props.title}</h3>
         <div className="post-desc">{props.description}</div>
@@ -79,7 +95,7 @@ export default function ProjectCard(props) {
           <span className="upvotes">
             <img
               onClick={(e) =>
-                handleLikePost(e, currentUser, setShowLogin, () =>
+                handleLikePost(e, token, setShowLogin, () =>
                   likeUnlike(props.id, "posts", liked, setLiked, setLikeCount)
                 )
               }
@@ -92,32 +108,6 @@ export default function ProjectCard(props) {
             <img className="comments-icon" src="../media/images/comments.svg" />
             <div className="comment-count">{props.comments_count}</div>
           </span>
-          {props.location === "profile" &&
-            currentUser &&
-            currentUser.username === props.user && (
-              <KebabMenu 
-                onEdit={() => {
-                  handleEdit() //navigates to Post
-                }}
-                onDelete={(e) => 
-                  props.showDeletePopup(e, props.id, setDeleted, setShowPopup)
-                }
-              />
-              // <span className="delete">
-              //   <img
-              //     onClick={(e) => {
-              //       props.showDeletePopup(
-              //         e,
-              //         props.id,
-              //         setDeleted,
-              //         setShowPopup
-              //       );
-              //     }}
-              //     className="delete-icon"
-              //     src="../media/images/delete-icon.svg"
-              //   />
-              // </span>
-            )}
         </div>
       </div>
     </Link>

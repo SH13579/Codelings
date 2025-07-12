@@ -8,7 +8,6 @@ import { UserContext } from "../utils";
 function LoginPage({ setLoginOrRegister, setShowLogin }) {
   const [msg, setMsg] = useState(null);
   const loginRef = useRef(null);
-  const { setIsLoggedIn } = useContext(UserContext);
   const navigate = useNavigate();
 
   //click anywhere outside of the box and it will exit out
@@ -44,7 +43,6 @@ function LoginPage({ setLoginOrRegister, setShowLogin }) {
       if (res.ok) {
         //codes 200(ok), 201(created)
         sessionStorage.setItem("token", data.token);
-        setIsLoggedIn(true);
         setShowLogin(false);
         navigate("/");
       } else {

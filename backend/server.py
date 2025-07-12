@@ -181,11 +181,11 @@ def fetch_user_profile(decoded):
         username = decoded["username"]
         with conn.cursor() as cursor:
             cursor.execute(
-                "SELECT username, email, profile_picture FROM users WHERE username=%s",
+                "SELECT profile_picture FROM users WHERE username=%s",
                 (username,),
             )
             user = cursor.fetchone()
-        return jsonify({"username": user[0], "email": user[1], "pfp": user[2]})
+        return jsonify({"username": username, "pfp": user[0]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -763,14 +763,15 @@ def delete_comment(decoded):
 
             cursor.execute("DELETE FROM comments WHERE id = %s", (comment_id,))
 
-            #if deleting parent comment, include replies_count and update posts table
+            # if deleting parent comment, include replies_count and update posts table
             if parent_comment_id is None:
                 decrement = 1 + replies_count
                 cursor.execute(
-                    "UPDATE posts SET comments = comments - %s WHERE id = %s", (decrement, post_id)
+                    "UPDATE posts SET comments = comments - %s WHERE id = %s",
+                    (decrement, post_id),
                 )
 
-            #if deleting reply, update comments table
+            # if deleting reply, update comments table
             elif parent_comment_id:
                 cursor.execute(
                     "UPDATE comments SET comments_count = comments_count - 1 WHERE id = %s",
@@ -795,6 +796,7 @@ def get_comments(decoded):
     start = int(request.args.get("start"))
     limit = int(request.args.get("limit"))
     post_id = request.args.get("post_id")
+    category = request.args.get("category")
     user_id = decoded["user_id"] if decoded else None
 
     try:
@@ -834,6 +836,19 @@ def get_comments(decoded):
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500
+
+
+# @app.route("get_comments_by_category", methods=["GET"])
+# @token_optional
+# def get_comments_by_category(decoded):
+#     if not conn:
+#         return jsonify({"error": "Database connection not established"}), 500
+
+#     start = int(request.args.get("start"))
+#     limit = int(request.args.get("limit"))
+#     post_id = request.args.get("post_id")
+#     category = request.args.get('category')
+#     user_id = decoded["user_id"] if decoded else None
 
 
 # route to get replies from a comment

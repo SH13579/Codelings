@@ -10,9 +10,8 @@ export default function Posts(props) {
   const { loading, viewMoreLoading } = useContext(UIContext);
 
   useEffect(() => {
-    props.setHasMorePosts(true);
     props.displaySectionPosts();
-  }, [props.filter, props.currentSection, props.searchTerm, props.currentUser]);
+  }, [props.filter, props.currentSection, props.searchTerm, props.token]);
 
   //map through all the projects
   const all_posts = props.posts.map((item) => {

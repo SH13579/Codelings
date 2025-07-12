@@ -188,6 +188,7 @@
   transition: background-color 0.2s ease-in-out;
 }
 .project-first-row{
+  position: relative;
   display: flex;
   align-items: center;
 }
@@ -295,9 +296,6 @@
 }
 .empty-icon{
   width: 2.5rem;
-}
-.delete-icon{
-  width: 1.75rem;
 }
 .delete{
   margin-left: auto;

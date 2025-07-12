@@ -127,7 +127,6 @@ async function fetchPostsHomePage(
         postType
       )}&category=${category}&start=${reset ? 0 : start}&limit=${limit}`,
       {
-        method: "GET",
         headers: {
           Accept: "application/json",
           Authorization: `Bearer ${token}`,
@@ -135,18 +134,19 @@ async function fetchPostsHomePage(
       }
     );
     const data = await res.json();
-    //if the number of posts received is lower than the limit, it means there's no more posts left to fetch
-    if (data.posts.length < limit) {
-      setHasMore(false);
-    }
     if (reset) {
       setPostType(data.posts);
       setStart(data.posts.length);
+      setHasMore(true);
     } else {
       //update all the posts displayed
       setPostType((prev) => [...prev, ...data.posts]);
       //increment the offset to fetch the next batch of 10 posts
       setStart((prev) => prev + limit);
+    }
+    //if the number of posts received is lower than the limit, it means there's no more posts left to fetch
+    if (data.posts.length < limit) {
+      setHasMore(false);
     }
   } catch (err) {
     alert("Error: " + err.message);
@@ -172,16 +172,14 @@ export function displayTagsOnPage(setTags) {
 }
 
 export default function Content() {
-  const token = sessionStorage.getItem("token");
-  const [likedPosts, setLikedPosts] = useState([]);
+  const { token } = useContext(UserContext);
   const [currentSection, setCurrentSection] = useState("project");
   const [tags, setTags] = useState([]);
   const [posts, setPosts] = useState([]);
   const [start, setStart] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
   const [postFilter, setPostFilter] = useState("Best");
   const location = "home-page";
-  const { currentUser } = useContext(UserContext);
   const { loading, setLoading, setViewMoreLoading } = useContext(UIContext);
 
   //display avaliable tags for sections in the navbar
@@ -190,8 +188,8 @@ export default function Content() {
   const fetchTagsForQna = fetchTagsForPostType(tags, "qna");
 
   useEffect(() => {
-    console.log(loading);
-  }, [loading]);
+    console.log(posts);
+  }, [posts]);
 
   //sections to insert into the navbar for this page
   const navbar_sections = [
@@ -255,7 +253,7 @@ export default function Content() {
                 token
               )
             }
-            currentUser={currentUser}
+            token={token}
             currentSection={currentSection}
             location={location}
             postLabel="Projects"
@@ -301,7 +299,7 @@ export default function Content() {
                 token
               )
             }
-            currentUser={currentUser}
+            token={token}
             currentSection={currentSection}
             location={location}
             postLabel="Projects"
@@ -345,7 +343,7 @@ export default function Content() {
                 token
               )
             }
-            currentUser={currentUser}
+            token={token}
             currentSection={currentSection}
             location={location}
             postLabel="Ask & Answers"
@@ -390,7 +388,7 @@ export default function Content() {
                 token
               )
             }
-            currentUser={currentUser}
+            token={token}
             currentSection={currentSection}
             location={location}
             postLabel="Ask & Answers"

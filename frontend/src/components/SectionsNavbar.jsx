@@ -1,9 +1,6 @@
 import React, { useEffect } from "react";
 
 export default function SectionsNavbar(props) {
-  useEffect(() => {
-    console.log(props.sections);
-  }, [props.sections]);
   const all_sections = props.sections.map((item) => {
     //render any subsections such as tags associated with the main section
     const subsections =
