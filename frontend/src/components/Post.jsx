@@ -19,15 +19,17 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
   const [start, setStart] = useState(0); //for fetchComments()
   const limit = 5;
   const [hasMoreComments, setHasMoreComments] = useState(true);
+  const [filter, setFilter] = useState("Best")
   const navigate = useNavigate();
 
   //cant put useEffect around this because fetchComments() is called when user clicks "view more"
   //fetch parent comments once first load in or refresh
   async function fetchComments(reset = false) {
     !reset && setViewMoreLoading(true);
+    const category = filter === "Best" ? "likes_count" : "comment_date";
     try {
       const res = await fetch(
-        `http://localhost:5000/get_comments?post_id=${postId}&start=${
+        `http://localhost:5000/get_comments?post_id=${postId}&category=${category}&start=${
           reset ? 0 : start
         }&limit=${limit}`,
         {
@@ -63,7 +65,7 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
   //initial batch of 10 comments
   useEffect(() => {
     fetchComments(true);
-  }, []);
+  }, [filter]);
 
   //post comment
   const handleCommentSubmit = async (e) => {
@@ -114,7 +116,31 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
 
   return (
     <div className="comments-wrapper">
-      <h2>Comments</h2>
+      <div className="comments-header">
+        <h2>Comments</h2>
+        <div className="filter-wrapper">
+          <div className="current-filter">
+            {filter}
+            <img
+              className="dropdown-arrow"
+              src="../media/images/dropdown-arrow.svg"
+              alt="Dropdown"
+            />
+          </div>
+          <div className="filter-dropdown">
+            {filter !== "Best" && (
+              <div onClick={() => setFilter("Best")} className="filter">
+                Best
+              </div>
+            )}
+            {filter !== "New" && (
+              <div onClick={() => setFilter("New")} className="filter">
+                New
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
       {currentUser === undefined ? null : currentUser ? (
         <form className="comment-input-wrapper" onSubmit={handleCommentSubmit}>
           {/*cannot add comment if not logged in*/}

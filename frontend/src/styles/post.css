@@ -16,6 +16,12 @@
  .upvotes-comments-wrapper img{
   cursor: pointer;
  }
+.comments-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
 .comment{
   border-radius: 10px;
 }

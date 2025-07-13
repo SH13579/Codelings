@@ -799,11 +799,15 @@ def get_comments(decoded):
     category = request.args.get("category")
     user_id = decoded["user_id"] if decoded else None
 
+    if category not in {"comment_date", "likes_count"}:
+        return jsonify({"error": "Invalid sort category"}), 400
+    
+    
     try:
         with conn.cursor() as cursor:
             # get parents comments
             cursor.execute(
-                """
+                f"""
                 SELECT comments.id, comments.comment_date, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username,
                 %s IS NOT NULL AND EXISTS (
                     SELECT 1 FROM likes WHERE user_id = %s AND target_id = comments.id AND type = 'comments'
@@ -811,7 +815,7 @@ def get_comments(decoded):
                 FROM comments
                 JOIN users ON comments.user_id = users.id
                 WHERE comments.post_id = %s AND comments.parent_comment_id IS NULL
-                ORDER BY comments.id ASC
+                ORDER BY comments.{category} DESC
                 LIMIT %s OFFSET %s
             """,
                 (user_id, user_id, post_id, limit, start),
