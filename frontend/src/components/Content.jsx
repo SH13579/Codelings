@@ -108,7 +108,7 @@ function fetchTagsForPostType(tags, post_type) {
 //function to fetch 10 posts at a time
 async function fetchPostsHomePage(
   postType,
-  setPostType,
+  setPosts,
   start,
   setStart,
   setHasMore,
@@ -135,12 +135,12 @@ async function fetchPostsHomePage(
     );
     const data = await res.json();
     if (reset) {
-      setPostType(data.posts);
+      setPosts(data.posts);
       setStart(data.posts.length);
       setHasMore(true);
     } else {
       //update all the posts displayed
-      setPostType((prev) => [...prev, ...data.posts]);
+      setPosts((prev) => [...prev, ...data.posts]);
       //increment the offset to fetch the next batch of 10 posts
       setStart((prev) => prev + limit);
     }
@@ -175,7 +175,7 @@ export default function Content() {
   const { token } = useContext(UserContext);
   const [currentSection, setCurrentSection] = useState("project");
   const [tags, setTags] = useState([]);
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState(null);
   const [start, setStart] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [postFilter, setPostFilter] = useState("Best");
@@ -196,13 +196,13 @@ export default function Content() {
     {
       sectionDbName: "project",
       imagePath: "../media/images/projects-logo.svg",
-      sectionName: "All Projects",
+      sectionName: "Projects",
       subsections: fetchTagsForProjects,
     },
     {
       sectionDbName: "qna",
       imagePath: "../media/images/askAnswer.svg",
-      sectionName: "All Ask & Answers",
+      sectionName: "Ask & Answer",
       subsections: fetchTagsForQna,
     },
   ];

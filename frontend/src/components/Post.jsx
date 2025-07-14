@@ -11,6 +11,7 @@ import { showDeletePopup } from "./Profile"; //delete post
 
 function Comments({ postId, currentUser, setShowLogin, token }) {
   const { viewMoreLoading, setViewMoreLoading } = useContext(UIContext);
+  const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [replyText, setReplyText] = useState("");
   const [parentCommentsList, setParentCommentsList] = useState([]);
@@ -18,14 +19,20 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
   const [msg, setMsg] = useState("");
   const [start, setStart] = useState(0); //for fetchComments()
   const limit = 5;
-  const [hasMoreComments, setHasMoreComments] = useState(true);
-  const [filter, setFilter] = useState("Best")
+  const [hasMoreComments, setHasMoreComments] = useState(false);
+  const [newlySubmittedComment, setNewlySubmittedComment] = useState([]);
+  const [isNewlySubmittedComment, setIsNewlySubmittedComment] = useState(false);
+  const [filter, setFilter] = useState("Best");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log(parentCommentsList);
+  }, [parentCommentsList]);
 
   //cant put useEffect around this because fetchComments() is called when user clicks "view more"
   //fetch parent comments once first load in or refresh
   async function fetchComments(reset = false) {
-    !reset && setViewMoreLoading(true);
+    reset ? setCommentsLoading(true) : setViewMoreLoading(true);
     const category = filter === "Best" ? "likes_count" : "comment_date";
     try {
       const res = await fetch(
@@ -42,15 +49,16 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
       );
       const data = await res.json();
       if (res.ok) {
-        if (data.comments.length < limit) {
-          setHasMoreComments(false);
-        }
         if (reset) {
           setParentCommentsList(data.comments);
-          setStart(limit);
+          setStart(data.comments.length);
+          setHasMoreComments(true);
         } else {
           setParentCommentsList((prev) => [...prev, ...data.comments]);
           setStart((prev) => prev + limit);
+        }
+        if (data.comments.length < limit) {
+          setHasMoreComments(false);
         }
       } else {
         alert(data.error);
@@ -58,7 +66,7 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
     } catch (err) {
       alert("Error: " + err.message);
     } finally {
-      !reset && setViewMoreLoading(false);
+      reset ? setCommentsLoading(false) : setViewMoreLoading(false);
     }
   }
 
@@ -97,12 +105,14 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
           comments_count: 0,
           liked: false,
         };
+        setNewlySubmittedComment((prev) => [newComment, ...prev]);
+        setStart((prev) => prev + 1);
         //only show newly created comment imemdiately on frontend if there are less than 5 comments OR no more comments left (view more button gone)
         //to update frontend immediately after submitting a comment
-        if (!hasMoreComments) {
-          setParentCommentsList((prev) => [...prev, newComment]);
-          setStart((prev) => prev + 1); //increase offset by 1 to prevent duplicates
-        }
+        // if (!hasMoreComments) {
+        //   setParentCommentsList((prev) => [...prev, newComment]);
+        //   setStart((prev) => prev + 1); //increase offset by 1 to prevent duplicates
+        // }
         setCommentText(""); //empty input after adding comment
         setMsg(data.success);
       } else {
@@ -129,7 +139,13 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
           </div>
           <div className="filter-dropdown">
             {filter !== "Best" && (
-              <div onClick={() => setFilter("Best")} className="filter">
+              <div
+                onClick={() => {
+                  setFilter("Best");
+                  // setViewMoreLoading(true);
+                }}
+                className="filter"
+              >
                 Best
               </div>
             )}
@@ -141,7 +157,7 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
           </div>
         </div>
       </div>
-      {currentUser === undefined ? null : currentUser ? (
+      {token ? (
         <form className="comment-input-wrapper" onSubmit={handleCommentSubmit}>
           {/*cannot add comment if not logged in*/}
           <textarea
@@ -158,31 +174,61 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
         <div className="comment-login-msg">Sign in to comment</div>
       )}
 
-      <div className="all-comments">
-        {/* Fetch from database to display parent comments of current post*/}
-        {parentCommentsList.map((parentComment) => (
-          <CommentCard
-            key={parentComment.comment_id}
-            token={token}
-            postId={postId}
-            setMsg={setMsg}
-            parentComment={parentComment}
-            currentUser={currentUser}
-            setShowLogin={setShowLogin}
-            navigate={navigate}
-            replyCommentId={replyCommentId}
-            replyText={replyText}
-            setReplyText={setReplyText}
-            setReplyCommentId={setReplyCommentId}
-            setParentCommentsList={setParentCommentsList}
-            setStart={setStart}
-          />
-        ))}
-      </div>
-      {hasMoreComments && (
-        <button className="view-more-button" onClick={() => fetchComments()}>
-          {viewMoreLoading ? <ViewMoreLoading /> : "View More"}
-        </button>
+      {commentsLoading ? (
+        <Loading />
+      ) : (
+        <div className="all-comments">
+          {/* temporarily show newly submitted comments on the top in frontend*/}
+          {newlySubmittedComment.map((comment) => (
+            <CommentCard
+              key={comment.comment_id}
+              token={token}
+              postId={postId}
+              setMsg={setMsg}
+              parentComment={comment}
+              currentUser={currentUser}
+              setShowLogin={setShowLogin}
+              navigate={navigate}
+              replyCommentId={replyCommentId}
+              replyText={replyText}
+              setReplyText={setReplyText}
+              setReplyCommentId={setReplyCommentId}
+              setParentCommentsList={setParentCommentsList}
+              setStart={setStart}
+              setNewlySubmittedComment={setNewlySubmittedComment}
+              isNewlySubmittedComment={true}
+            />
+          ))}
+          {/* Fetch from database to display parent comments of current post*/}
+          {parentCommentsList.map((parentComment) => (
+            <CommentCard
+              key={parentComment.comment_id}
+              token={token}
+              postId={postId}
+              setMsg={setMsg}
+              parentComment={parentComment}
+              currentUser={currentUser}
+              setShowLogin={setShowLogin}
+              navigate={navigate}
+              replyCommentId={replyCommentId}
+              replyText={replyText}
+              setReplyText={setReplyText}
+              setReplyCommentId={setReplyCommentId}
+              setParentCommentsList={setParentCommentsList}
+              setStart={setStart}
+              setNewlySubmittedComment={setNewlySubmittedComment}
+              isNewlySubmittedComment={false}
+            />
+          ))}
+          {hasMoreComments && (
+            <button
+              className="view-more-button"
+              onClick={() => fetchComments()}
+            >
+              {viewMoreLoading ? <ViewMoreLoading /> : "View More"}
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
@@ -335,13 +381,14 @@ export default function Post() {
         <div className="post-body">
           {/* if editing, replace body of post with textarea */}
           {isEditing ? (
-            <div>
+            <div className="post-edit-wrapper">
               <textarea
-                className=""
+                name="post-edit"
+                className="post-edit-box"
                 value={existingBody}
                 onChange={(e) => setExistingBody(e.target.value)}
               />
-              <div>
+              <div className="post-edit-buttons">
                 <button onClick={handleEdit}>Save</button>
                 <button onClick={() => setIsEditing(false)}>Cancel</button>
               </div>

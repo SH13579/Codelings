@@ -54,10 +54,12 @@
   gap: 3rem;
   margin-top: 2rem;
   flex-wrap: wrap;
+  justify-content: center;
 }
 .edit-pfp{
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 2rem;
 }
 .edit-profile-wrap .profile-pfp{

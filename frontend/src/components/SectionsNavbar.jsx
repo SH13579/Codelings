@@ -31,7 +31,7 @@ export default function SectionsNavbar(props) {
           <img className="projects-logo" src={item.imagePath} />
           <span>{item.sectionName}</span>
         </div>
-        {item.subsections && (
+        {item.subsections && item.subsections.length > 0 && (
           <div className="subsections-wrapper">{subsections}</div>
         )}
       </div>

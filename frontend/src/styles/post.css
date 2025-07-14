@@ -20,7 +20,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
 }
 .comment{
   border-radius: 10px;
@@ -35,6 +34,9 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+.all-replies:empty{
+  display: none;
 }
 .comment-input{
   height: 5rem;
@@ -119,7 +121,6 @@
 }
 .comment-reply-box{
   position: relative;
-  margin-bottom: 0.5rem;
 }
 .reply-buttons{
   display: flex;
@@ -180,8 +181,7 @@
   cursor: pointer;
   float: right;
 }
-.view-more-button{
-  margin-top: 1.5rem;
+.comments-wrapper .view-more-button{
   width: 100%;
 }
 .view-more-replies-button{
@@ -285,9 +285,7 @@
   background-color: rgba(239, 239, 239, 0.725);
   transition: background-color 0.2s ease-in-out;
 }
-
 .post-deleted-msg{
-  /* background-color: lightblue; */
   width: 100%;
   display: flex;
   justify-content: center;
@@ -295,7 +293,24 @@
   height: 25rem;
   color: #023E7D;
 }
-
+.post-edit-box{
+  font-size: 1rem;
+  width: calc(100% - 2rem);
+  padding: 1rem;
+  resize: vertical;
+  border: 1px solid rgb(227, 227, 228);
+}
+.post-edit-buttons{
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.post-edit-buttons button{
+  min-width: 6rem;
+}
+.comment .post-edit-box{
+  margin-top: 1rem;
+}
   /* color: #023E7D;
   display: flex;
   align-items: center;

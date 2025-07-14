@@ -108,31 +108,5 @@ export function handleFilter(
   setFilter(filterValue); // changes filter, triggers useEffect fetch
 }
 
-//hook to display the posts of a particular section for homepage and profile
-export function displaySectionPosts(
-  postType,
-  fetchPostsByCategory,
-  setPosts,
-  setStartPost,
-  setHasMorePost,
-  postFilter,
-  username = null //only for profile section
-) {
-  useEffect(() => {
-    setHasMorePost(true);
-    fetchPostsByCategory(
-      postType,
-      setPosts,
-      0,
-      setStartPost,
-      setHasMorePost,
-      postFilter,
-      10,
-      true,
-      username //only for profile section
-    );
-  }, [postFilter, postType]);
-}
-
 export const UserContext = createContext(null);
 export const UIContext = createContext(null);

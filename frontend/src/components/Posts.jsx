@@ -13,19 +13,21 @@ export default function Posts(props) {
     props.displaySectionPosts();
   }, [props.filter, props.currentSection, props.searchTerm, props.token]);
 
-  //map through all the projects
-  const all_posts = props.posts.map((item) => {
-    const PostCard = item.type === "project" ? ProjectCard : AskAnswerCard;
-    return (
-      <PostCard
-        location={props.location}
-        showDeletePopup={showDeletePopup} //only for profile section
-        key={item.id}
-        user={props.username} //only for profile section
-        {...item}
-      />
-    );
-  });
+  //map through all the projects, default state of posts is null so we only map when posts are finished being fetched from the backend
+  const all_posts = props.posts
+    ? props.posts.map((item) => {
+        const PostCard = item.type === "project" ? ProjectCard : AskAnswerCard;
+        return (
+          <PostCard
+            location={props.location}
+            showDeletePopup={showDeletePopup} //only for profile section
+            key={item.id}
+            user={props.username} //only for profile section
+            {...item}
+          />
+        );
+      })
+    : [];
 
   return loading ? (
     <Loading />
@@ -57,7 +59,7 @@ export default function Posts(props) {
           </div>
         )}
       </div>
-      {props.posts.length > 0 ? all_posts : <EmptyContainer />}
+      {props.posts && !props.posts.length > 0 ? <EmptyContainer /> : all_posts}
       {props.hasMorePosts && (
         <button className="view-more-button" onClick={props.fetchMorePosts}>
           {viewMoreLoading ? <ViewMoreLoading /> : "View More"}

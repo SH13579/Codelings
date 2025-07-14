@@ -131,6 +131,7 @@
 }
 .filter-wrapper{
   position: relative;
+  z-index: 1000;
 }
 .current-filter{
   font-weight: 500;
@@ -329,30 +330,29 @@
   font-size: 0.8rem;
 }
   
-  @media(51rem > width) {
-    .sections-navbar, .content-navbar{
-      overflow-x: auto;
-    }
-    .content-navbar{
-      flex-direction: row;
-      padding-top: 0;
-      gap: 0.5rem;
-      width: 100%;
-      margin-bottom: 3rem;
-    }
-    .content-navbar .subsections-wrapper{
-      overflow-x: auto;
-      flex-direction: row;
-      height: 3.5rem;
-      white-space: nowrap;
-      position: absolute;
-      top: 100;
-      width: calc(100vw - 3rem);
-    }
-      .sections-navbar{
-      flex-direction: row;
-      padding-top: 0;
-      gap: 0.5rem;
-      width: 100%;
-      }
+@media(max-width: 51rem) {
+  .sections-navbar, .content-navbar{
+    overflow-x: auto;
   }
+  .content-navbar{
+    padding-top: 0;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  .content-navbar .navbar-section{
+    display: flex;
+    gap: 0.5rem;
+  }
+  .content-navbar .subsections-wrapper{
+    overflow-x: auto;
+    flex-direction: row;
+    height: 3.5rem;
+    white-space: nowrap;
+  }
+  .sections-navbar{
+    flex-direction: row;
+    padding-top: 0;
+    gap: 0.5rem;
+    width: 100%;
+  }
+}

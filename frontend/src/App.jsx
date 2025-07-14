@@ -8,6 +8,7 @@ import Profile from "./components/Profile";
 import Popup from "./components/Popup";
 import Search from "./components/Search";
 import EditProfile from "./components/EditProfile";
+import NotFound404 from "./components/NotFound404";
 import { UserContext, UIContext } from "./utils";
 import "./styles/App.css";
 
@@ -48,6 +49,7 @@ function App() {
               <Route path="/edit-profile/:username" element={<EditProfile />} />
               <Route path="/post/:postId" element={<Post />} />
               <Route path="/search/:searchTerm" element={<Search />} />
+              <Route path="*" element={<NotFound404 />} />
             </Routes>
           </div>
           {showPopup && (

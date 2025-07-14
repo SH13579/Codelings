@@ -1,0 +1,23 @@
+.notfound-wrapper{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.notfound-header{
+  display: flex;
+  align-items: center;
+  font-size: 12rem;
+  color: rgb(0, 0, 0);
+  font-weight: 400;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.notfound-svg{
+  width: 10rem;
+}
+.notfound-button{
+  margin-top: 1rem;
+  font-size: 1.2rem;
+}

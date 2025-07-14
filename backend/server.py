@@ -771,11 +771,16 @@ def delete_comment(decoded):
                     (decrement, post_id),
                 )
 
-            # if deleting reply, update comments table
+            # if deleting reply, update comments and posts table
             elif parent_comment_id:
                 cursor.execute(
                     "UPDATE comments SET comments_count = comments_count - 1 WHERE id = %s",
                     (parent_comment_id,),
+                )
+
+                cursor.execute(
+                    "UPDATE posts SET comments = comments - 1 WHERE id = %s",
+                    (post_id,),
                 )
             conn.commit()
 
@@ -801,8 +806,7 @@ def get_comments(decoded):
 
     if category not in {"comment_date", "likes_count"}:
         return jsonify({"error": "Invalid sort category"}), 400
-    
-    
+
     try:
         with conn.cursor() as cursor:
             # get parents comments
@@ -815,7 +819,7 @@ def get_comments(decoded):
                 FROM comments
                 JOIN users ON comments.user_id = users.id
                 WHERE comments.post_id = %s AND comments.parent_comment_id IS NULL
-                ORDER BY comments.{category} DESC
+                ORDER BY comments.{category} DESC, {"comments.comment_date DESC" if category == "likes_count" else ""}
                 LIMIT %s OFFSET %s
             """,
                 (user_id, user_id, post_id, limit, start),

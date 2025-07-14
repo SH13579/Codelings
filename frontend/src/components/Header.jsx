@@ -38,14 +38,13 @@ export default function Header() {
     };
   }, []);
 
-  //Fetch profile picture, username and email of the current user
+  //Fetch profile picture and username of current user
   useEffect(() => {
     if (!token) {
       return;
     }
     const controller = new AbortController();
     const signal = controller.signal;
-    setLoading(true);
 
     const getCurrentUser = async () => {
       try {
@@ -62,7 +61,6 @@ export default function Header() {
         if (res.ok) {
           setCurrentUser({
             username: data.username,
-            email: data.email,
             pfp: data.pfp,
           });
         } else {
@@ -75,8 +73,6 @@ export default function Header() {
           sessionStorage.removeItem("token");
           setCurrentUser(null);
         }
-      } finally {
-        setLoading(false);
       }
     };
 

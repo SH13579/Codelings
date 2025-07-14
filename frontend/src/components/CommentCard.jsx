@@ -40,11 +40,13 @@ export default function CommentCard({
   setReplyCommentId,
   setParentCommentsList,
   setStart,
+  isNewlySubmittedComment, //to only delete the new comment
   //below are for recursive calls (to update existing repliesList and replyStart)
   parentRepliesList,
   setParentRepliesList,
   existingReplyStart,
   setExistingReplyStart,
+  setNewlySubmittedComment,
 }) {
   const isReply = parentComment.parent_comment_id !== null;
   const isCommenter =
@@ -53,7 +55,7 @@ export default function CommentCard({
   //if <CommentCard /> is parent comment, set repliesList to []
   //if <CommentCard /> is reply, set repliesList to existing repliesList in order for replying to reply to work
   const [repliesList, setRepliesList] = useState(
-    isReply ? parentRepliesList || [] : []
+    isReply ? parentRepliesList : []
   );
   const [replyStart, setReplyStart] = useState(
     isReply ? existingReplyStart : 0
@@ -95,8 +97,14 @@ export default function CommentCard({
         });
         const data = await res.json();
         if (res.ok) {
+          if (isNewlySubmittedComment) {
+            //delete new comment(s)
+            setNewlySubmittedComment((prev) =>
+              prev.filter((comment) => comment.comment_id !== commentId)
+            );
+          }
           //if reply, delete reply
-          if (isReply) {
+          else if (isReply) {
             //use setParentRepliesList if deleting reply
             setParentRepliesList((prev) =>
               prev.filter((reply) => reply.comment_id !== commentId)
@@ -237,7 +245,7 @@ export default function CommentCard({
     }
   };
 
-  const handleReplyClick = (commentId, username, isReplyingToReply) => {
+  const handleReplyClick = (comment_id, username, isReplyingToReply) => {
     //still a bit confused on parentId
     const parentId = isReplyingToReply
       ? parentComment.parent_comment_id //connect to reply's parent_comment_id
@@ -250,12 +258,11 @@ export default function CommentCard({
     ); //if replying to reply, @username. Refer to showReplyBox below
   };
 
-  const fetchReplies = async (reset = false) => {
+  const fetchReplies = async () => {
     try {
-      !reset && setViewMoreRepliesLoading(true);
-      const start = reset ? 0 : replyStart;
+      setViewMoreRepliesLoading(true);
       const res = await fetch(
-        `http://localhost:5000/get_replies?parent_comment_id=${parentComment.comment_id}&start=${start}&limit=${limit}`,
+        `http://localhost:5000/get_replies?parent_comment_id=${parentComment.comment_id}&start=${replyStart}&limit=${limit}`,
         {
           method: "GET",
           headers: {
@@ -267,22 +274,42 @@ export default function CommentCard({
       const data = await res.json();
       if (res.ok) {
         const fetchedReplies = data.replies;
-        setRepliesList((prev) =>
-          reset ? fetchedReplies : [...prev, ...fetchedReplies]
-        );
-        setHasMoreReplies(
-          fetchedReplies.length > 0 && fetchedReplies.length === limit
-        );
-        setReplyStart((prev) => prev + limit);
+        setRepliesList((prev) => [...prev, ...fetchedReplies]);
+        setReplyStart((prev) => prev + fetchedReplies.length);
+        setHasMoreReplies(fetchedReplies === limit);
       } else {
         alert(data.error);
       }
     } catch (err) {
       alert("Error: " + err.message);
     } finally {
-      !reset && setViewMoreRepliesLoading(false);
+      setViewMoreRepliesLoading(false);
     }
   };
+
+  const all_replies = repliesList.map((reply) => (
+    <CommentCard
+      key={reply.comment_id}
+      token={token}
+      postId={postId}
+      setMsg={setMsg}
+      parentComment={reply} //rename?
+      currentUser={currentUser}
+      navigate={navigate}
+      replyCommentId={replyCommentId}
+      replyText={replyText}
+      setReplyText={setReplyText}
+      setReplyCommentId={setReplyCommentId}
+      setRepliesList={setRepliesList}
+      setParentCommentsList={setParentCommentsList}
+      //when adding or deleting
+      parentRepliesList={repliesList}
+      setParentRepliesList={setRepliesList}
+      existingReplyStart={replyStart}
+      setExistingReplyStart={setReplyStart}
+      isNewlySubmittedComment={false}
+    />
+  ));
 
   return (
     //REMINDER: change to reply if commentcard is reply (unnecessary?)
@@ -317,13 +344,14 @@ export default function CommentCard({
         )}
       </div>
       {isEditing ? (
-        <div>
+        <div className="post-edit-wrapper">
           <textarea
-            className=""
+            name="post-edit"
+            className="post-edit-box"
             value={existingComment}
             onChange={(e) => setExistingComment(e.target.value)}
           />
-          <div>
+          <div className="post-edit-buttons">
             <button onClick={handleEditComment}>Save</button>
             <button onClick={() => setIsEditing(false)}>Cancel</button>
           </div>
@@ -350,7 +378,7 @@ export default function CommentCard({
           />
           <div className="upvote-count">{likeCount}</div>
         </span>
-        {!isReply && (
+        {!isReply && repliesList && (
           <span className="comments">
             <img className="comments-icon" src="../media/images/comments.svg" />
             <div className="comment-count">{parentComment.comments_count}</div>
@@ -384,31 +412,10 @@ export default function CommentCard({
         />
       )}
       {/* map through repliesList and call <CommentCard /> */}
-      {!isReply && parentComment.comments_count > 0 && repliesList && (
+      {!isReply && (
         <div className="all-replies">
           {/* issue: when doing recursive call, it maps again, leading to infinite loop/recursive calls. add "!isReply" so that it ONLY maps ONCE when <CommentCard /> is a parent comment. avoid going through repliesList when it's a reply */}
-          {repliesList.map((reply) => (
-            <CommentCard
-              key={reply.comment_id}
-              token={token}
-              postId={postId}
-              setMsg={setMsg}
-              parentComment={reply} //rename?
-              currentUser={currentUser}
-              navigate={navigate}
-              replyCommentId={replyCommentId}
-              replyText={replyText}
-              setReplyText={setReplyText}
-              setReplyCommentId={setReplyCommentId}
-              setRepliesList={setRepliesList}
-              setParentCommentsList={setParentCommentsList}
-              //when adding or deleting
-              parentRepliesList={repliesList}
-              setParentRepliesList={setRepliesList}
-              existingReplyStart={replyStart}
-              setExistingReplyStart={setReplyStart}
-            />
-          ))}
+          {all_replies}
           {hasMoreReplies && (
             <div
               className="view-more-replies-button"
