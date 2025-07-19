@@ -144,6 +144,10 @@ def login():
     password = data.get("password")  # reminder to hash passwords and sensitive info
 
     try:
+        # if fields are empty
+        if not username or not password:
+            return jsonify({"error": "Please fill in the blanks!"}), 400
+
         with conn.cursor() as cursor:
             cursor.execute(
                 "SELECT id, username, password FROM users WHERE username=%s",
@@ -215,7 +219,11 @@ def fetch_profile():
                 (username,),
             )
             profile = cursor.fetchone()
-            print(profile)
+            if not profile:
+                return (
+                    jsonify({"error": "User not found!"}),
+                    404,
+                )
 
         columns = ["about_me", "github_link", "year_of_study", "pfp", "email"]
         profile_dict = dict(zip(columns, profile))
@@ -611,7 +619,7 @@ def get_specific_post(decoded):
 
             row = cursor.fetchone()  # returns 1 row
             if not row:
-                return jsonify({"error": "POST NOT FOUND"}), 404
+                return jsonify({"error": "Post not found"}), 404
         columns = [
             "id",
             "date",
@@ -809,7 +817,7 @@ def get_comments(decoded):
 
     try:
         with conn.cursor() as cursor:
-            # get parents comments
+            # get parents comments, if like count is equal, secondary condition is just return in order of date
             cursor.execute(
                 f"""
                 SELECT comments.id, comments.comment_date, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username,
@@ -819,7 +827,7 @@ def get_comments(decoded):
                 FROM comments
                 JOIN users ON comments.user_id = users.id
                 WHERE comments.post_id = %s AND comments.parent_comment_id IS NULL
-                ORDER BY comments.{category} DESC, {"comments.comment_date DESC" if category == "likes_count" else ""}
+                ORDER BY comments.{category} DESC {",comments.comment_date DESC" if category == "likes_count" else ""}
                 LIMIT %s OFFSET %s
             """,
                 (user_id, user_id, post_id, limit, start),
@@ -844,19 +852,6 @@ def get_comments(decoded):
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500
-
-
-# @app.route("get_comments_by_category", methods=["GET"])
-# @token_optional
-# def get_comments_by_category(decoded):
-#     if not conn:
-#         return jsonify({"error": "Database connection not established"}), 500
-
-#     start = int(request.args.get("start"))
-#     limit = int(request.args.get("limit"))
-#     post_id = request.args.get("post_id")
-#     category = request.args.get('category')
-#     user_id = decoded["user_id"] if decoded else None
 
 
 # route to get replies from a comment
@@ -1153,23 +1148,23 @@ def search_profiles():
 
 
 # fetch all the tags on the website
-@app.route("/fetch_tags", methods=["GET"])
-def fetch_tags():
-    if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+# @app.route("/fetch_tags", methods=["GET"])
+# def fetch_tags():
+#     if not conn:
+#         return jsonify({"error": "Database connection not established"}), 500
 
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT tag_name, post_type FROM tags")
-            tags = cursor.fetchall()
-        all_tags = []
-        for tag in tags:
-            all_tags.append({"tag_name": tag[0], "post_type": tag[1]})
+#     try:
+#         with conn.cursor() as cursor:
+#             cursor.execute("SELECT tag_name, post_type FROM tags")
+#             tags = cursor.fetchall()
+#         all_tags = []
+#         for tag in tags:
+#             all_tags.append({"tag_name": tag[0], "post_type": tag[1]})
 
-        return jsonify({"tags": all_tags})
+#         return jsonify({"tags": all_tags})
 
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
 
 
 # fetch all the posts for a specific tag

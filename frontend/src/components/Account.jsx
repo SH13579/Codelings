@@ -3,7 +3,6 @@ import "../styles/account.css";
 import "../styles/createpost.css";
 import { useNavigate } from "react-router-dom";
 import { useExitListener } from "../utils";
-import { UserContext } from "../utils";
 
 function LoginPage({ setLoginOrRegister, setShowLogin }) {
   const [msg, setMsg] = useState(null);
@@ -104,103 +103,116 @@ function LoginPage({ setLoginOrRegister, setShowLogin }) {
   );
 }
 
+//RegisterForm is now a separete component for existing input to not be removed after an error (something with re-rendering issues)
+//display the actual registration form
+function RegisterForm({ msg, setMsg, setLoginOrRegister }) {
+  const [register, setRegister] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const handleChange = (e) => {
+    setRegister((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (
+      !register.username ||
+      !register.password ||
+      !register.email ||
+      !register.confirmPassword
+    ) {
+      setMsg("Please fill in the blanks!");
+      return;
+    } else if (register.password !== register.confirmPassword) {
+      setMsg("Passwords do not match!");
+      return;
+    }
+    try {
+      const res = await fetch("http://localhost:5000/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...register,
+          confirm_password: register.confirmPassword, //change to python format/rules
+        }),
+      });
+
+      const data = await res.json(); //frontend receives JSON object from backend
+
+      if (res.ok) {
+        setMsg("Registration successful!");
+      } else {
+        //!res.ok (Registration unsuccessful)
+        setMsg(data.error);
+      }
+    } catch (err) {
+      alert("Error:" + err.message);
+    }
+  };
+  return (
+    <form className="form-section" onSubmit={handleRegister}>
+      <h2 className="form-title">Register</h2>
+      {msg && <div className="error-message">{msg}</div>}
+      <input
+        type="text"
+        name="username"
+        value={register.username}
+        onChange={handleChange}
+        placeholder="Username"
+      />
+      <input
+        type="email"
+        name="email"
+        value={register.email}
+        onChange={handleChange}
+        placeholder="Email"
+      />
+      <input
+        type="password"
+        name="password"
+        value={register.password}
+        onChange={handleChange}
+        placeholder="Password"
+      />
+      <input
+        type="password"
+        name="confirmPassword"
+        value={register.confirmPassword}
+        onChange={handleChange}
+        placeholder="Confirm Password"
+      />
+      <button type="submit" className="form-button">
+        Register
+      </button>
+      <div className="alternative">
+        <span>Already have an account?</span>
+        <span
+          className="alternative-button"
+          onClick={() => {
+            setLoginOrRegister("login");
+          }}
+        >
+          Login
+        </span>
+      </div>
+    </form>
+  );
+}
+
 function RegisterPage({ setLoginOrRegister, setShowLogin }) {
   const [msg, setMsg] = useState(null);
   const registerRef = useRef(null);
   useExitListener(setShowLogin, registerRef);
-
   //display the actual registration form
-  const RegisterForm = () => {
-    const [register, setRegister] = useState({
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    });
-
-    const handleChange = (e) => {
-      setRegister((prev) => ({
-        ...prev,
-        [e.target.name]: e.target.value,
-      }));
-    };
-
-    const handleRegister = async (e) => {
-      e.preventDefault();
-      try {
-        const res = await fetch("http://localhost:5000/register", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...register,
-            confirm_password: register.confirmPassword, //change to python format/rules
-          }),
-        });
-
-        const data = await res.json(); //frontend receives JSON object from backend
-
-        if (res.ok) {
-          setMsg("Registration successful!");
-        } else {
-          //!res.ok (Registration unsuccessful)
-          setMsg(data.error);
-        }
-      } catch (err) {
-        alert("Error:" + err.message);
-      }
-    };
-
-    return (
-      <form className="form-section" onSubmit={handleRegister}>
-        <h2 className="form-title">Register</h2>
-        {msg && <div className="error-message">{msg}</div>}
-        <input
-          type="text"
-          name="username"
-          value={register.username}
-          onChange={handleChange}
-          placeholder="Username"
-        />
-        <input
-          type="email"
-          name="email"
-          value={register.email}
-          onChange={handleChange}
-          placeholder="Email"
-        />
-        <input
-          type="password"
-          name="password"
-          value={register.password}
-          onChange={handleChange}
-          placeholder="Password"
-        />
-        <input
-          type="password"
-          name="confirmPassword"
-          value={register.confirmPassword}
-          onChange={handleChange}
-          placeholder="Confirm Password"
-        />
-        <button type="submit" className="form-button">
-          Register
-        </button>
-        <div className="alternative">
-          <span>Already have an account?</span>
-          <span
-            className="alternative-button"
-            onClick={() => {
-              setLoginOrRegister("login");
-            }}
-          >
-            Login
-          </span>
-        </div>
-      </form>
-    );
-  };
+  //RegisteredForm is now a function/component (located below)
 
   //display message after user successfully registers
   const RegisteredMsg = () => {
@@ -236,7 +248,12 @@ function RegisterPage({ setLoginOrRegister, setShowLogin }) {
           &times;
         </button>
         {msg !== "Registration successful!" ? (
-          <RegisterForm />
+          // register, handleChange, handleRegister, msg, setLoginOrRegister
+          <RegisterForm
+            msg={msg}
+            setMsg={setMsg}
+            setLoginOrRegister={setLoginOrRegister}
+          />
         ) : (
           <RegisteredMsg />
         )}

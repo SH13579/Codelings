@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "../styles/post.css";
 import { UserContext, UIContext, handleLikePost, likeUnlike } from "../utils";
@@ -7,16 +7,19 @@ import CommentCard from "./CommentCard";
 import Tags from "./Tags";
 import Loading, { ViewMoreLoading } from "./Loading";
 import KebabMenu from "./KebabMenu";
+import CharCount from "./CharCount";
+import NotExist from "./NotExist";
 import { showDeletePopup } from "./Profile"; //delete post
 
 function Comments({ postId, currentUser, setShowLogin, token }) {
-  const { viewMoreLoading, setViewMoreLoading } = useContext(UIContext);
-  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [viewMoreLoading, setViewMoreLoading] = useState(false);
+  const [commentsLoading, setCommentsLoading] = useState(true);
   const [commentText, setCommentText] = useState("");
   const [replyText, setReplyText] = useState("");
   const [parentCommentsList, setParentCommentsList] = useState([]);
   const [replyCommentId, setReplyCommentId] = useState(null);
   const [msg, setMsg] = useState("");
+  const [showCommentButtons, setShowCommentButtons] = useState(false);
   const [start, setStart] = useState(0); //for fetchComments()
   const limit = 5;
   const [hasMoreComments, setHasMoreComments] = useState(false);
@@ -24,6 +27,8 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
   const [isNewlySubmittedComment, setIsNewlySubmittedComment] = useState(false);
   const [filter, setFilter] = useState("Best");
   const navigate = useNavigate();
+  const limitedCharComment = 1000;
+  const textareaRef = useRef(null);
 
   useEffect(() => {
     console.log(parentCommentsList);
@@ -114,6 +119,7 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
         //   setStart((prev) => prev + 1); //increase offset by 1 to prevent duplicates
         // }
         setCommentText(""); //empty input after adding comment
+        setShowCommentButtons(false);
         setMsg(data.success);
       } else {
         alert(data.error);
@@ -164,11 +170,45 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
             className="comment-input"
             value={commentText}
             placeholder="Add a comment..."
-            onChange={(e) => setCommentText(e.target.value)}
+            ref={textareaRef}
+            onFocus={() => setShowCommentButtons(true)}
+            onChange={(e) => {
+              setCommentText(e.target.value);
+              if (e.target.value.length > 0) {
+                setShowCommentButtons(true);
+              }
+            }}
+            maxLength={limitedCharComment}
+            onInput={(e) => {
+              e.target.style.height = "auto";
+              e.target.style.height = `${e.target.scrollHeight}px`;
+            }}
           />
-          <button className="comment-submit-icon" type="submit">
-            <img src="../media/images/enter.svg" />
-          </button>
+          {showCommentButtons && (
+            <div className="bottom-row">
+              <button
+                onClick={() => {
+                  setShowCommentButtons(false);
+                  setCommentText("");
+                  if (textareaRef.current) {
+                    textareaRef.current.style.height = "auto";
+                  }
+                }}
+              >
+                Cancel
+              </button>
+              <button type="submit" disabled={commentText.trim() === ""}>
+                Submit
+              </button>
+              <CharCount
+                currentLength={commentText.length}
+                maxLength={limitedCharComment}
+              />
+              {/* <button className="comment-submit-icon" type="submit">
+                <img src="../media/images/enter.svg" />
+              </button> */}
+            </div>
+          )}
         </form>
       ) : (
         <div className="comment-login-msg">Sign in to comment</div>
@@ -237,10 +277,9 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
 export default function Post() {
   const [postInfo, setPostInfo] = useState({});
   const { currentUser, setShowLogin, token } = useContext(UserContext);
-  const { loading, setLoading, displayLiked } = useContext(UIContext);
+  const [loading, setLoading] = useState(true);
   const [likeCount, setLikeCount] = useState(null);
   const [liked, setLiked] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [existingBody, setExistingBody] = useState("");
   const [deleted, setDeleted] = useState(false);
@@ -249,6 +288,7 @@ export default function Post() {
   const query = new URLSearchParams(location.search);
   const { postId } = useParams();
   const { setShowPopup } = useContext(UIContext);
+  const limitedCharBody = 200;
 
   const handlePropagation = (e) => {
     e.stopPropagation();
@@ -257,7 +297,6 @@ export default function Post() {
 
   //fetch post's info
   useEffect(() => {
-    setLoading(true);
     const fetchPost = async () => {
       try {
         const res = await fetch(
@@ -276,6 +315,8 @@ export default function Post() {
           setPostInfo(post);
           setLikeCount(post.upvotes);
           setLiked(post.liked);
+        } else {
+          setPostInfo(null);
         }
       } catch (err) {
         alert("Error: " + err.message);
@@ -293,7 +334,7 @@ export default function Post() {
       setExistingBody(postInfo.body);
       navigate(location.pathname, { replace: true }); //remove "edit=true" from URL
     }
-  }, [postInfo.body]);
+  }, [postInfo]);
 
   useEffect(() => {
     console.log(existingBody);
@@ -334,7 +375,11 @@ export default function Post() {
 
   return loading ? (
     <Loading />
-  ) : !deleted ? (
+  ) : deleted ? (
+    <h2 className="post-deleted-msg">Post has been deleted</h2>
+  ) : postInfo === null ? (
+    <NotExist msg={"Post does not exist or may have been deleted"} />
+  ) : (
     <div className="content-wrapper no-hover">
       <div className="post-wrapper">
         <div className="project-first-row">
@@ -387,6 +432,11 @@ export default function Post() {
                 className="post-edit-box"
                 value={existingBody}
                 onChange={(e) => setExistingBody(e.target.value)}
+                maxLength={limitedCharBody}
+              />
+              <CharCount
+                currentLength={existingBody.length}
+                maxLength={limitedCharBody}
               />
               <div className="post-edit-buttons">
                 <button onClick={handleEdit}>Save</button>
@@ -426,7 +476,5 @@ export default function Post() {
         }
       </div>
     </div>
-  ) : (
-    <h2 className="post-deleted-msg">Post has been deleted</h2>
   );
 }

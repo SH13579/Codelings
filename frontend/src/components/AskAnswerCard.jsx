@@ -38,6 +38,18 @@ export default function AskAnswerCard(props) {
             <span className="post-date-dot">&#8226;</span>
             {props.date}
           </div>
+          {props.location === "profile" &&
+            currentUser &&
+            currentUser.username === props.name && (
+              <KebabMenu
+                onEdit={() => {
+                  handleEdit(); //navigates to Post
+                }}
+                onDelete={(e) =>
+                  props.showDeletePopup(e, props.id, setDeleted, setShowPopup)
+                }
+              />
+            )}
         </div>
         <h3 className="post-title">{props.title}</h3>
         <Tags tags={props.tags} />
@@ -58,18 +70,6 @@ export default function AskAnswerCard(props) {
             <img className="comments-icon" src="../media/images/comments.svg" />
             <div className="comment-count">{props.comments_count}</div>
           </span>
-          {props.location === "profile" &&
-            currentUser &&
-            currentUser.username === props.user && (
-              <KebabMenu
-                onEdit={() => {
-                  handleEdit(); //navigates to Post
-                }}
-                onDelete={(e) =>
-                  props.showDeletePopup(e, props.id, setDeleted, setShowPopup)
-                }
-              />
-            )}
         </div>
       </div>
     </Link>

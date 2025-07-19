@@ -1,36 +1,42 @@
 import React, { useEffect } from "react";
+import { Link } from "react-router-dom";
 
 export default function SectionsNavbar(props) {
   const all_sections = props.sections.map((item) => {
+    const section = item.sectionDbName;
     //render any subsections such as tags associated with the main section
     const subsections =
       item.subsections &&
       item.subsections.map((item) => {
         return (
-          <div
-            onClick={() => props.setCurrentSection(item)}
-            className={
-              props.currentSection === item ? "highlight-sub" : "sub-section"
-            }
-          >
-            {item}
-          </div>
+          <Link key={item} to={`${props.currentRoute}${section}/${item}`}>
+            <div
+              // onClick={() => props.handleTagChange(section, item)}
+              className={
+                props.currentTag === item ? "highlight-sub" : "sub-section"
+              }
+            >
+              {item}
+            </div>
+          </Link>
         );
       });
     //render the actual main section
     const renderSection = (
       <div className="navbar-section">
-        <div
-          onClick={() => props.setCurrentSection(item.sectionDbName)}
-          className={
-            props.currentSection === item.sectionDbName
-              ? "highlight"
-              : "navbar-label"
-          }
-        >
-          <img className="projects-logo" src={item.imagePath} />
-          <span>{item.sectionName}</span>
-        </div>
+        <Link key={section} to={`${props.currentRoute}${section}`}>
+          <div
+            // onClick={() => props.handleSectionChange(section)}
+            className={
+              props.currentSection === item.sectionDbName && !props.currentTag
+                ? "highlight"
+                : "navbar-label"
+            }
+          >
+            <img className="projects-logo" src={item.imagePath} />
+            <span>{item.sectionName}</span>
+          </div>
+        </Link>
         {item.subsections && item.subsections.length > 0 && (
           <div className="subsections-wrapper">{subsections}</div>
         )}

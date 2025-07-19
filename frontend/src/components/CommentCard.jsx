@@ -4,8 +4,10 @@ import { UIContext, handleLikePost, likeUnlike } from "../utils";
 import { handleNavigating } from "./Content";
 import KebabMenu from "./KebabMenu";
 import Loading from "./Loading";
+import CharCount from "./CharCount";
 
 function ReplyBox({ onSubmit, replyText, setReplyText, onCancel }) {
+  const limitedChar = 1000;
   return (
     <form onSubmit={onSubmit}>
       <div className="comment-reply-box">
@@ -14,13 +16,22 @@ function ReplyBox({ onSubmit, replyText, setReplyText, onCancel }) {
           value={replyText}
           placeholder="Write your reply here..."
           onChange={(e) => setReplyText(e.target.value)}
+          maxLength={limitedChar}
+          onInput={(e) => {
+            e.target.style.height = "auto";
+            e.target.style.height = `${e.target.scrollHeight}px`;
+          }}
         />
-        <button className="comment-submit-icon-reply" type="submit">
+        {/* <button className="comment-submit-icon-reply" type="submit">
           <img src="../media/images/enter.svg" />
-        </button>
-        <button className="cancel-button" type="button" onClick={onCancel}>
-          Cancel
-        </button>
+        </button> */}
+        <div className="bottom-row">
+          <button className="cancel-button" type="button" onClick={onCancel}>
+            Cancel
+          </button>
+          <button type="submit">Submit</button>
+          <CharCount currentLength={replyText.length} maxLength={limitedChar} />
+        </div>
       </div>
     </form>
   );

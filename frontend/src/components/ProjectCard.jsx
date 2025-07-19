@@ -77,7 +77,7 @@ export default function ProjectCard(props) {
           </div>
           {props.location === "profile" &&
             currentUser &&
-            currentUser.username === props.user && (
+            currentUser.username === props.name && (
               <KebabMenu
                 onEdit={() => {
                   handleEdit(); //navigates to Post

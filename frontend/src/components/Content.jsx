@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import "../styles/content.css";
 import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
+import NotFound404 from "./NotFound404";
 import { UserContext, UIContext } from "../utils";
 
 export const SearchBar = () => {
@@ -50,7 +51,7 @@ export const handleNavigating = (e, navigate, username) => {
 
 //function used to fetch the posts for a specific tag
 async function fetchSpecificTag(
-  currentSection,
+  section,
   post_type,
   setPosts,
   start,
@@ -67,7 +68,7 @@ async function fetchSpecificTag(
   const category = filter === "Best" ? "likes" : "post_date";
   try {
     const res = await fetch(
-      `http://localhost:5000/fetch_specific_tag?target_tag=${currentSection}&post_type=${post_type}&category=${category}&start=${
+      `http://localhost:5000/fetch_specific_tag?target_tag=${section}&post_type=${post_type}&category=${category}&start=${
         reset ? 0 : start
       }&limit=${limit}`,
       {
@@ -92,17 +93,6 @@ async function fetchSpecificTag(
   } finally {
     reset ? setLoading(false) : setViewMoreLoading(false);
   }
-}
-
-//fetch respective tags for specific category on the site (projects, ask & answer, ...)
-function fetchTagsForPostType(tags, post_type) {
-  const tags_arr = [];
-  tags.forEach((element) => {
-    if (element.post_type === post_type) {
-      tags_arr.push(element.tag_name);
-    }
-  });
-  return tags_arr;
 }
 
 //function to fetch 10 posts at a time
@@ -155,41 +145,63 @@ async function fetchPostsHomePage(
   }
 }
 
-async function fetchTags(setTags) {
-  try {
-    const res = await fetch("http://localhost:5000/fetch_tags");
-    const data = await res.json();
-    setTags(data.tags);
-  } catch (err) {
-    alert("Error: " + err.message);
-  }
-}
+// async function fetchTags(setTags) {
+//   try {
+//     const res = await fetch("http://localhost:5000/fetch_tags");
+//     const data = await res.json();
+//     setTags(data.tags);
+//   } catch (err) {
+//     alert("Error: " + err.message);
+//   }
+// }
 
-export function displayTagsOnPage(setTags) {
-  useEffect(() => {
-    fetchTags(setTags);
-  }, []);
-}
+// export function useDisplayTagsOnPage(setTags) {
+//   useEffect(() => {
+//     fetchTags(setTags);
+//   }, []);
+// }
+
+//fetch respective tags for specific category on the site (projects, ask & answer, ...)
+// function fetchTagsForPostType(tags, post_type) {
+//   const tags_arr = [];
+//   tags.forEach((element) => {
+//     if (element.post_type === post_type) {
+//       tags_arr.push(element.tag_name);
+//     }
+//   });
+//   return tags_arr;
+// }
 
 export default function Content() {
   const { token } = useContext(UserContext);
-  const [currentSection, setCurrentSection] = useState("project");
-  const [tags, setTags] = useState([]);
+  const { tags } = useContext(UIContext);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [viewMorePostsLoading, setViewMorePostsLoading] = useState(false);
+  const { currentSection = "project", currentTag } = useParams();
   const [posts, setPosts] = useState(null);
   const [start, setStart] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [postFilter, setPostFilter] = useState("Best");
   const location = "home-page";
-  const { loading, setLoading, setViewMoreLoading } = useContext(UIContext);
+  const validSections = ["project", "qna"];
+  const projectTags = tags
+    .filter((item) => item.post_type === "project")
+    .map((item) => item.tag_name);
+  const askAnswerTags = tags
+    .filter((item) => item.post_type === "qna")
+    .map((item) => item.tag_name);
 
-  //display avaliable tags for sections in the navbar
-  displayTagsOnPage(setTags);
-  const fetchTagsForProjects = fetchTagsForPostType(tags, "project");
-  const fetchTagsForQna = fetchTagsForPostType(tags, "qna");
+  if (!validSections.includes(currentSection)) {
+    return <NotFound404 />;
+  }
 
-  useEffect(() => {
-    console.log(posts);
-  }, [posts]);
+  if (currentTag) {
+    if (
+      !projectTags.includes(currentTag) &&
+      !askAnswerTags.includes(currentTag)
+    )
+      return <NotFound404 />;
+  }
 
   //sections to insert into the navbar for this page
   const navbar_sections = [
@@ -197,13 +209,13 @@ export default function Content() {
       sectionDbName: "project",
       imagePath: "../media/images/projects-logo.svg",
       sectionName: "Projects",
-      subsections: fetchTagsForProjects,
+      subsections: projectTags,
     },
     {
       sectionDbName: "qna",
       imagePath: "../media/images/askAnswer.svg",
       sectionName: "Ask & Answer",
-      subsections: fetchTagsForQna,
+      subsections: askAnswerTags,
     },
   ];
 
@@ -216,12 +228,13 @@ export default function Content() {
         {/* render sections navbar */}
         <SectionsNavbar
           sections={navbar_sections}
-          setCurrentSection={setCurrentSection}
           currentSection={currentSection}
+          currentTag={currentTag}
+          currentRoute="/"
           location={location}
         />
         {/* fetch posts for projects */}
-        {currentSection === "project" && (
+        {currentSection === "project" && !currentTag && (
           <Posts
             displaySectionPosts={() =>
               fetchPostsHomePage(
@@ -232,8 +245,8 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
-                setLoading,
-                setViewMoreLoading,
+                setPostsLoading,
+                setViewMorePostsLoading,
                 true,
                 token
               )
@@ -247,14 +260,15 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
-                setLoading,
-                setViewMoreLoading,
+                setPostsLoading,
+                setViewMorePostsLoading,
                 false,
                 token
               )
             }
-            token={token}
-            currentSection={currentSection}
+            postsLoading={postsLoading}
+            viewMorePostsLoading={viewMorePostsLoading}
+            dependencies={[currentSection, currentTag, token, postFilter]}
             location={location}
             postLabel="Projects"
             posts={posts}
@@ -265,11 +279,11 @@ export default function Content() {
           />
         )}
         {/* fetch tag posts for projects */}
-        {fetchTagsForProjects.includes(currentSection) && (
+        {projectTags.includes(currentTag) && (
           <Posts
             displaySectionPosts={() =>
               fetchSpecificTag(
-                currentSection,
+                currentTag,
                 "project",
                 setPosts,
                 start,
@@ -277,15 +291,15 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
-                setLoading,
-                setViewMoreLoading,
+                setPostsLoading,
+                setViewMorePostsLoading,
                 true,
                 token
               )
             }
             fetchMorePosts={() =>
               fetchSpecificTag(
-                currentSection,
+                currentTag,
                 "project",
                 setPosts,
                 start,
@@ -293,14 +307,15 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
-                setLoading,
-                setViewMoreLoading,
+                setPostsLoading,
+                setViewMorePostsLoading,
                 false,
                 token
               )
             }
-            token={token}
-            currentSection={currentSection}
+            postsLoading={postsLoading}
+            viewMorePostsLoading={viewMorePostsLoading}
+            dependencies={[currentSection, currentTag, token, postFilter]}
             location={location}
             postLabel="Projects"
             posts={posts}
@@ -311,7 +326,7 @@ export default function Content() {
           />
         )}
         {/* fetch posts for ask and answers */}
-        {currentSection === "qna" && (
+        {currentSection === "qna" && !currentTag && (
           <Posts
             displaySectionPosts={() =>
               fetchPostsHomePage(
@@ -322,8 +337,8 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
-                setLoading,
-                setViewMoreLoading,
+                setPostsLoading,
+                setViewMorePostsLoading,
                 true,
                 token
               )
@@ -337,14 +352,15 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
-                setLoading,
-                setViewMoreLoading,
+                setPostsLoading,
+                setViewMorePostsLoading,
                 false,
                 token
               )
             }
-            token={token}
-            currentSection={currentSection}
+            postsLoading={postsLoading}
+            viewMorePostsLoading={viewMorePostsLoading}
+            dependencies={[currentSection, currentTag, token, postFilter]}
             location={location}
             postLabel="Ask & Answers"
             posts={posts}
@@ -354,11 +370,11 @@ export default function Content() {
             setFilter={setPostFilter}
           />
         )}
-        {fetchTagsForQna.includes(currentSection) && (
+        {askAnswerTags.includes(currentTag) && (
           <Posts
             displaySectionPosts={() =>
               fetchSpecificTag(
-                currentSection,
+                currentTag,
                 "qna",
                 setPosts,
                 start,
@@ -366,15 +382,15 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
-                setLoading,
-                setViewMoreLoading,
+                setPostsLoading,
+                setViewMorePostsLoading,
                 true,
                 token
               )
             }
             fetchMorePosts={() =>
               fetchSpecificTag(
-                currentSection,
+                currentTag,
                 "qna",
                 setPosts,
                 start,
@@ -382,14 +398,15 @@ export default function Content() {
                 setHasMore,
                 postFilter,
                 10,
-                setLoading,
-                setViewMoreLoading,
+                setPostsLoading,
+                setViewMorePostsLoading,
                 false,
                 token
               )
             }
-            token={token}
-            currentSection={currentSection}
+            postsLoading={postsLoading}
+            viewMorePostsLoading={viewMorePostsLoading}
+            dependencies={[currentSection, currentTag, token, postFilter]}
             location={location}
             postLabel="Ask & Answers"
             posts={posts}

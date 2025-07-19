@@ -2,8 +2,10 @@ import React, { useState, useContext, useEffect } from "react";
 import "../styles/profile.css";
 import { UserContext, UIContext } from "../utils";
 import { useParams, Link } from "react-router-dom";
+import Loading from "./Loading";
 import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
+import NotExist from "./NotExist";
 
 export function showDeletePopup(e, post_id, setDeleted, setShowPopup) {
   e.preventDefault();
@@ -62,11 +64,11 @@ async function fetchLikedPosts(
   setHasMore,
   limit,
   reset = false,
-  setLoading,
+  setPostsLoading,
   token,
-  setViewMoreLoading
+  setViewMorePostsLoading
 ) {
-  reset ? setLoading(true) : setViewMoreLoading(true);
+  reset ? setPostsLoading(true) : setViewMorePostsLoading(true);
   try {
     const res = await fetch(
       `http://localhost:5000/fetch_liked_posts?limit=${limit}&offset=${
@@ -92,7 +94,7 @@ async function fetchLikedPosts(
   } catch (err) {
     alert("Error: " + err.message);
   } finally {
-    reset ? setLoading(false) : setViewMoreLoading(false);
+    reset ? setPostsLoading(false) : setViewMorePostsLoading(false);
   }
 }
 
@@ -106,12 +108,12 @@ async function fetchPostsProfile(
   limit,
   reset = false,
   username,
-  setLoading,
-  setViewMoreLoading,
+  setPostsLoading,
+  setViewMorePostsLoading,
   token
 ) {
   const category = filter === "Best" ? "likes" : "post_date";
-  reset ? setLoading(true) : setViewMoreLoading(true);
+  reset ? setPostsLoading(true) : setViewMorePostsLoading(true);
   try {
     const res = await fetch(
       `http://localhost:5000/get_posts_byUserAndCategory?username=${encodeURIComponent(
@@ -143,22 +145,32 @@ async function fetchPostsProfile(
   } catch (err) {
     alert("Error: " + err.message);
   } finally {
-    reset ? setLoading(false) : setViewMoreLoading(false);
+    reset ? setPostsLoading(false) : setViewMorePostsLoading(false);
   }
 }
 
-export function fetchProfileInfo(username, setProfileInfo) {
+export function useFetchProfileInfo(
+  username,
+  setProfileInfo,
+  setProfileLoading
+) {
   useEffect(() => {
     async function fetchProfile() {
+      setProfileLoading(true);
       try {
         const res = await fetch(
           `http://localhost:5000/fetch_profile?username=${encodeURIComponent(
             username
           )}`
         );
-
         const data = await res.json();
         const profile = data.profile;
+
+        if (!profile) {
+          setProfileInfo(null);
+          return;
+        }
+
         setProfileInfo({
           about_me: profile.about_me || "",
           email: profile.email || "",
@@ -168,6 +180,8 @@ export function fetchProfileInfo(username, setProfileInfo) {
         });
       } catch (err) {
         alert("Error: " + err.message);
+      } finally {
+        setProfileLoading(false);
       }
     }
 
@@ -176,17 +190,25 @@ export function fetchProfileInfo(username, setProfileInfo) {
 }
 
 export default function Profile() {
-  const token = sessionStorage.getItem("token");
-  const { setLoading, setViewMoreLoading } = useContext(UIContext);
-  const { currentUser } = useContext(UserContext);
-  const [currentSection, setCurrentSection] = useState("project");
+  const [profileInfo, setProfileInfo] = useState({
+    about_me: "",
+    email: "",
+    github_link: "",
+    pfp: "",
+    year_of_study: "",
+  });
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [viewMorePostsLoading, setViewMorePostsLoading] = useState(false);
+  const { currentUser, token } = useContext(UserContext);
   const [posts, setPosts] = useState([]);
   const [start, setStart] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [postFilter, setPostFilter] = useState("Best");
-  const [profileInfo, setProfileInfo] = useState(null);
   const location = "profile";
-  const { username } = useParams();
+  const { username, currentSection = "project" } = useParams();
+
+  useFetchProfileInfo(username, setProfileInfo, setProfileLoading);
 
   const navbar_sections = [
     {
@@ -207,69 +229,64 @@ export default function Profile() {
     },
   ];
 
-  fetchProfileInfo(username, setProfileInfo);
-
-  useEffect(() => {
-    console.log(profileInfo);
-  }, [profileInfo]);
-
-  return (
+  return profileLoading ? (
+    <Loading />
+  ) : profileInfo ? (
     <div className="profile-wrapper">
       <div className="profile">
         <div className="profile-info">
           {currentUser && currentUser.username === username && (
-            <Link to={`/edit-profile/${username}`}>
+            <Link to="/edit-profile">
               <button className="edit-profile">Edit Profile</button>
             </Link>
           )}
           <img className="profile-pfp" src="../media/images/doggy.png" />
           <h2 className="profile-name">@{username}</h2>
-          {profileInfo && (
-            <div className="profile-details-wrap">
-              {profileInfo.about_me && (
-                <div className="profile-about">{profileInfo.about_me}</div>
+
+          <div className="profile-details-wrap">
+            {profileInfo.about_me && (
+              <div className="profile-about">{profileInfo.about_me}</div>
+            )}
+            <div className="profile-details">
+              {profileInfo.email && (
+                <span className="profile-email">
+                  <img
+                    className="profile-email-logo"
+                    src="../media/images/email-logo.svg"
+                  />
+                  {profileInfo.email}
+                </span>
               )}
-              <div className="profile-details">
-                {profileInfo.email && (
-                  <span className="profile-email">
-                    <img
-                      className="profile-email-logo"
-                      src="../media/images/email-logo.svg"
-                    />
-                    {profileInfo.email}
-                  </span>
-                )}
-                {profileInfo.year_of_study && (
-                  <span className="profile-yos">
-                    <img
-                      className="profile-yos-logo"
-                      src="../media/images/year-study-logo.svg"
-                    />
-                    {profileInfo.year_of_study}
-                  </span>
-                )}
-                {profileInfo.github_link && (
-                  <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href={profileInfo.github_link}
-                    className="profile-github"
-                  >
-                    <img
-                      className="profile-github-logo"
-                      src="../media/images/github-logo.svg"
-                    />
-                  </a>
-                )}
-              </div>
+              {profileInfo.year_of_study && (
+                <span className="profile-yos">
+                  <img
+                    className="profile-yos-logo"
+                    src="../media/images/year-study-logo.svg"
+                  />
+                  {profileInfo.year_of_study}
+                </span>
+              )}
+              {profileInfo.github_link && (
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href={profileInfo.github_link}
+                  className="profile-github"
+                >
+                  <img
+                    className="profile-github-logo"
+                    src="../media/images/github-logo.svg"
+                  />
+                </a>
+              )}
             </div>
-          )}
+          </div>
         </div>
         <div className="horizontal-line"></div>
         <div className="content-grid">
           <SectionsNavbar
+            currentRoute={`/profile/${username}/`}
             sections={navbar_sections}
-            setCurrentSection={setCurrentSection}
             currentSection={currentSection}
           />
           {currentSection === "project" && (
@@ -285,8 +302,8 @@ export default function Profile() {
                   10,
                   true,
                   username,
-                  setLoading,
-                  setViewMoreLoading,
+                  setPostsLoading,
+                  setViewMorePostsLoading,
                   token
                 )
               }
@@ -301,14 +318,15 @@ export default function Profile() {
                   10,
                   false,
                   username,
-                  setLoading,
-                  setViewMoreLoading,
+                  setPostsLoading,
+                  setViewMorePostsLoading,
                   token
                 )
               }
-              currentSection={currentSection}
+              postsLoading={postsLoading}
+              viewMorePostsLoading={viewMorePostsLoading}
+              dependencies={[currentSection, postFilter, username]}
               location={location}
-              username={username}
               postLabel="Projects"
               posts={posts}
               hasMorePosts={hasMore}
@@ -330,8 +348,8 @@ export default function Profile() {
                   10,
                   true,
                   username,
-                  setLoading,
-                  setViewMoreLoading,
+                  setPostsLoading,
+                  setViewMorePostsLoading,
                   token
                 )
               }
@@ -346,14 +364,15 @@ export default function Profile() {
                   10,
                   false,
                   username,
-                  setLoading,
-                  setViewMoreLoading,
+                  setPostsLoading,
+                  setViewMorePostsLoading,
                   token
                 )
               }
-              currentSection={currentSection}
+              postsLoading={postsLoading}
+              viewMorePostsLoading={viewMorePostsLoading}
+              dependencies={[currentSection, postFilter, username]}
               location={location}
-              username={username}
               postLabel="Ask & Answers"
               posts={posts}
               hasMorePosts={hasMore}
@@ -372,9 +391,9 @@ export default function Profile() {
                   setHasMore,
                   10,
                   true,
-                  setLoading,
+                  setPostsLoading,
                   token,
-                  setViewMoreLoading
+                  setViewMorePostsLoading
                 )
               }
               fetchMorePosts={() =>
@@ -385,14 +404,15 @@ export default function Profile() {
                   setHasMore,
                   10,
                   false,
-                  setLoading,
+                  setPostsLoading,
                   token,
-                  setViewMoreLoading
+                  setViewMorePostsLoading
                 )
               }
-              currentSection={currentSection}
+              postsLoading={postsLoading}
+              viewMorePostsLoading={viewMorePostsLoading}
+              dependencies={[currentSection, postFilter, username]}
               location={location}
-              username={username}
               postLabel="Liked Posts"
               posts={posts}
               hasMorePosts={hasMore}
@@ -402,5 +422,7 @@ export default function Profile() {
         </div>
       </div>
     </div>
+  ) : (
+    <NotExist msg={"The user you are looking for does not exist"} />
   );
 }

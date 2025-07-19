@@ -4,7 +4,7 @@ import { SearchBar } from "./Content";
 import { handleNavigating } from "./Content";
 import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
-import Loading from "./Loading";
+import Loading, { ViewMoreLoading } from "./Loading";
 import "../styles/search.css";
 import { UIContext, EmptyContainer, UserContext } from "../utils";
 
@@ -31,7 +31,7 @@ const SearchProfiles = (props) => {
   const profilesReturned = props.profiles.map((item) => {
     return <SearchProfileCard key={item.id} {...item} />;
   });
-  return props.loading ? (
+  return props.postsLoading ? (
     <Loading />
   ) : (
     <div className="searched-profiles-wrapper">
@@ -41,21 +41,27 @@ const SearchProfiles = (props) => {
       ) : (
         <EmptyContainer />
       )}
-      {props.hasMore && <button onClick={props.fetchMore}>View More</button>}
+      {props.hasMore && (
+        <button onClick={props.fetchMore}>
+          {props.viewMorePostsLoading ? <ViewMoreLoading /> : "View More"}
+        </button>
+      )}
     </div>
   );
 };
 
 export default function Search() {
   const { token } = useContext(UserContext);
-  const { searchTerm } = useParams();
-  const [currentSection, setCurrentSection] = useState("project");
+  const { searchTerm, currentSection = "project" } = useParams();
   const [start, setStart] = useState(0);
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState(null);
   const limit = 10;
-  const [hasMore, setHasMore] = useState(true);
-  const { loading, setLoading } = useContext(UIContext);
+  const [hasMore, setHasMore] = useState(false);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [viewMorePostsLoading, setViewMorePostsLoading] = useState(false);
   const location = "search-page";
+
+  console.log("Search");
 
   const navbar_sections = [
     {
@@ -83,7 +89,7 @@ export default function Search() {
     reset = false,
     token
   ) {
-    setLoading(true);
+    reset ? setPostsLoading(true) : setViewMorePostsLoading(true);
     try {
       const res = await fetch(
         `http://localhost:5000/search_posts?search_term=${searchTerm}&limit=${limit}&offset=${
@@ -99,20 +105,21 @@ export default function Search() {
       );
 
       const data = await res.json();
-      if (data.posts.length < limit) {
-        setPostsHasMore(false);
-      }
       if (reset) {
+        setPostsHasMore(true);
         setSearchPosts(data.posts);
         setPostStart(data.posts.length);
       } else {
         setSearchPosts((prev) => [...prev, ...data.posts]);
         setPostStart((prev) => prev + limit);
       }
+      if (data.posts.length < limit) {
+        setPostsHasMore(false);
+      }
     } catch (err) {
       alert("Error: " + err.message);
     } finally {
-      setLoading(false);
+      reset ? setPostsLoading(false) : setViewMorePostsLoading(false);
     }
   }
 
@@ -123,7 +130,7 @@ export default function Search() {
     setProfileStart,
     reset = false
   ) {
-    setLoading(true);
+    reset ? setPostsLoading(true) : setViewMorePostsLoading(true);
     try {
       const res = await fetch(
         `http://localhost:5000/search_profiles?search_term=${searchTerm}&limit=${limit}&offset=${
@@ -137,20 +144,21 @@ export default function Search() {
         }
       );
       const data = await res.json();
-      if (data.profiles.length < limit) {
-        setProfilesHasMore(false);
-      }
       if (reset) {
+        setProfilesHasMore(true);
         setSearchProfiles(data.profiles);
         setProfileStart(data.profiles.length);
       } else {
         setSearchProfiles((prev) => [...prev, ...data.profiles]);
         setProfileStart((prev) => prev + limit);
       }
+      if (data.profiles.length < limit) {
+        setProfilesHasMore(false);
+      }
     } catch (err) {
       alert("Error: " + err.message);
     } finally {
-      setLoading(false);
+      reset ? setPostsLoading(false) : setViewMorePostsLoading(false);
     }
   }
 
@@ -160,7 +168,7 @@ export default function Search() {
       <div className="search-results">
         <SectionsNavbar
           sections={navbar_sections}
-          setCurrentSection={setCurrentSection}
+          currentRoute={`/search/${searchTerm}/`}
           currentSection={currentSection}
         />
         {currentSection === "profile" && (
@@ -175,7 +183,8 @@ export default function Search() {
             searchTerm={searchTerm}
             hasMore={hasMore}
             setHasMore={setHasMore}
-            loading={loading}
+            postsLoading={postsLoading}
+            viewMorePostsLoading={viewMorePostsLoading}
           />
         )}
         {currentSection === "project" && (
@@ -186,10 +195,11 @@ export default function Search() {
             fetchMorePosts={() =>
               search_posts(start, setHasMore, setPosts, setStart, false, token)
             }
+            postsLoading={postsLoading}
+            viewMorePostsLoading={viewMorePostsLoading}
+            dependencies={[currentSection, searchTerm]}
             postLabel="Projects"
             location={location}
-            currentSection={currentSection}
-            searchTerm={searchTerm}
             posts={posts}
             hasMorePosts={hasMore}
             setHasMorePosts={setHasMore}
@@ -203,10 +213,11 @@ export default function Search() {
             fetchMorePosts={() =>
               search_posts(start, setHasMore, setPosts, setStart, false, token)
             }
+            postsLoading={postsLoading}
+            viewMorePostsLoading={viewMorePostsLoading}
+            dependencies={[currentSection, searchTerm]}
             postLabel="Ask & Answers"
             location={location}
-            currentSection={currentSection}
-            searchTerm={searchTerm}
             posts={posts}
             hasMorePosts={hasMore}
             setHasMorePosts={setHasMore}

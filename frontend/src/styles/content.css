@@ -196,9 +196,9 @@
 .ask-ans-wrapper{
   display: flex;
   flex-direction: column;
-  padding-top: 0rem;
   text-decoration: none;
   cursor: pointer;
+  
 }
 .user-info{
   display: inline-flex;
@@ -207,7 +207,7 @@
   text-decoration: none;
 }
 .user-name{
-  font-weight: 500;
+  font-weight: 450;
   margin-left: 0.5rem;
   color: #001233;
 }
@@ -328,6 +328,12 @@
   color: #023E7D;
   border-radius: 5px;
   font-size: 0.8rem;
+}
+.hidden{
+  display: none;
+}
+.display{
+  display: block;
 }
   
 @media(max-width: 51rem) {

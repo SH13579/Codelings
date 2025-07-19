@@ -1,8 +1,8 @@
 import React, { useState, useRef, useContext, useEffect, useMemo } from "react";
 import { useExitListener, useExitListenerWithAlert } from "../utils";
-import { UserContext } from "../utils";
+import { UserContext, UIContext } from "../utils";
 import { useNavigate } from "react-router-dom";
-import { displayTagsOnPage } from "./Content";
+import CharCount from "./CharCount";
 
 const MultiselectDropdown = ({
   tags,
@@ -112,15 +112,18 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
     post_body: "",
     video_file_path: "",
   });
+  const { tags } = useContext(UIContext);
   const postFormRef = useRef(null);
-  const [tags, setTags] = useState([]);
   const [allowedTags, setAllowedTags] = useState([]);
   const [selectedTags, setSelectedTags] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [alertMsg, setAlertMsg] = useState(null);
   const navigate = useNavigate();
-  displayTagsOnPage(setTags);
+
   useExitListenerWithAlert(setAlertMsg, postFormRef);
+  const limitedCharTitle = 50;
+  const limitedCharDesc = 200;
+  const limitedCharBody = 4000;
   //set the states of all form values
   const handleChange = (e) => {
     if (e.target.name === "post_type") {
@@ -213,16 +216,26 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
           className="create-post-title"
           type="text"
           name="post_title"
+          maxLength={limitedCharTitle}
+        />
+        <CharCount
+          currentLength={projectPost.post_title.length}
+          maxLength={limitedCharTitle}
         />
         <label>
           Description<span className="required"> *</span>
         </label>
         <textarea
-          value={projectPost.description}
+          value={projectPost.post_description}
           onChange={handleChange}
           className="create-post-description"
           type="text"
           name="post_description"
+          maxLength={limitedCharDesc}
+        />
+        <CharCount
+          currentLength={projectPost.post_description.length}
+          maxLength={limitedCharDesc}
         />
         <label>Body</label>
         <textarea
@@ -231,6 +244,11 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
           className="create-post-body"
           type="text"
           name="post_body"
+          maxLength={limitedCharBody}
+        />
+        <CharCount
+          currentLength={projectPost.post_body.length}
+          maxLength={limitedCharBody}
         />
         <div className="post-project-last">
           <div className="">

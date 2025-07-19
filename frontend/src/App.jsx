@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useParams } from "react-router-dom";
 import Header from "./components/Header";
 import Content from "./components/Content";
 import Post from "./components/Post";
@@ -16,9 +16,49 @@ function App() {
   const token = sessionStorage.getItem("token");
   const [currentUser, setCurrentUser] = useState(null);
   const [showPopup, setShowPopup] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [viewMoreLoading, setViewMoreLoading] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const tags = [
+    { tag_name: "web-app", post_type: "project" },
+    { tag_name: "mobile-app", post_type: "project" },
+    { tag_name: "api", post_type: "project" },
+    { tag_name: "portfolio", post_type: "project" },
+    { tag_name: "automation", post_type: "project" },
+    { tag_name: "cli-tool", post_type: "project" },
+    { tag_name: "data-analysis", post_type: "project" },
+    { tag_name: "machine-learning", post_type: "project" },
+    { tag_name: "chat-app", post_type: "project" },
+    { tag_name: "ecommerce", post_type: "project" },
+    { tag_name: "web-scraper", post_type: "project" },
+    { tag_name: "game-dev", post_type: "project" },
+    { tag_name: "visualization", post_type: "project" },
+    { tag_name: "cms", post_type: "project" },
+    { tag_name: "forum", post_type: "project" },
+    { tag_name: "desktop-app", post_type: "project" },
+    { tag_name: "extension", post_type: "project" },
+    { tag_name: "plugin", post_type: "project" },
+    { tag_name: "library", post_type: "project" },
+    { tag_name: "framework", post_type: "project" },
+    { tag_name: "blog-engine", post_type: "project" },
+    { tag_name: "dashboard", post_type: "project" },
+    { tag_name: "auth-system", post_type: "project" },
+    { tag_name: "dev-tool", post_type: "project" },
+    { tag_name: "crud-app", post_type: "project" },
+    { tag_name: "notetaking-app", post_type: "project" },
+    { tag_name: "finance-app", post_type: "project" },
+    { tag_name: "scheduler", post_type: "project" },
+    { tag_name: "image-processor", post_type: "project" },
+    { tag_name: "music-app", post_type: "project" },
+    { tag_name: "general", post_type: "qna" },
+    { tag_name: "discussion", post_type: "qna" },
+    { tag_name: "debugging", post_type: "qna" },
+    { tag_name: "career-advice", post_type: "qna" },
+    { tag_name: "coding-help", post_type: "qna" },
+    { tag_name: "code-review", post_type: "qna" },
+    { tag_name: "best-practices", post_type: "qna" },
+    { tag_name: "performance", post_type: "qna" },
+    { tag_name: "how-to", post_type: "qna" },
+    { tag_name: "security", post_type: "qna" },
+  ];
 
   return (
     <div className="site">
@@ -35,20 +75,27 @@ function App() {
           value={{
             showPopup,
             setShowPopup,
-            loading,
-            setLoading,
-            viewMoreLoading,
-            setViewMoreLoading,
+            tags,
           }}
         >
           <Header />
           <div className="all-content-wrap">
             <Routes>
               <Route path="/" element={<Content />} />
-              <Route path="/profile/:username" element={<Profile />} />
-              <Route path="/edit-profile/:username" element={<EditProfile />} />
+              <Route
+                path="/:currentSection?/:currentTag?"
+                element={<Content />}
+              />
+              <Route
+                path="/profile/:username/:currentSection?"
+                element={<Profile />}
+              />
+              <Route path="/edit-profile" element={<EditProfile />} />
               <Route path="/post/:postId" element={<Post />} />
-              <Route path="/search/:searchTerm" element={<Search />} />
+              <Route
+                path="/search/:searchTerm/:currentSection?"
+                element={<Search />}
+              />
               <Route path="*" element={<NotFound404 />} />
             </Routes>
           </div>

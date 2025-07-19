@@ -8,7 +8,6 @@ import { Link, useNavigate } from "react-router-dom";
 export default function Header() {
   const { currentUser, setCurrentUser, showLogin, setShowLogin, token } =
     useContext(UserContext);
-  const { setLoading } = useContext(UIContext);
   const [isScrolled, setIsScrolled] = useState(false);
   const [clickCreatePost, setClickCreatePost] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -40,6 +39,14 @@ export default function Header() {
 
   //Fetch profile picture and username of current user
   useEffect(() => {
+    const cachedUser = sessionStorage.getItem("currentUser");
+
+    //if user is already cached, just set the state to the cached value
+    if (cachedUser) {
+      setCurrentUser(JSON.parse(cachedUser));
+      return;
+    }
+
     if (!token) {
       return;
     }
@@ -59,18 +66,18 @@ export default function Header() {
         const data = await res.json();
 
         if (res.ok) {
-          setCurrentUser({
-            username: data.username,
-            pfp: data.pfp,
-          });
+          setCurrentUser(data);
+          sessionStorage.setItem("currentUser", JSON.stringify(data));
         } else {
           sessionStorage.removeItem("token");
+          sessionStorage.removeItem("currentUser");
           setCurrentUser(null);
         }
       } catch (err) {
         if (err.name !== "AbortError") {
           alert("Error: " + err.message);
           sessionStorage.removeItem("token");
+          sessionStorage.removeItem("currentUser");
           setCurrentUser(null);
         }
       }
@@ -129,6 +136,7 @@ export default function Header() {
 
   function signOut(navigate) {
     sessionStorage.removeItem("token");
+    sessionStorage.removeItem("currentUser");
     setCurrentUser(null);
     setShowProfileDropdown(false);
     navigate("/");
