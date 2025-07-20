@@ -29,7 +29,7 @@ function ReplyBox({ onSubmit, replyText, setReplyText, onCancel }) {
           <button className="cancel-button" type="button" onClick={onCancel}>
             Cancel
           </button>
-          <button type="submit">Submit</button>
+          <button type="submit" disabled={replyText.trim() === ""}>Submit</button>
           <CharCount currentLength={replyText.length} maxLength={limitedChar} />
         </div>
       </div>
@@ -41,7 +41,7 @@ export default function CommentCard({
   token,
   postId,
   setMsg,
-  parentComment,
+  parentComment,  //parentComment refers to parent comment or reply depending on <CommnentCard /> call
   currentUser,
   setShowLogin,
   navigate,
@@ -74,6 +74,7 @@ export default function CommentCard({
   const [hasMoreReplies, setHasMoreReplies] = useState(
     parentComment.has_replies
   );
+  const [targetParentId, setTargetParentId] = useState(null); //to get parent comment's id when replying to comment or replying to reply
   const [likeCount, setLikeCount] = useState(parentComment.upvotes);
   const [liked, setLiked] = useState(parentComment.liked);
   const [isEditing, setIsEditing] = useState(false);
@@ -242,7 +243,13 @@ export default function CommentCard({
 
         //to update frontend immediately after posting reply
         if (!hasMoreReplies) {
-          setRepliesList((prev) => [...prev, newReply]);
+          //both cases add to the same repliesList. depends on variable name which is based on which <CommentCarad /> is being called
+          if (isReply) {
+            setParentRepliesList((prev) => [...prev, newReply]);
+          }
+          else {
+            setRepliesList((prev) => [...prev, newReply]);
+          }
         }
 
         setReplyText("");
@@ -256,12 +263,14 @@ export default function CommentCard({
     }
   };
 
-  const handleReplyClick = (comment_id, username, isReplyingToReply) => {
-    //still a bit confused on parentId
+  const handleReplyClick = (commentId, username, isReplyingToReply) => {
+    //commentId refers to parent comment's id or reply's id depending on which <CommentCard /> is called
     const parentId = isReplyingToReply
       ? parentComment.parent_comment_id //connect to reply's parent_comment_id
       : parentComment.comment_id; //connect to parent_comment's id
-    setReplyCommentId(currentUser ? parentId : null); //if not logged in, do not show textarea
+    
+    setTargetParentId(parentId);
+    setReplyCommentId(currentUser ? commentId : null); //if not logged in, do not show textarea
     setReplyText(
       isReplyingToReply && username !== currentUser.username
         ? `@${username} `
@@ -413,7 +422,7 @@ export default function CommentCard({
       {/* show reply box when click "Reply" */}
       {showReplyBox && (
         <ReplyBox
-          onSubmit={(e) => handleReplySubmit(e, parentComment.comment_id)}
+          onSubmit={(e) => handleReplySubmit(e, targetParentId)}
           replyText={replyText}
           setReplyText={setReplyText}
           onCancel={() => {
