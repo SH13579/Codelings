@@ -4,27 +4,43 @@ import { useFetchProfileInfo } from "./Profile";
 import { UserContext } from "../utils";
 import Loading from "./Loading";
 
-async function handleEditProfile(e, token, profileInfo, setMsg) {
+async function handleEditProfile(
+  e,
+  token,
+  profileInfo,
+  setMsg,
+  pfpFile,
+  currentUser,
+  setCurrentUser
+) {
   e.preventDefault();
+  const formData = new FormData();
+  formData.append("about_me", profileInfo.about_me);
+  formData.append("email", profileInfo.email);
+  formData.append("github_link", profileInfo.github_link);
+  formData.append("year_of_study", profileInfo.year_of_study);
+  formData.append("pfp", profileInfo.pfp);
+  formData.append("pfpFile", pfpFile);
   try {
     const res = await fetch("http://localhost:5000/edit_profile", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        about_me: profileInfo.about_me,
-        email: profileInfo.email,
-        github_link: profileInfo.github_link,
-        year_of_study: profileInfo.year_of_study,
-        pfp: profileInfo.pfp,
-      }),
+      body: formData,
     });
     const data = await res.json();
     if (res.ok) {
       setMsg(data.success);
-      sessionStorage.removeItem("currentUser");
+      //if user selected a new file for the profile picture, reset the cached user info in session storage
+      if (pfpFile) {
+        const newInfo = {
+          username: currentUser.username,
+          pfp: data.pfp_url,
+        };
+        setCurrentUser(newInfo);
+        sessionStorage.setItem("currentUser", JSON.stringify(newInfo));
+      }
     } else {
       setMsg(data.error);
     }
@@ -34,14 +50,12 @@ async function handleEditProfile(e, token, profileInfo, setMsg) {
 }
 
 export default function EditProfile() {
-  const { token, setShowLogin } = useContext(UserContext);
-
+  const { token, setShowLogin, currentUser, setCurrentUser } =
+    useContext(UserContext);
   if (!token) {
     setShowLogin(true);
     return;
   }
-
-  const [imagePreview, setImagePreview] = useState(null);
   const [msg, setMsg] = useState(null);
   const [profileInfo, setProfileInfo] = useState({
     about_me: "",
@@ -50,10 +64,13 @@ export default function EditProfile() {
     pfp: "",
     year_of_study: "",
   });
+  const [pfpFile, setPfpFile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
-  const username = JSON.parse(sessionStorage.getItem("currentUser")).username;
+  // const username = JSON.parse(sessionStorage.getItem("currentUser")).username;
+  const [imagePreview, setImagePreview] = useState(null);
 
-  useFetchProfileInfo(username, setProfileInfo, setProfileLoading);
+  //fetch all the details for the profile of the current user
+  useFetchProfileInfo(currentUser.username, setProfileInfo, setProfileLoading);
 
   function handleChange(e) {
     if (e.target.name === "pfp") {
@@ -63,13 +80,14 @@ export default function EditProfile() {
       reader.onloadend = () => {
         setImagePreview(reader.result);
       };
-
       reader.readAsDataURL(file);
+      setPfpFile(file);
+    } else {
+      setProfileInfo((prev) => ({
+        ...prev,
+        [e.target.name]: e.target.value,
+      }));
     }
-    setProfileInfo((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
   }
 
   return profileLoading ? (
@@ -80,18 +98,30 @@ export default function EditProfile() {
         <h2 className="edit-profile-header">Edit Profile</h2>
         <div className="edit-profile-sec">
           <div className="edit-pfp">
-            <img className="profile-pfp" src={imagePreview} />
+            <img
+              className="profile-pfp"
+              src={imagePreview || profileInfo.pfp}
+            />
             <input
               className="edit-profile-pfp-file"
               type="file"
               accept="image/*"
               name="pfp"
-              value={profileInfo.pfp || ""}
               onChange={(e) => handleChange(e)}
             />
           </div>
           <form
-            onSubmit={(e) => handleEditProfile(e, token, profileInfo, setMsg)}
+            onSubmit={(e) =>
+              handleEditProfile(
+                e,
+                token,
+                profileInfo,
+                setMsg,
+                pfpFile,
+                currentUser,
+                setCurrentUser
+              )
+            }
             className="edit-profile-info"
           >
             {msg && <div className="edit-profile-msg">{msg}</div>}

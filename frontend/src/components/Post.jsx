@@ -1,7 +1,13 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "../styles/post.css";
-import { UserContext, UIContext, handleLikePost, likeUnlike } from "../utils";
+import {
+  UserContext,
+  UIContext,
+  ErrorContext,
+  handleLikePost,
+  likeUnlike,
+} from "../utils";
 import { handleNavigating } from "./Content";
 import CommentCard from "./CommentCard";
 import Tags from "./Tags";
@@ -9,6 +15,7 @@ import Loading, { ViewMoreLoading } from "./Loading";
 import KebabMenu from "./KebabMenu";
 import CharCount from "./CharCount";
 import NotExist from "./NotExist";
+import InternalServerError500 from "./InternalServerError500";
 import { showDeletePopup } from "./Profile"; //delete post
 
 function Comments({ postId, currentUser, setShowLogin, token }) {
@@ -23,12 +30,11 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
   const [start, setStart] = useState(0); //for fetchComments()
   const limit = 5;
   const [hasMoreComments, setHasMoreComments] = useState(false);
-  const [newlySubmittedComment, setNewlySubmittedComment] = useState([]);
-  const [isNewlySubmittedComment, setIsNewlySubmittedComment] = useState(false);
   const [filter, setFilter] = useState("Best");
   const navigate = useNavigate();
   const limitedCharComment = 1000;
   const textareaRef = useRef(null);
+  const [lastCommentTime, setLastCommentTime] = useState(null);
 
   useEffect(() => {
     console.log(parentCommentsList);
@@ -83,6 +89,13 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
   //post comment
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
+    //to prevent spam: (error code 429)
+    // const now = Date.now();
+    // const cooldown = 10 * 1000; //10 seconds
+    // if (lastCommentTime && now - lastCommentTime < cooldown) {
+    //   alert("STOP SPAMMING");
+    //   return;
+    // }
     try {
       const res = await fetch("http://localhost:5000/post_comment", {
         method: "POST",
@@ -110,7 +123,7 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
           comments_count: 0,
           liked: false,
         };
-        setNewlySubmittedComment((prev) => [newComment, ...prev]);
+        setParentCommentsList((prev) => [newComment, ...prev]);
         setStart((prev) => prev + 1);
         //only show newly created comment imemdiately on frontend if there are less than 5 comments OR no more comments left (view more button gone)
         //to update frontend immediately after submitting a comment
@@ -120,6 +133,7 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
         // }
         setCommentText(""); //empty input after adding comment
         setShowCommentButtons(false);
+        setLastCommentTime(Date.now());
         setMsg(data.success);
       } else {
         alert(data.error);
@@ -139,7 +153,7 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
             {filter}
             <img
               className="dropdown-arrow"
-              src="../media/images/dropdown-arrow.svg"
+              src="/media/images/dropdown-arrow.svg"
               alt="Dropdown"
             />
           </div>
@@ -186,26 +200,28 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
           />
           {showCommentButtons && (
             <div className="bottom-row">
-              <button
-                onClick={() => {
-                  setShowCommentButtons(false);
-                  setCommentText("");
-                  if (textareaRef.current) {
-                    textareaRef.current.style.height = "auto";
-                  }
-                }}
-              >
-                Cancel
-              </button>
-              <button type="submit" disabled={commentText.trim() === ""}>
-                Submit
-              </button>
+              <div className="bottom-row-buttons">
+                <button type="submit" disabled={commentText.trim() === ""}>
+                  Submit
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCommentButtons(false);
+                    setCommentText("");
+                    if (textareaRef.current) {
+                      textareaRef.current.style.height = "auto";
+                    }
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
               <CharCount
                 currentLength={commentText.length}
                 maxLength={limitedCharComment}
               />
               {/* <button className="comment-submit-icon" type="submit">
-                <img src="../media/images/enter.svg" />
+                <img src="/media/images/enter.svg" />
               </button> */}
             </div>
           )}
@@ -218,27 +234,6 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
         <Loading />
       ) : (
         <div className="all-comments">
-          {/* temporarily show newly submitted comments on the top in frontend*/}
-          {newlySubmittedComment.map((comment) => (
-            <CommentCard
-              key={comment.comment_id}
-              token={token}
-              postId={postId}
-              setMsg={setMsg}
-              parentComment={comment}
-              currentUser={currentUser}
-              setShowLogin={setShowLogin}
-              navigate={navigate}
-              replyCommentId={replyCommentId}
-              replyText={replyText}
-              setReplyText={setReplyText}
-              setReplyCommentId={setReplyCommentId}
-              setParentCommentsList={setParentCommentsList}
-              setStart={setStart}
-              setNewlySubmittedComment={setNewlySubmittedComment}
-              isNewlySubmittedComment={true}
-            />
-          ))}
           {/* Fetch from database to display parent comments of current post*/}
           {parentCommentsList.map((parentComment) => (
             <CommentCard
@@ -256,8 +251,6 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
               setReplyCommentId={setReplyCommentId}
               setParentCommentsList={setParentCommentsList}
               setStart={setStart}
-              setNewlySubmittedComment={setNewlySubmittedComment}
-              isNewlySubmittedComment={false}
             />
           ))}
           {hasMoreComments && (
@@ -288,6 +281,7 @@ export default function Post() {
   const query = new URLSearchParams(location.search);
   const { postId } = useParams();
   const { setShowPopup } = useContext(UIContext);
+  const { error500, setError500 } = useContext(ErrorContext);
   const limitedCharBody = 200;
 
   const handlePropagation = (e) => {
@@ -311,11 +305,15 @@ export default function Post() {
         );
         const data = await res.json();
         if (res.ok) {
+          // setError500(true); //testing purposes
           const post = data.posts[0];
           setPostInfo(post);
           setLikeCount(post.upvotes);
           setLiked(post.liked);
         } else {
+          if (res.status === 500) {
+            setError500(true);
+          }
           setPostInfo(null);
         }
       } catch (err) {
@@ -373,7 +371,9 @@ export default function Post() {
 
   console.log("Rendering Post");
 
-  return loading ? (
+  return error500 ? (
+    <InternalServerError500 />
+  ) : loading ? (
     <Loading />
   ) : deleted ? (
     <h2 className="post-deleted-msg">Post has been deleted</h2>
@@ -390,7 +390,7 @@ export default function Post() {
             }}
             className="user-info"
           >
-            <img className="pfp" src={`../media/images/${postInfo.pfp}`} />
+            <img className="pfp" src={`/media/images/${postInfo.pfp}`} />
             <span className="user-name">{postInfo.name}</span>
           </div>
           <div className="post-date">
@@ -411,18 +411,17 @@ export default function Post() {
           )}
         </div>
         <h2 className="post-title">{postInfo.title}</h2>
-        <h4 className="post-desc-post">{postInfo.description}</h4>
+        <div className="post-desc-post">{postInfo.description}</div>
         <Tags tags={postInfo.tags} />
-        <div className="post-video">
-          {/* reminder to remove video for ask & answer section */}
-          <video controls>
-            <source
-              src={`../media/videos/${postInfo.video}`}
-              type="video/mp4"
-            />
-            Your browser does not support the video tag.
-          </video>
-        </div>
+        {postInfo.video && (
+          <div className="post-video">
+            {/* reminder to remove video for ask & answer section */}
+            <video controls>
+              <source src={postInfo.video} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        )}
         <div className="post-body">
           {/* if editing, replace body of post with textarea */}
           {isEditing ? (
@@ -434,13 +433,15 @@ export default function Post() {
                 onChange={(e) => setExistingBody(e.target.value)}
                 maxLength={limitedCharBody}
               />
-              <CharCount
-                currentLength={existingBody.length}
-                maxLength={limitedCharBody}
-              />
-              <div className="post-edit-buttons">
-                <button onClick={handleEdit}>Save</button>
-                <button onClick={() => setIsEditing(false)}>Cancel</button>
+              <div className="bottom-row">
+                <div className="post-edit-buttons">
+                  <button onClick={handleEdit}>Save</button>
+                  <button onClick={() => setIsEditing(false)}>Cancel</button>
+                </div>
+                <CharCount
+                  currentLength={existingBody.length}
+                  maxLength={limitedCharBody}
+                />
               </div>
             </div>
           ) : (
@@ -456,12 +457,12 @@ export default function Post() {
                 )
               }
               className={liked ? "upvote-icon-liked" : "upvote-icon"}
-              src="../media/images/thumbs-up.svg"
+              src="/media/images/thumbs-up.svg"
             />
             <div className="upvote-count">{likeCount}</div>
           </span>
           <span className="comments">
-            <img className="comments-icon" src="../media/images/comments.svg" />
+            <img className="comments-icon" src="/media/images/comments.svg" />
             <div className="comment-count">{postInfo.comments_count}</div>
           </span>
         </div>

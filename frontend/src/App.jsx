@@ -9,14 +9,16 @@ import Popup from "./components/Popup";
 import Search from "./components/Search";
 import EditProfile from "./components/EditProfile";
 import NotFound404 from "./components/NotFound404";
-import { UserContext, UIContext } from "./utils";
+import { UserContext, UIContext, ErrorContext } from "./utils";
 import "./styles/App.css";
 
 function App() {
   const token = sessionStorage.getItem("token");
-  const [currentUser, setCurrentUser] = useState(null);
+  const cachedUser = sessionStorage.getItem("currentUser");
+  const [currentUser, setCurrentUser] = useState(JSON.parse(cachedUser));
   const [showPopup, setShowPopup] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
+  const [error500, setError500] = useState(false);
   const tags = [
     { tag_name: "web-app", post_type: "project" },
     { tag_name: "mobile-app", post_type: "project" },
@@ -62,48 +64,51 @@ function App() {
 
   return (
     <div className="site">
-      <UserContext.Provider
-        value={{
-          token,
-          currentUser,
-          setCurrentUser,
-          showLogin,
-          setShowLogin,
-        }}
-      >
-        <UIContext.Provider
+      <ErrorContext.Provider value={{ error500, setError500 }}>
+        <UserContext.Provider
           value={{
-            showPopup,
-            setShowPopup,
-            tags,
+            token,
+            currentUser,
+            setCurrentUser,
+            showLogin,
+            setShowLogin,
           }}
         >
-          <Header />
-          <div className="all-content-wrap">
-            <Routes>
-              <Route path="/" element={<Content />} />
-              <Route
-                path="/:currentSection?/:currentTag?"
-                element={<Content />}
-              />
-              <Route
-                path="/profile/:username/:currentSection?"
-                element={<Profile />}
-              />
-              <Route path="/edit-profile" element={<EditProfile />} />
-              <Route path="/post/:postId" element={<Post />} />
-              <Route
-                path="/search/:searchTerm/:currentSection?"
-                element={<Search />}
-              />
-              <Route path="*" element={<NotFound404 />} />
-            </Routes>
-          </div>
-          {showPopup && (
-            <Popup message={showPopup.message} buttons={showPopup.buttons} />
-          )}
-        </UIContext.Provider>
-      </UserContext.Provider>
+          <UIContext.Provider
+            value={{
+              showPopup,
+              setShowPopup,
+              tags,
+            }}
+          >
+            <Header />
+            <div className="all-content-wrap">
+              <Routes>
+                <Route path="/" element={<Content />} />
+                <Route
+                  path="/:currentSection?/:currentTag?"
+                  element={<Content />}
+                />
+                <Route
+                  path="/profile/:username/:currentSection?"
+                  element={<Profile />}
+                />
+                <Route path="/edit-profile" element={<EditProfile />} />
+                <Route path="/post/:postId" element={<Post />} />
+                <Route
+                  path="/search/:searchTerm/:currentSection?"
+                  element={<Search />}
+                />
+                <Route path="/" element={<NotFound404 />} />
+                <Route path="*" element={<NotFound404 />} />
+              </Routes>
+            </div>
+            {showPopup && (
+              <Popup message={showPopup.message} buttons={showPopup.buttons} />
+            )}
+          </UIContext.Provider>
+        </UserContext.Provider>
+      </ErrorContext.Provider>
       <Footer />
     </div>
   );

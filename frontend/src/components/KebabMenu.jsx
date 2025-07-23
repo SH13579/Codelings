@@ -12,11 +12,14 @@ export default function KebabMenu({ onEdit, onDelete }) {
 
   return (
     <div ref={menuRef} className="post-kebab-menu-wrapper">
-      <div className="kebab-menu" onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setMenuOpen((prev) => !prev)
-      }}>
+      <div
+        className="kebab-menu"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setMenuOpen((prev) => !prev);
+        }}
+      >
         &#8942;
         {/* use svg instead */}
       </div>
@@ -31,7 +34,7 @@ export default function KebabMenu({ onEdit, onDelete }) {
               setMenuOpen(false);
             }}
           >
-            <img className="edit-icon" src="../media/images/edit.svg" />
+            <img className="edit-icon" src="/media/images/edit.svg" />
             Edit
           </div>
           <div
@@ -43,10 +46,7 @@ export default function KebabMenu({ onEdit, onDelete }) {
               setMenuOpen(false);
             }}
           >
-            <img
-              className="delete-icon"
-              src="../media/images/delete-icon.svg"
-            />
+            <img className="delete-icon" src="/media/images/delete-icon.svg" />
             Delete
           </div>
         </div>

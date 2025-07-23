@@ -38,7 +38,7 @@ export default function Posts(props) {
               {props.filter}
               <img
                 className="dropdown-arrow"
-                src="../media/images/dropdown-arrow.svg"
+                src="/media/images/dropdown-arrow.svg"
               ></img>
             </div>
             <div className="filter-dropdown">

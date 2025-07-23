@@ -31,7 +31,7 @@
   height: 1.4rem;
 }
 .create-post-body, .create-post-description{
-  resize: none;
+  resize: vertical;
 }
 .create-post-body{
   height: 10rem;

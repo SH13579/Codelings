@@ -6,7 +6,9 @@ import os
 import jwt
 from functools import wraps
 import math
+import time
 from werkzeug.security import generate_password_hash, check_password_hash
+from supabase import create_client, Client
 
 app = Flask(__name__)
 CORS(app)
@@ -31,6 +33,12 @@ try:
     )
 except Exception as e:
     print("Error connecting to database:", e)
+
+# connect to Supabase storage
+SUPABASE_URL = "https://azxfokxbsfmqibzjduky.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6eGZva3hic2ZtcWliempkdWt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzMyNjgsImV4cCI6MjA2ODYwOTI2OH0.9PL3bH-aMUGoleViasmPKGoE2AKTWFBOkEjfEKCqt9U"
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
 def token_required(f):
@@ -83,7 +91,7 @@ def token_optional(f):
 @app.route("/register", methods=["POST"])
 def register():
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     data = request.json
     username = data.get("username")
@@ -137,7 +145,7 @@ def register():
 @app.route("/login", methods=["POST"])
 def login():
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     data = request.json
     username = data.get("username")
@@ -150,17 +158,16 @@ def login():
 
         with conn.cursor() as cursor:
             cursor.execute(
-                "SELECT id, username, password FROM users WHERE username=%s",
+                "SELECT id, password FROM users WHERE username=%s",
                 (username,),
             )
             user = cursor.fetchone()
             if user and check_password_hash(
-                user[2], password
+                user[1], password
             ):  # check if username and hashed password is same as password inserted
                 token = jwt.encode(
                     {
                         "user_id": user[0],
-                        "username": user[1],
                         "exp": datetime.datetime.now(datetime.timezone.utc)
                         + datetime.timedelta(hours=1),
                     },
@@ -179,17 +186,17 @@ def login():
 @token_required
 def fetch_user_profile(decoded):
     if not conn:
-        return jsonify({"error": "Database connection is not established"}), 500
+        return jsonify({"error": "Database connection is not established"}), 503
 
     try:
-        username = decoded["username"]
+        user_id = decoded["user_id"]
         with conn.cursor() as cursor:
             cursor.execute(
-                "SELECT profile_picture FROM users WHERE username=%s",
-                (username,),
+                "SELECT username, profile_picture FROM users WHERE id=%s",
+                (user_id,),
             )
             user = cursor.fetchone()
-        return jsonify({"username": username, "pfp": user[0]})
+        return jsonify({"username": user[0], "pfp": user[1]})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -198,7 +205,7 @@ def fetch_user_profile(decoded):
 @app.route("/fetch_profile", methods=["GET"])
 def fetch_profile():
     if not conn:
-        return jsonify({"error": "Database connection is not established"}), 500
+        return jsonify({"error": "Database connection is not established"}), 503
 
     username = request.args.get("username")
 
@@ -237,14 +244,37 @@ def fetch_profile():
 @token_required
 def edit_profile(decoded):
     if not conn:
-        return jsonify({"error": "Database connection is not established"}), 500
+        return jsonify({"error": "Database connection is not established"}), 503
+
+    data = request.form
     user_id = decoded["user_id"]
-    data = request.json
     about_me = data.get("about_me")
     email = data.get("email")
     github_link = data.get("github_link")
     year_of_study = data.get("year_of_study")
     pfp = data.get("pfp")
+    new_pfp_url = None
+
+    if "pfpFile" in request.files:
+        pfpFile = request.files["pfpFile"]
+        file_ext = pfpFile.filename.split(".")[-1]
+        filename = f"{int(time.time() * 1000)}.{file_ext}"
+        path = f"users-pfp/{filename}"
+
+        file_bytes = pfpFile.read()
+
+        try:
+            res = supabase.storage.from_("uploads").upload(path, file_bytes)
+
+            if res:
+                new_pfp_url = supabase.storage.from_("uploads").get_public_url(path)
+            else:
+                return jsonify({"error": "Upload failed - empty response"}), 400
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    pfp_url = new_pfp_url if new_pfp_url is not None else pfp
 
     try:
         if len(about_me) > 1000:
@@ -256,14 +286,19 @@ def edit_profile(decoded):
 
                 cursor.execute(
                     "UPDATE users SET email = %s, profile_picture = %s WHERE id = %s",
-                    (email, pfp, user_id),
+                    (email, pfp_url, user_id),
                 )
                 cursor.execute(
                     "UPDATE profiles SET about_me = %s, github_link = %s, year_of_study = %s WHERE user_id = %s",
                     (about_me, github_link, year_of_study, user_id),
                 )
             conn.commit()
-            return jsonify({"success": "Your profile has been updated!"}), 201
+            return (
+                jsonify(
+                    {"success": "Your profile has been updated!", "pfp_url": pfp_url}
+                ),
+                201,
+            )
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500
@@ -277,30 +312,47 @@ def edit_profile(decoded):
 @token_required
 def post_project(decoded):
     if not conn:
-        return jsonify({"error": "Database connection is not established"}), 500
+        return jsonify({"error": "Database connection is not established"}), 503
 
     now = datetime.datetime.now()
-    data = request.json
+    data = request.form
 
     title = data.get("title")
     post_type = data.get("post_type")
     post_date = now.strftime("%Y-%m-%d %H:%M:%S")
     post_description = data.get("post_description")
     post_body = data.get("post_body")
-    video_file_path = data.get("video_file_path")
-    likes = data.get("likes")
-    comments = data.get("comments")
     tags = data.get("tags")
+    video_file_path = None
+
+    if "demoFile" in request.files:
+        demoFile = request.files["demoFile"]
+        file_ext = demoFile.filename.split(".")[-1]
+        filename = f"{int(time.time() * 1000)}.{file_ext}"
+        path = f"project-demos/{filename}"
+
+        file_bytes = demoFile.read()
+
+        try:
+            res = supabase.storage.from_("uploads").upload(path, file_bytes)
+
+            if res:
+                video_file_path = supabase.storage.from_("uploads").get_public_url(path)
+            else:
+                return jsonify({"error": "Upload failed - empty response"}), 400
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
     try:
         if not post_type:
-            return jsonify({"error": "Post needs a type"}), 400
+            return jsonify({"error": "Post requires a type"}), 400
         elif not title:
             return jsonify({"error": "Post needs a title"}), 400
         elif not post_description:
-            return jsonify({"error": "Post needs a short description"}), 400
-        elif len(title) > 50:
-            return jsonify({"error": "Post title cannot be over 50 characters"}), 400
+            return jsonify({"error": "Post needs a description"}), 400
+        elif len(title) > 200:
+            return jsonify({"error": "Post title cannot be over 200 characters"}), 400
         elif len(post_description) > 200:
             return (
                 jsonify({"error": "Post description cannot be over 200 characters"}),
@@ -312,7 +364,7 @@ def post_project(decoded):
             with conn.cursor() as cursor:
                 user_id = decoded["user_id"]
                 cursor.execute(
-                    "INSERT INTO posts (post_date, post_type, user_id, title, post_description, post_body, video_file_path, likes, comments) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id",
+                    "INSERT INTO posts (post_date, post_type, user_id, title, post_description, post_body, video_file_path, likes, comments) VALUES (%s, %s, %s, %s, %s, %s, %s, 0, 0) RETURNING id",
                     (
                         post_date,
                         post_type,
@@ -321,24 +373,24 @@ def post_project(decoded):
                         post_description,
                         post_body,
                         video_file_path,
-                        likes,
-                        comments,
                     ),
                 )
                 post_id = cursor.fetchone()[0]
                 # fetch all the ids for the tag names
-                cursor.execute("SELECT id FROM tags WHERE tag_name = ANY(%s)", (tags,))
-                tag_ids = cursor.fetchall()
-                post_tags_arr = []
-                # append it into array of tuple values (post_id, tag_id)
-                for tag_id in tag_ids:
-                    post_tags_arr.append((post_id, tag_id))
-                # executemany executes the same statement for all the values in the array
-                cursor.executemany(
-                    "INSERT INTO post_tags (post_id, tag_id) VALUES (%s, %s)",
-                    post_tags_arr,
-                )
-
+                if len(tags) > 0:
+                    post_tags_arr = []
+                    cursor.execute(
+                        "SELECT id FROM tags WHERE tag_name = ANY(%s)", (tags,)
+                    )
+                    tag_ids = cursor.fetchall()
+                    # append it into array of tuple values (post_id, tag_id)
+                    for tag_id in tag_ids:
+                        post_tags_arr.append((post_id, tag_id))
+                    # executemany executes the same statement for all the values in the array
+                    cursor.executemany(
+                        "INSERT INTO post_tags (post_id, tag_id) VALUES (%s, %s)",
+                        post_tags_arr,
+                    )
             conn.commit()
             return (
                 jsonify(
@@ -401,7 +453,7 @@ def get_posts_helper(rows, columns):
 @token_optional
 def get_posts(decoded):
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     post_type = request.args.get("post_type")
     start = request.args.get("start")
@@ -472,7 +524,7 @@ def get_posts(decoded):
 @token_optional
 def get_posts_byUser(decoded):
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     username = request.args.get("username")
     post_type = request.args.get("post_type")
@@ -548,7 +600,7 @@ def get_posts_byUser(decoded):
 @token_required
 def delete_post(decoded):
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     data = request.get_json()
     post_id = data.get("post_id")
@@ -580,7 +632,7 @@ def delete_post(decoded):
 @token_optional
 def get_specific_post(decoded):
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     post_id = request.args.get("post_id")
     user_id = decoded["user_id"] if decoded else None
@@ -649,7 +701,7 @@ def get_specific_post(decoded):
 @token_optional
 def edit_post(decoded):
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     data = request.get_json()
     new_post_body = data.get("new_post_body")
@@ -686,7 +738,7 @@ def edit_post(decoded):
 @token_required
 def post_comment(decoded):
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     now = datetime.datetime.now()
     comment_date = now.strftime("%Y-%m-%d %H:%M:%S")
@@ -698,16 +750,24 @@ def post_comment(decoded):
 
     try:
         # if fields are empty
-        username = decoded["username"]
+        user_id = decoded["user_id"]
         if not comment:
             return jsonify({"error": "Please fill in the blanks!"}), 400
 
+        cooldown_seconds = 10
+
         with conn.cursor() as cursor:
-            cursor.execute("SELECT id from users WHERE username=%s", (username,))
-            user_id_tuple = cursor.fetchone()  # returns tuple (1,)
-            user_id = user_id_tuple[
-                0
-            ]  # access the value to correctly insert into posts
+
+            cursor.execute(
+                "SELECT comment_date FROM comments WHERE user_id = %s ORDER BY comment_date DESC LIMIT 1",
+                (user_id,),
+            )
+            last_comment = cursor.fetchone()
+            if last_comment:
+                last_comment_time = last_comment[0]
+                diff = (now - last_comment_time).total_seconds()
+                if diff < cooldown_seconds:
+                    return jsonify({"error": "You are commenting too quickly!"}), 429
 
             # insert new comment into comments table THEN immediately fetch the id(necessary if user deletes comment right after adding comment) by SQL code: "RETURNING ID"
             cursor.execute(
@@ -747,7 +807,7 @@ def post_comment(decoded):
 @token_required
 def delete_comment(decoded):
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     data = request.get_json()
     comment_id = data.get("comment_id")
@@ -804,7 +864,7 @@ def delete_comment(decoded):
 @token_optional
 def get_comments(decoded):
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     start = int(request.args.get("start"))
     limit = int(request.args.get("limit"))
@@ -859,7 +919,7 @@ def get_comments(decoded):
 @token_optional
 def get_replies(decoded):
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     start = int(request.args.get("start"))
     limit = int(request.args.get("limit"))
@@ -909,7 +969,7 @@ def get_replies(decoded):
 @token_optional
 def edit_comment(decoded):
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     data = request.get_json()
     comment_id = data.get("comment_id")
@@ -941,7 +1001,7 @@ def edit_comment(decoded):
 @token_required
 def like_unlike_post(decoded):
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     data = request.get_json()
     user_id = decoded["user_id"]
@@ -1054,7 +1114,7 @@ def fetch_liked_posts(decoded):
 @token_optional
 def search_posts(decoded):
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     search_term = request.args.get("search_term")
     limit = request.args.get("limit")
@@ -1119,7 +1179,7 @@ def search_posts(decoded):
 @app.route("/search_profiles", methods=["GET"])
 def search_profiles():
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     search_term = request.args.get("search_term")
     limit = request.args.get("limit")
@@ -1151,7 +1211,7 @@ def search_profiles():
 # @app.route("/fetch_tags", methods=["GET"])
 # def fetch_tags():
 #     if not conn:
-#         return jsonify({"error": "Database connection not established"}), 500
+#         return jsonify({"error": "Database connection not established"}), 503
 
 #     try:
 #         with conn.cursor() as cursor:
@@ -1172,7 +1232,7 @@ def search_profiles():
 @token_optional
 def fetch_specific_tag(decoded):
     if not conn:
-        return jsonify({"error": "Database connection not established"}), 500
+        return jsonify({"error": "Database connection not established"}), 503
 
     target_tag = request.args.get("target_tag")
     post_type = request.args.get("post_type")

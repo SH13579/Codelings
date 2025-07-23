@@ -6,7 +6,13 @@ import KebabMenu from "./KebabMenu";
 import Loading from "./Loading";
 import CharCount from "./CharCount";
 
-function ReplyBox({ onSubmit, replyText, setReplyText, onCancel }) {
+function ReplyBox({
+  onSubmit,
+  replyText,
+  setReplyText,
+  onCancel,
+  replyInputRef,
+}) {
   const limitedChar = 1000;
   return (
     <form onSubmit={onSubmit}>
@@ -15,6 +21,7 @@ function ReplyBox({ onSubmit, replyText, setReplyText, onCancel }) {
           className="reply-input"
           value={replyText}
           placeholder="Write your reply here..."
+          ref={replyInputRef}
           onChange={(e) => setReplyText(e.target.value)}
           maxLength={limitedChar}
           onInput={(e) => {
@@ -23,13 +30,22 @@ function ReplyBox({ onSubmit, replyText, setReplyText, onCancel }) {
           }}
         />
         {/* <button className="comment-submit-icon-reply" type="submit">
-          <img src="../media/images/enter.svg" />
+          <img src="/media/images/enter.svg" />
         </button> */}
         <div className="bottom-row">
-          <button className="cancel-button" type="button" onClick={onCancel}>
-            Cancel
-          </button>
-          <button type="submit" disabled={replyText.trim() === ""}>Submit</button>
+          <div className="bottom-row-buttons">
+            <button
+              type="submit"
+              disabled={
+                replyText.trim() === "" || /^@\w+\s*$/.test(replyText.trim())
+              }
+            >
+              Submit
+            </button>
+            <button className="cancel-button" type="button" onClick={onCancel}>
+              Cancel
+            </button>
+          </div>
           <CharCount currentLength={replyText.length} maxLength={limitedChar} />
         </div>
       </div>
@@ -41,7 +57,7 @@ export default function CommentCard({
   token,
   postId,
   setMsg,
-  parentComment,  //parentComment refers to parent comment or reply depending on <CommnentCard /> call
+  parentComment, //parentComment refers to parent comment or reply depending on <CommnentCard /> call
   currentUser,
   setShowLogin,
   navigate,
@@ -51,13 +67,11 @@ export default function CommentCard({
   setReplyCommentId,
   setParentCommentsList,
   setStart,
-  isNewlySubmittedComment, //to only delete the new comment
   //below are for recursive calls (to update existing repliesList and replyStart)
   parentRepliesList,
   setParentRepliesList,
   existingReplyStart,
   setExistingReplyStart,
-  setNewlySubmittedComment,
 }) {
   const isReply = parentComment.parent_comment_id !== null;
   const isCommenter =
@@ -82,10 +96,19 @@ export default function CommentCard({
   const limit = 5;
   const { setShowPopup } = useContext(UIContext);
   const [viewMoreRepliesLoading, setViewMoreRepliesLoading] = useState(false);
+  const limitedChar = 1000;
+  const replyInputRef = useRef(null);
 
   useEffect(() => {
     console.log(repliesList);
   }, [repliesList]);
+
+  //focus the reply textarea when clicking reply and reply box appears
+  useEffect(() => {
+    if (showReplyBox && replyInputRef.current) {
+      replyInputRef.current.focus();
+    }
+  }, [showReplyBox]);
 
   const handleDeleteComment = async (
     commentId,
@@ -109,14 +132,8 @@ export default function CommentCard({
         });
         const data = await res.json();
         if (res.ok) {
-          if (isNewlySubmittedComment) {
-            //delete new comment(s)
-            setNewlySubmittedComment((prev) =>
-              prev.filter((comment) => comment.comment_id !== commentId)
-            );
-          }
           //if reply, delete reply
-          else if (isReply) {
+          if (isReply) {
             //use setParentRepliesList if deleting reply
             setParentRepliesList((prev) =>
               prev.filter((reply) => reply.comment_id !== commentId)
@@ -245,10 +262,9 @@ export default function CommentCard({
         if (!hasMoreReplies) {
           //both cases add to the same repliesList. depends on variable name which is based on which <CommentCarad /> is being called
           if (isReply) {
-            setParentRepliesList((prev) => [...prev, newReply]);
-          }
-          else {
-            setRepliesList((prev) => [...prev, newReply]);
+            setParentRepliesList((prev) => [newReply, ...prev]);
+          } else {
+            setRepliesList((prev) => [newReply, ...prev]);
           }
         }
 
@@ -268,7 +284,7 @@ export default function CommentCard({
     const parentId = isReplyingToReply
       ? parentComment.parent_comment_id //connect to reply's parent_comment_id
       : parentComment.comment_id; //connect to parent_comment's id
-    
+
     setTargetParentId(parentId);
     setReplyCommentId(currentUser ? commentId : null); //if not logged in, do not show textarea
     setReplyText(
@@ -296,7 +312,7 @@ export default function CommentCard({
         const fetchedReplies = data.replies;
         setRepliesList((prev) => [...prev, ...fetchedReplies]);
         setReplyStart((prev) => prev + fetchedReplies.length);
-        setHasMoreReplies(fetchedReplies === limit);
+        setHasMoreReplies(fetchedReplies.length === limit);
       } else {
         alert(data.error);
       }
@@ -327,19 +343,17 @@ export default function CommentCard({
       setParentRepliesList={setRepliesList}
       existingReplyStart={replyStart}
       setExistingReplyStart={setReplyStart}
-      isNewlySubmittedComment={false}
     />
   ));
 
   return (
-    //REMINDER: change to reply if commentcard is reply (unnecessary?)
-    <div className={`comment ${isReply ? "reply" : ""}`}>
+    <div className="comment">
       <div className="comment-top-row">
         <div
           className="user-info"
           onClick={(e) => handleNavigating(e, navigate, parentComment.name)}
         >
-          <img className="pfp" src={`../media/images/${parentComment.pfp}`} />
+          <img className="pfp" src={`/media/images/${parentComment.pfp}`} />
           <div className="user-name">{parentComment.name}</div>
         </div>
         <div className="post-date">
@@ -371,9 +385,15 @@ export default function CommentCard({
             value={existingComment}
             onChange={(e) => setExistingComment(e.target.value)}
           />
-          <div className="post-edit-buttons">
-            <button onClick={handleEditComment}>Save</button>
-            <button onClick={() => setIsEditing(false)}>Cancel</button>
+          <div className="bottom-row">
+            <div className="post-edit-buttons">
+              <button onClick={handleEditComment}>Save</button>
+              <button onClick={() => setIsEditing(false)}>Cancel</button>
+            </div>
+            <CharCount
+              currentLength={existingComment.length}
+              maxLength={limitedChar}
+            />
           </div>
         </div>
       ) : (
@@ -394,13 +414,13 @@ export default function CommentCard({
               )
             }
             className={liked ? "upvote-icon-liked" : "upvote-icon"}
-            src="../media/images/thumbs-up.svg"
+            src="/media/images/thumbs-up.svg"
           />
           <div className="upvote-count">{likeCount}</div>
         </span>
         {!isReply && repliesList && (
           <span className="comments">
-            <img className="comments-icon" src="../media/images/comments.svg" />
+            <img className="comments-icon" src="/media/images/comments.svg" />
             <div className="comment-count">{parentComment.comments_count}</div>
           </span>
         )}
@@ -429,6 +449,7 @@ export default function CommentCard({
             setReplyCommentId(null);
             setReplyText("");
           }}
+          replyInputRef={replyInputRef}
         />
       )}
       {/* map through repliesList and call <CommentCard /> */}

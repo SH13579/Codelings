@@ -13,6 +13,7 @@ export default function Header() {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const cachedUser = sessionStorage.getItem("currentUser");
 
   //remove ability to scroll any content outside of the account component
   useEffect(() => {
@@ -39,14 +40,6 @@ export default function Header() {
 
   //Fetch profile picture and username of current user
   useEffect(() => {
-    const cachedUser = sessionStorage.getItem("currentUser");
-
-    //if user is already cached, just set the state to the cached value
-    if (cachedUser) {
-      setCurrentUser(JSON.parse(cachedUser));
-      return;
-    }
-
     if (!token) {
       return;
     }
@@ -66,8 +59,13 @@ export default function Header() {
         const data = await res.json();
 
         if (res.ok) {
-          setCurrentUser(data);
-          sessionStorage.setItem("currentUser", JSON.stringify(data));
+          //if user is already cached, just set the state to the cached value
+          if (cachedUser) {
+            return;
+          } else {
+            setCurrentUser(data);
+            sessionStorage.setItem("currentUser", JSON.stringify(data));
+          }
         } else {
           sessionStorage.removeItem("token");
           sessionStorage.removeItem("currentUser");
@@ -86,7 +84,7 @@ export default function Header() {
     getCurrentUser();
 
     return () => controller.abort();
-  }, [token]);
+  }, [token, cachedUser]);
 
   useExitListener(setShowProfileDropdown, dropdownRef);
 
@@ -116,10 +114,7 @@ export default function Header() {
           </Link>
           <a onClick={() => signOut(navigate)} className="dropdown-signout">
             <div className="dropdown-icons">
-              <img
-                className="sign-out-svg"
-                src="../media/images/sign-out.svg"
-              />
+              <img className="sign-out-svg" src="/media/images/sign-out.svg" />
             </div>
             <div className="dropdown-logout">Sign Out</div>
           </a>
@@ -150,7 +145,7 @@ export default function Header() {
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="site-info"
         >
-          <img className="site-logo" src="../media/images/site-logo.svg" />
+          <img className="site-logo" src="/media/images/site-logo.svg" />
           <h2 className="site-name">Codelings</h2>
         </Link>
         <div className="header-buttons-wrapper">
@@ -162,9 +157,7 @@ export default function Header() {
               <img
                 onClick={showOrHideDropdown}
                 className="header-pfp"
-                src={
-                  currentUser ? currentUser.pfp : "../media/images/doggy.png"
-                }
+                src={currentUser ? currentUser.pfp : "/media/images/doggy.png"}
               />
             ) : (
               <button

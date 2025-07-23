@@ -47,7 +47,7 @@ export default function ProjectCard(props) {
         className="post-video"
       >
         <video ref={videoRef} controls>
-          <source src={`../media/videos/${props.video}`} type="video/mp4" />
+          <source src={`/media/videos/${props.video}`} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
       </div>
@@ -62,15 +62,13 @@ export default function ProjectCard(props) {
     <Link to={`/post/${props.id}`} className="project-wrapper">
       <div className="project">
         <div className="project-first-row">
-          {props.location !== "profile" && (
-            <div
-              onClick={(e) => handleNavigating(e, navigate, props.name)}
-              className="user-info"
-            >
-              <img className="pfp" src={props.pfp} />
-              <span className="user-name">{props.name}</span>
-            </div>
-          )}
+          <div
+            onClick={(e) => handleNavigating(e, navigate, props.name)}
+            className="user-info"
+          >
+            <img className="pfp" src={props.pfp} />
+            <span className="user-name">{props.name}</span>
+          </div>
           <div className="post-date">
             <span className="post-date-dot">&#8226;</span>
             {props.date}
@@ -100,12 +98,12 @@ export default function ProjectCard(props) {
                 )
               }
               className={liked ? "upvote-icon-liked" : "upvote-icon"}
-              src="../media/images/thumbs-up.svg"
+              src="/media/images/thumbs-up.svg"
             />
             <div className="upvote-count">{likeCount}</div>
           </span>
           <span className="comments">
-            <img className="comments-icon" src="../media/images/comments.svg" />
+            <img className="comments-icon" src="/media/images/comments.svg" />
             <div className="comment-count">{props.comments_count}</div>
           </span>
         </div>

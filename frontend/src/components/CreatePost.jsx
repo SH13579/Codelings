@@ -88,7 +88,7 @@ const MultiselectDropdown = ({
         </span>
         <img
           className="dropdown-arrow"
-          src="../media/images/dropdown-arrow.svg"
+          src="/media/images/dropdown-arrow.svg"
           onClick={() =>
             tags.length === 0
               ? setShowDropdown(false)
@@ -110,7 +110,7 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
     post_title: "",
     post_description: "",
     post_body: "",
-    video_file_path: "",
+    demoFile: "",
   });
   const { tags } = useContext(UIContext);
   const postFormRef = useRef(null);
@@ -119,6 +119,10 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [alertMsg, setAlertMsg] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log(projectPost.demoFile);
+  }, [projectPost.demoFile]);
 
   useExitListenerWithAlert(setAlertMsg, postFormRef);
   const limitedCharTitle = 50;
@@ -129,45 +133,73 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
     if (e.target.name === "post_type") {
       setAllowedTags(tags.filter((tag) => tag.post_type === e.target.value));
     }
-    setProjectPost((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
+    if (e.target.name === "demoFile") {
+      const file = e.target.files[0];
+      setProjectPost((prev) => ({
+        ...prev,
+        demoFile: file,
+      }));
+    } else {
+      setProjectPost((prev) => ({
+        ...prev,
+        [e.target.name]: e.target.value,
+      }));
+    }
   };
 
   //handles submitting the post
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const res = await fetch("http://localhost:5000/create_post", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: projectPost.post_title,
-          post_type: projectPost.post_type,
-          // post_date: projectPost.post_date,
-          post_description: projectPost.post_description,
-          post_body: projectPost.post_body,
-          video_file_path: projectPost.video_file_path,
-          likes: 0,
-          comments: 0,
-          tags: selectedTags,
-        }),
-      });
+    if (!projectPost.post_type) {
+      setMsg("Post requires a type");
+    } else if (!projectPost.post_title) {
+      setMsg("Post needs a title");
+    } else if (!projectPost.post_description) {
+      setMsg("Post needs a description");
+    } else if (
+      projectPost.demoFile &&
+      projectPost.demoFile.size / (1024 * 1024) > 50
+    ) {
+      setMsg("Video file size cannot exceed 50 MB");
+    } else if (
+      projectPost.demoFile &&
+      !projectPost.demoFile.type.startsWith("video/")
+    ) {
+      setMsg("Only video files are allowed for demo");
+    } else if (projectPost.post_title.length > 200) {
+      setMsg("Post title cannot be over 200 characters");
+    } else if (projectPost.post_description.length > 200) {
+      setMsg("Post description cannot be over 200 characters");
+    } else if (projectPost.post_body.length > 4000) {
+      setMsg("Post body cannot be over 4000 characters");
+    } else {
+      const formData = new FormData();
+      formData.append("title", projectPost.post_title);
+      formData.append("post_type", projectPost.post_type);
+      formData.append("post_description", projectPost.post_description);
+      formData.append("post_body", projectPost.post_body);
+      formData.append("tags", selectedTags);
+      formData.append("demoFile", projectPost.demoFile);
+      try {
+        const res = await fetch("http://localhost:5000/create_post", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      if (res.ok) {
-        setMsg(data.success);
-        navigate(`/post/${data.post_id}`);
-      } else {
-        setMsg(data.error);
+        if (res.ok) {
+          setMsg(data.success);
+          navigate(`/post/${data.post_id}`);
+        } else {
+          setMsg(data.error);
+        }
+      } catch (err) {
+        alert("Error:" + err.message);
       }
-    } catch (err) {
-      alert("Error:" + err.message);
     }
   };
 
@@ -251,17 +283,18 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
           maxLength={limitedCharBody}
         />
         <div className="post-project-last">
-          <div className="">
-            <label>Demo(mp4 only): </label>
-            <input
-              onChange={handleChange}
-              type="file"
-              accept=".mp4"
-              name="video_file_path"
-            />
-            <div>OR</div>
-            <div>Link:</div>
-          </div>
+          {projectPost.post_type === "project" && (
+            <div className="">
+              <label>Demo: </label>
+              <input
+                onChange={handleChange}
+                type="file"
+                accept="video/*"
+                name="demoFile"
+              />
+              <label>Github Link:</label>
+            </div>
+          )}
           <div>
             <button className="project-submit">Post</button>
           </div>
@@ -322,7 +355,7 @@ const PostedMessage = ({ setClickCreatePost }) => {
       </button>
       <div className="post-success-wrapper">
         <div className="success-logo-wrapper">
-          <img className="success-logo" src="../media/images/success.svg" />
+          <img className="success-logo" src="/media/images/success.svg" />
         </div>
         <h3>Your submission has been sent</h3>
       </div>

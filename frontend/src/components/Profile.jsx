@@ -213,17 +213,17 @@ export default function Profile() {
   const navbar_sections = [
     {
       sectionDbName: "project",
-      imagePath: "../media/images/projects-logo.svg",
+      imagePath: "/media/images/projects-logo.svg",
       sectionName: "Projects",
     },
     {
       sectionDbName: "qna",
-      imagePath: "../media/images/askAnswer.svg",
+      imagePath: "/media/images/askAnswer.svg",
       sectionName: "Ask & Answer",
     },
     {
       sectionDbName: "liked_posts",
-      imagePath: "../media/images/liked_section_icon.svg",
+      imagePath: "/media/images/liked_section_icon.svg",
       sectionName: "Liked Posts",
       condition: Boolean(currentUser && currentUser.username === username),
     },
@@ -240,7 +240,7 @@ export default function Profile() {
               <button className="edit-profile">Edit Profile</button>
             </Link>
           )}
-          <img className="profile-pfp" src="../media/images/doggy.png" />
+          <img className="profile-pfp" src={currentUser.pfp} />
           <h2 className="profile-name">@{username}</h2>
 
           <div className="profile-details-wrap">
@@ -252,7 +252,7 @@ export default function Profile() {
                 <span className="profile-email">
                   <img
                     className="profile-email-logo"
-                    src="../media/images/email-logo.svg"
+                    src="/media/images/email-logo.svg"
                   />
                   {profileInfo.email}
                 </span>
@@ -261,7 +261,7 @@ export default function Profile() {
                 <span className="profile-yos">
                   <img
                     className="profile-yos-logo"
-                    src="../media/images/year-study-logo.svg"
+                    src="/media/images/year-study-logo.svg"
                   />
                   {profileInfo.year_of_study}
                 </span>
@@ -275,7 +275,7 @@ export default function Profile() {
                 >
                   <img
                     className="profile-github-logo"
-                    src="../media/images/github-logo.svg"
+                    src="/media/images/github-logo.svg"
                   />
                 </a>
               )}

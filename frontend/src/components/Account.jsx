@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import "../styles/account.css";
 import "../styles/createpost.css";
 import { useNavigate } from "react-router-dom";
-import { useExitListener } from "../utils";
+import { UserContext, useExitListener } from "../utils";
 
 function LoginPage({ setLoginOrRegister, setShowLogin }) {
   const [msg, setMsg] = useState(null);
   const loginRef = useRef(null);
   const navigate = useNavigate();
+  const { setCurrentUser } = useContext(UserContext);
 
   //click anywhere outside of the box and it will exit out
   useExitListener(setShowLogin, loginRef);
@@ -219,7 +220,7 @@ function RegisterPage({ setLoginOrRegister, setShowLogin }) {
     return (
       <div className="register-success-wrapper">
         <div className="success-logo-wrapper">
-          <img className="success-logo" src="../media/images/success.svg" />
+          <img className="success-logo" src="/media/images/success.svg" />
         </div>
         <h2 className="register-success">Thank you for registering</h2>
         <button

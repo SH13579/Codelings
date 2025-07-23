@@ -19,6 +19,7 @@ export const SearchBar = () => {
     >
       <input
         className="search-bar"
+        name="search-bar"
         onChange={(e) => setSearchTerm(e.target.value)}
         type="search"
         placeholder="Looking for something?"
@@ -207,13 +208,13 @@ export default function Content() {
   const navbar_sections = [
     {
       sectionDbName: "project",
-      imagePath: "../media/images/projects-logo.svg",
+      imagePath: "/media/images/projects-logo.svg",
       sectionName: "Projects",
       subsections: projectTags,
     },
     {
       sectionDbName: "qna",
-      imagePath: "../media/images/askAnswer.svg",
+      imagePath: "/media/images/askAnswer.svg",
       sectionName: "Ask & Answer",
       subsections: askAnswerTags,
     },

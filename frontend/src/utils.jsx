@@ -110,3 +110,4 @@ export function handleFilter(
 
 export const UserContext = createContext(null);
 export const UIContext = createContext(null);
+export const ErrorContext = createContext(null);
