@@ -16,9 +16,17 @@ import KebabMenu from "./KebabMenu";
 import CharCount from "./CharCount";
 import NotExist from "./NotExist";
 import InternalServerError500 from "./InternalServerError500";
+import ServiceUnavailableError503 from "./ServiceUnavailableError503";
 import { showDeletePopup } from "./Profile"; //delete post
 
-function Comments({ postId, currentUser, setShowLogin, token }) {
+function Comments({
+  postId,
+  currentUser,
+  setShowLogin,
+  token,
+  error500,
+  setError500,
+}) {
   const [viewMoreLoading, setViewMoreLoading] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [commentText, setCommentText] = useState("");
@@ -112,6 +120,8 @@ function Comments({ postId, currentUser, setShowLogin, token }) {
       const data = await res.json();
 
       if (res.ok) {
+        //testing purposes
+        // setError500(true);
         const newComment = {
           comment_id: data.commentId, //fetch comment_id from database table(necessary to delete comment immediately)
           date: "Just now",
@@ -281,13 +291,19 @@ export default function Post() {
   const query = new URLSearchParams(location.search);
   const { postId } = useParams();
   const { setShowPopup } = useContext(UIContext);
-  const { error500, setError500 } = useContext(ErrorContext);
+  const { error500, setError500, error503, setError503 } =
+    useContext(ErrorContext);
+  const [error500Render, setError500Render] = useState(false);
   const limitedCharBody = 200;
 
   const handlePropagation = (e) => {
     e.stopPropagation();
     e.preventDefault();
   };
+
+  useEffect(() => {
+    console.log(postInfo);
+  }, [postInfo]);
 
   //fetch post's info
   useEffect(() => {
@@ -305,19 +321,29 @@ export default function Post() {
         );
         const data = await res.json();
         if (res.ok) {
-          // setError500(true); //testing purposes
+          //testing purposes
+          // setError500(true);
+          // setError503(true);
+          setError500Render(true);
+
           const post = data.posts[0];
           setPostInfo(post);
           setLikeCount(post.upvotes);
           setLiked(post.liked);
         } else {
           if (res.status === 500) {
+            setError500Render(true);
             setError500(true);
+          } else if (res.status === 503) {
+            setError503(true);
           }
           setPostInfo(null);
         }
       } catch (err) {
-        alert("Error: " + err.message);
+        //backend down; no internet
+        // alert("Error: " + err.message);
+        console.error("Network error: ", err);
+        setError503(true);
       } finally {
         setLoading(false);
       }
@@ -360,18 +386,26 @@ export default function Post() {
           body: existingBody,
         }));
         setIsEditing(false);
-        // alert(data.success)
       } else {
-        alert(data.error);
+        if (res.status === 500) {
+          alert(data.error);
+        }
+        console.error(data.error);
+        setMsg("");
       }
     } catch (err) {
-      alert("Error: " + err.message);
+      // alert("Error: " + err.message);
+      console.error("Network error: ", err);
+      setMsg();
+      setError503(true);
     }
   };
 
   console.log("Rendering Post");
 
-  return error500 ? (
+  return error503 ? (
+    <ServiceUnavailableError503 />
+  ) : error500 ? (
     <InternalServerError500 />
   ) : loading ? (
     <Loading />
@@ -405,7 +439,13 @@ export default function Post() {
                 setExistingBody(postInfo.body);
               }}
               onDelete={(e) => {
-                showDeletePopup(e, postId, setDeleted, setShowPopup);
+                showDeletePopup(
+                  e,
+                  postId,
+                  setDeleted,
+                  setShowPopup,
+                  postInfo.video
+                );
               }}
             />
           )}
@@ -473,6 +513,8 @@ export default function Post() {
             currentUser={currentUser}
             setShowLogin={setShowLogin}
             token={token}
+            error500={error500}
+            setError500={setError500}
           />
         }
       </div>

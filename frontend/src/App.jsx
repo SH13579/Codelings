@@ -19,6 +19,7 @@ function App() {
   const [showPopup, setShowPopup] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [error500, setError500] = useState(false);
+  const [error503, setError503] = useState(false);
   const tags = [
     { tag_name: "web-app", post_type: "project" },
     { tag_name: "mobile-app", post_type: "project" },
@@ -64,7 +65,9 @@ function App() {
 
   return (
     <div className="site">
-      <ErrorContext.Provider value={{ error500, setError500 }}>
+      <ErrorContext.Provider
+        value={{ error500, setError500, error503, setError503 }}
+      >
         <UserContext.Provider
           value={{
             token,

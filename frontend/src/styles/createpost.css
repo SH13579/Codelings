@@ -21,20 +21,26 @@
   font-weight: 500;
   font-size: 1rem;
 }
-.create-post-title, .create-post-description, .create-post-body{
-  border-radius: 6px;
-  border: 1px solid black;
-  padding: 0.5rem 0.85rem 0.5rem 0.85rem;
+.create-post-title{
+  resize: none;
+}
+.create-post-select{
+  padding: 0.5rem;
   font-size: 1rem;
 }
-.create-post-title{
-  height: 1.4rem;
+.create-post-title, .create-post-description, .create-post-body{
+  border-radius: 5px;
+  padding: 0.5rem 0.85rem 0.5rem 0.85rem;
+  font-size: 1rem;
+  field-sizing: content;
 }
 .create-post-body, .create-post-description{
   resize: vertical;
 }
 .create-post-body{
-  height: 10rem;
+  min-height: 7.5rem;
+  white-space: pre-line;
+
 }
 .post-video{
   margin-top: 0.5rem;
@@ -42,8 +48,13 @@
 .post-project input:focus, textarea:focus{
   outline-color: #023E7D;
 }
+.post-project select{
+   border: 1px solid rgb(202, 202, 202);
+}
+
 .post-project textarea{
   padding: 1rem;
+  border: 1px solid rgb(202, 202, 202);
 }
 .create-post{
   margin-top: 0;

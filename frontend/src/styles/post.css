@@ -220,6 +220,7 @@
 .post-body{
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
+  white-space: pre-line;
 }
 .post-wrapper .horizontal-line{
   margin-top: 1.4rem;
@@ -252,21 +253,17 @@
   width: 7.5rem;
   display: flex;
   flex-direction: column;
-  color: #0353A4;
-  font-weight: 500;
+  color: black;
+  font-weight: 450;
   border-radius: 7.5px;
 }
 .kebab-menu-dropdown div:hover{
   background-color: #e6e6e6;
   transition: background-color 0.2s ease;
 }
-.delete-icon{
+.delete-icon, .edit-icon{
   width: 1.75rem;
-  filter: brightness(0) saturate(100%) invert(0%) sepia(84%) saturate(7500%) hue-rotate(333deg) brightness(111%) contrast(114%);
-}
-.edit-icon{
-  width: 1.75rem;
-  
+  filter: brightness(0) saturate(100%) invert(19%) sepia(91%) saturate(2145%) hue-rotate(197deg) brightness(96%) contrast(98%);
 }
 .kebab-menu-edit-button{
   flex: 1;

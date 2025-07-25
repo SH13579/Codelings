@@ -81,7 +81,13 @@ export default function ProjectCard(props) {
                   handleEdit(); //navigates to Post
                 }}
                 onDelete={(e) =>
-                  props.showDeletePopup(e, props.id, setDeleted, setShowPopup)
+                  props.showDeletePopup(
+                    e,
+                    props.id,
+                    setDeleted,
+                    setShowPopup,
+                    props.video
+                  )
                 }
               />
             )}

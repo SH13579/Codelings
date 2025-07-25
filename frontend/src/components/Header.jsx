@@ -2,7 +2,12 @@ import React, { useEffect, useState, useRef, useContext } from "react";
 import Account from "./Account";
 import CreatePost from "./CreatePost";
 import "../styles/header.css";
-import { useExitListener, UserContext, UIContext } from "../utils";
+import {
+  useExitListener,
+  UserContext,
+  UIContext,
+  ErrorContext,
+} from "../utils";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function Header() {
@@ -14,6 +19,10 @@ export default function Header() {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const cachedUser = sessionStorage.getItem("currentUser");
+  const { error500, setError500 } = useContext(ErrorContext);
+  // useEffect(() => {
+  //   setError500(true);
+  // }, []);
 
   //remove ability to scroll any content outside of the account component
   useEffect(() => {
@@ -148,6 +157,14 @@ export default function Header() {
           <img className="site-logo" src="/media/images/site-logo.svg" />
           <h2 className="site-name">Codelings</h2>
         </Link>
+        {error500 && (
+          <div className="error-500-msg">
+            Something went wrong. Please try again.
+            <div className="exit-button" onClick={() => setError500(false)}>
+              &times;
+            </div>
+          </div>
+        )}
         <div className="header-buttons-wrapper">
           <a className="header-create-post-button" onClick={checkLoggedIn}>
             Create Post
@@ -157,7 +174,7 @@ export default function Header() {
               <img
                 onClick={showOrHideDropdown}
                 className="header-pfp"
-                src={currentUser ? currentUser.pfp : "/media/images/doggy.png"}
+                src={currentUser && currentUser.pfp}
               />
             ) : (
               <button

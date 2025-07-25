@@ -7,7 +7,13 @@ import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
 import NotExist from "./NotExist";
 
-export function showDeletePopup(e, post_id, setDeleted, setShowPopup) {
+export function showDeletePopup(
+  e,
+  post_id,
+  setDeleted,
+  setShowPopup,
+  video_file_path
+) {
   e.preventDefault();
   e.stopPropagation();
   const token = sessionStorage.getItem("token");
@@ -21,6 +27,7 @@ export function showDeletePopup(e, post_id, setDeleted, setShowPopup) {
         },
         body: JSON.stringify({
           post_id: post_id,
+          video_file_path: video_file_path,
         }),
       });
       const data = await res.json();

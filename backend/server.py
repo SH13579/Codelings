@@ -7,8 +7,10 @@ import jwt
 from functools import wraps
 import math
 import time
+import json
 from werkzeug.security import generate_password_hash, check_password_hash
 from supabase import create_client, Client
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 CORS(app)
@@ -87,6 +89,27 @@ def token_optional(f):
     return decorated
 
 
+# remove a file from the supabase storage
+def removeFile(url):
+    base_segment = "/storage/v1/object/public/"
+    if base_segment not in url:
+        return None, None
+
+    # remove the question mark at the end of the url, supabase requires the EXACT path when removing a file
+    url = urlparse(url.rstrip("?"))
+    relative_path = url.path.split(base_segment)[1]
+    parts = relative_path.split("/", 1)
+    if len(parts) != 2:
+        return None, None
+
+    bucket, file_path = parts
+
+    response = supabase.storage.from_(bucket).remove(file_path)
+
+    if not response:
+        return None, None
+
+
 # route to handle registration
 @app.route("/register", methods=["POST"])
 def register():
@@ -98,6 +121,7 @@ def register():
     email = data.get("email")
     password = data.get("password")
     confirm_password = data.get("confirm_password")
+    pfp = data.get("pfp")
 
     # codes error type: 400(bad request), 401(invalid credentials), 409(conflict, info already taken), 500(server error)
     try:
@@ -131,9 +155,10 @@ def register():
 
             # insert new account
             cursor.execute(
-                "INSERT INTO users (username, email, password) VALUES (%s, %s, %s)",
-                (username, email, hashed_password),
+                "INSERT INTO users (username, email, password, profile_picture) VALUES (%s, %s, %s, %s)",
+                (username, email, hashed_password, pfp),
             )
+            cursor.execute()
         conn.commit()
         return jsonify({"message": "User registered successfully"}), 201
     except Exception as e:
@@ -255,35 +280,46 @@ def edit_profile(decoded):
     pfp = data.get("pfp")
     new_pfp_url = None
 
-    if "pfpFile" in request.files:
-        pfpFile = request.files["pfpFile"]
-        file_ext = pfpFile.filename.split(".")[-1]
-        filename = f"{int(time.time() * 1000)}.{file_ext}"
-        path = f"users-pfp/{filename}"
-
-        file_bytes = pfpFile.read()
-
-        try:
-            res = supabase.storage.from_("uploads").upload(path, file_bytes)
-
-            if res:
-                new_pfp_url = supabase.storage.from_("uploads").get_public_url(path)
-            else:
-                return jsonify({"error": "Upload failed - empty response"}), 400
-
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-
-    pfp_url = new_pfp_url if new_pfp_url is not None else pfp
-
     try:
         if len(about_me) > 1000:
             return jsonify({"error": "About Me cannot be over 1000 characters!"}), 409
-        elif not github_link.startswith("https://github.com/"):
+        elif github_link and not github_link.startswith("https://github.com/"):
             return jsonify({"error": "Invalid Github link"}), 409
         else:
-            with conn.cursor() as cursor:
+            # if user inserted a new profile picture, take that file and give it a unique name to insert into supabase
+            if "pfpFile" in request.files:
+                pfpFile = request.files["pfpFile"]
+                file_ext = pfpFile.filename.split(".")[-1]
+                filename = f"{int(time.time() * 1000)}.{file_ext}"
+                path = f"users-pfp/{filename}"
 
+                # supabase does not allow fileobject to be stored, convert into binary bytes
+                file_bytes = pfpFile.read()
+
+                try:
+                    response = supabase.storage.from_("uploads").upload(
+                        path, file_bytes
+                    )
+
+                    if response:
+                        new_pfp_url = supabase.storage.from_("uploads").get_public_url(
+                            path
+                        )
+                    else:
+                        return jsonify({"error": "Upload failed - empty response"}), 400
+
+                    if (
+                        pfp
+                        != "https://azxfokxbsfmqibzjduky.supabase.co/storage/v1/object/public/uploads/users-pfp/Default_pfp.svg"
+                    ):
+                        removeFile(pfp)
+
+                except Exception as e:
+                    return jsonify({"error": str(e)}), 500
+
+            pfp_url = new_pfp_url if new_pfp_url is not None else pfp
+
+            with conn.cursor() as cursor:
                 cursor.execute(
                     "UPDATE users SET email = %s, profile_picture = %s WHERE id = %s",
                     (email, pfp_url, user_id),
@@ -322,27 +358,8 @@ def post_project(decoded):
     post_date = now.strftime("%Y-%m-%d %H:%M:%S")
     post_description = data.get("post_description")
     post_body = data.get("post_body")
-    tags = data.get("tags")
-    video_file_path = None
-
-    if "demoFile" in request.files:
-        demoFile = request.files["demoFile"]
-        file_ext = demoFile.filename.split(".")[-1]
-        filename = f"{int(time.time() * 1000)}.{file_ext}"
-        path = f"project-demos/{filename}"
-
-        file_bytes = demoFile.read()
-
-        try:
-            res = supabase.storage.from_("uploads").upload(path, file_bytes)
-
-            if res:
-                video_file_path = supabase.storage.from_("uploads").get_public_url(path)
-            else:
-                return jsonify({"error": "Upload failed - empty response"}), 400
-
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
+    tags = json.loads(data["tags"])
+    video_file_path = ""
 
     try:
         if not post_type:
@@ -361,6 +378,27 @@ def post_project(decoded):
         elif len(post_body) > 4000:
             return jsonify({"error": "Post body cannot be over 4000 characters"}), 400
         else:
+            if "demoFile" in request.files:
+                demoFile = request.files["demoFile"]
+                file_ext = demoFile.filename.split(".")[-1]
+                filename = f"{int(time.time() * 1000)}.{file_ext}"
+                path = f"project-demos/{filename}"
+
+                file_bytes = demoFile.read()
+
+                try:
+                    res = supabase.storage.from_("uploads").upload(path, file_bytes)
+
+                    if res:
+                        video_file_path = supabase.storage.from_(
+                            "uploads"
+                        ).get_public_url(path)
+                    else:
+                        return jsonify({"error": "Upload failed - empty response"}), 400
+
+                except Exception as e:
+                    return jsonify({"error": str(e)}), 500
+
             with conn.cursor() as cursor:
                 user_id = decoded["user_id"]
                 cursor.execute(
@@ -478,6 +516,7 @@ def get_posts(decoded):
           posts.post_description, 
           posts.likes,
           posts.comments,
+          posts.video_file_path,
           users.username,
           users.profile_picture,
           array_agg(tags.tag_name) AS tag_name,
@@ -506,6 +545,7 @@ def get_posts(decoded):
             "description",
             "upvotes",
             "comments_count",
+            "video",
             "name",
             "pfp",
             "tags",
@@ -604,6 +644,7 @@ def delete_post(decoded):
 
     data = request.get_json()
     post_id = data.get("post_id")
+    video_file_path = data.get("video_file_path")
 
     try:
         with conn.cursor() as cursor:
@@ -620,6 +661,9 @@ def delete_post(decoded):
                 (post_id,),
             )
             conn.commit()
+            if video_file_path:
+                removeFile(video_file_path)
+
             return jsonify({"success": "Post has been deleted"})
 
     except Exception as e:
@@ -830,10 +874,14 @@ def delete_comment(decoded):
                 return jsonify({"error": "Cannot delete"})
 
             cursor.execute("DELETE FROM comments WHERE id = %s", (comment_id,))
+            cursor.execute(
+                "DELETE FROM likes WHERE type = 'comments' AND target_id = %s",
+                (comment_id,),
+            )
 
             # if deleting parent comment, include replies_count and update posts table
             if parent_comment_id is None:
-                decrement = 1 + replies_count
+                decrement = replies_count + 1
                 cursor.execute(
                     "UPDATE posts SET comments = comments - %s WHERE id = %s",
                     (decrement, post_id),

@@ -72,6 +72,8 @@
   gap: 1rem;
   flex: 1;
   min-width: 30rem;
+}
+.edit-profile-info label{
   font-weight: 700;
 }
 .edit-profile-info input, textarea, select{
@@ -93,6 +95,7 @@
   font-size: 0.9rem;
   min-height: 4.5rem;
   resize: vertical;
+  field-sizing: content;
 }
 .profile-github-box, .profile-email-box{
   height: 1.75rem;

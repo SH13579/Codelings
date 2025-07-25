@@ -110,6 +110,7 @@ function RegisterForm({ msg, setMsg, setLoginOrRegister }) {
   const [register, setRegister] = useState({
     username: "",
     email: "",
+    pfp: "https://azxfokxbsfmqibzjduky.supabase.co/storage/v1/object/public/uploads/users-pfp/Default_pfp.svg",
     password: "",
     confirmPassword: "",
   });

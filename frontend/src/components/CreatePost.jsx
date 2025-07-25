@@ -121,11 +121,11 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log(projectPost.demoFile);
-  }, [projectPost.demoFile]);
+    console.log(selectedTags);
+  }, [selectedTags]);
 
   useExitListenerWithAlert(setAlertMsg, postFormRef);
-  const limitedCharTitle = 50;
+  const limitedCharTitle = 200;
   const limitedCharDesc = 200;
   const limitedCharBody = 4000;
   //set the states of all form values
@@ -178,8 +178,11 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
       formData.append("post_type", projectPost.post_type);
       formData.append("post_description", projectPost.post_description);
       formData.append("post_body", projectPost.post_body);
-      formData.append("tags", selectedTags);
+      formData.append("tags", JSON.stringify(selectedTags));
       formData.append("demoFile", projectPost.demoFile);
+      for (const [key, value] of formData.entries()) {
+        console.log(`${key}:`, value);
+      }
       try {
         const res = await fetch("http://localhost:5000/create_post", {
           method: "POST",
@@ -217,7 +220,7 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
         <h2 className="create-post">Create Post</h2>
         <div className="post-error">{msg}</div>
         <label>
-          Select type of post<span className="required"> *</span>
+          Category<span className="required"> *</span>
         </label>
         <select
           className="create-post-select"
@@ -242,7 +245,7 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
         <label>
           Title<span className="required"> *</span>
         </label>
-        <input
+        <textarea
           value={projectPost.post_title}
           onChange={handleChange}
           className="create-post-title"
