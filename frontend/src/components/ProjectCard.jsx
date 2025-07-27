@@ -1,7 +1,7 @@
 import React, { useState, useRef, useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { handleNavigating } from "./Content";
-import { UserContext, likeUnlike, UIContext, handleLikePost } from "../utils";
+import { UserContext, likeUnlike, UIContext, handleLikePost, ErrorContext } from "../utils";
 import Tags from "./Tags";
 import KebabMenu from "./KebabMenu";
 
@@ -14,6 +14,7 @@ export default function ProjectCard(props) {
   const { currentUser, setShowLogin } = useContext(UserContext);
   const { setShowPopup } = useContext(UIContext);
   const navigate = useNavigate();
+  const { setError500Msg, setError503 } = useContext(ErrorContext)
 
   useEffect(() => {
     setLiked(props.liked);
@@ -86,7 +87,9 @@ export default function ProjectCard(props) {
                     props.id,
                     setDeleted,
                     setShowPopup,
-                    props.video
+                    props.video,
+                    setError500Msg,
+                    setError503
                   )
                 }
               />

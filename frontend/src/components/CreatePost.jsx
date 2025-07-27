@@ -1,6 +1,6 @@
 import React, { useState, useRef, useContext, useEffect, useMemo } from "react";
 import { useExitListener, useExitListenerWithAlert } from "../utils";
-import { UserContext, UIContext } from "../utils";
+import { UserContext, UIContext, ErrorContext } from "../utils";
 import { useNavigate } from "react-router-dom";
 import CharCount from "./CharCount";
 
@@ -103,7 +103,7 @@ const MultiselectDropdown = ({
   );
 };
 
-const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
+const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost, error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 }) => {
   const [projectPost, setProjectPost] = useState({
     post_date: "",
     post_type: "",
@@ -198,10 +198,15 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost }) => {
           setMsg(data.success);
           navigate(`/post/${data.post_id}`);
         } else {
+          if (res.status === 500) {
+            setMsg("Something went wrong. Please try again later.")
+          }
           setMsg(data.error);
         }
       } catch (err) {
-        alert("Error:" + err.message);
+        console.error("Error:" + err.message);
+        setError503(true);
+        setMsg("The service is temporariliy unavailable. Please try again later.");
       }
     }
   };
@@ -369,6 +374,7 @@ const PostedMessage = ({ setClickCreatePost }) => {
 export default function CreatePost({ setClickCreatePost }) {
   const { token } = useContext(UserContext);
   const [msg, setMsg] = useState("");
+  const { error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 } = useContext(ErrorContext);
 
   console.log("Rendering Create Post");
 
@@ -381,6 +387,12 @@ export default function CreatePost({ setClickCreatePost }) {
           msg={msg}
           setMsg={setMsg}
           setClickCreatePost={setClickCreatePost}
+          error500Msg={error500Msg}
+          setError500Msg={setError500Msg}
+          error500Page={error500Page}
+          setError500Page={setError500Page}
+          error503={error503}
+          setError503={setError503}
         />
       ) : (
         <PostedMessage setClickCreatePost={setClickCreatePost} />

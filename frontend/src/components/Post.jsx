@@ -24,8 +24,12 @@ function Comments({
   currentUser,
   setShowLogin,
   token,
-  error500,
-  setError500,
+  error500Msg,
+  setError500Msg,
+  error500Page,
+  setError500Page,
+  error503,
+  setError503,
 }) {
   const [viewMoreLoading, setViewMoreLoading] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(true);
@@ -80,16 +84,22 @@ function Comments({
           setHasMoreComments(false);
         }
       } else {
-        alert(data.error);
+        if (res.status === 500) {
+          setError500Page(true);
+        } else if (res.status === 503) {
+          setError503(true);
+        }
+        console.error(data.error);
       }
     } catch (err) {
-      alert("Error: " + err.message);
+      console.error("Error: " + err.message);
+      setError503(true);
     } finally {
       reset ? setCommentsLoading(false) : setViewMoreLoading(false);
     }
   }
 
-  //initial batch of 10 comments
+  //initial batch of 5 comments
   useEffect(() => {
     fetchComments(true);
   }, [filter]);
@@ -97,13 +107,6 @@ function Comments({
   //post comment
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
-    //to prevent spam: (error code 429)
-    // const now = Date.now();
-    // const cooldown = 10 * 1000; //10 seconds
-    // if (lastCommentTime && now - lastCommentTime < cooldown) {
-    //   alert("STOP SPAMMING");
-    //   return;
-    // }
     try {
       const res = await fetch("http://localhost:5000/post_comment", {
         method: "POST",
@@ -143,14 +146,18 @@ function Comments({
         // }
         setCommentText(""); //empty input after adding comment
         setShowCommentButtons(false);
-        setLastCommentTime(Date.now());
         setMsg(data.success);
       } else {
-        alert(data.error);
-        setMsg("");
+        if (res.status === 500) {
+          setError500Msg(true);
+        } else if (res.status === 503) {
+          setError503(true)
+        }
+        console.error(data.error);
       }
     } catch (err) {
-      alert("Error: " + err.message);
+      setError503(true);
+      console.error("Error: " + err.message);
     }
   };
 
@@ -261,6 +268,12 @@ function Comments({
               setReplyCommentId={setReplyCommentId}
               setParentCommentsList={setParentCommentsList}
               setStart={setStart}
+              error500Msg={error500Msg}
+              setError500Msg={setError500Msg}
+              error500Page={error500Page}
+              setError500Page={setError500Page}
+              error503={error503}
+              setError503={setError503}
             />
           ))}
           {hasMoreComments && (
@@ -291,9 +304,7 @@ export default function Post() {
   const query = new URLSearchParams(location.search);
   const { postId } = useParams();
   const { setShowPopup } = useContext(UIContext);
-  const { error500, setError500, error503, setError503 } =
-    useContext(ErrorContext);
-  const [error500Render, setError500Render] = useState(false);
+  const { error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 } = useContext(ErrorContext);
   const limitedCharBody = 200;
 
   const handlePropagation = (e) => {
@@ -322,9 +333,9 @@ export default function Post() {
         const data = await res.json();
         if (res.ok) {
           //testing purposes
-          // setError500(true);
+          // setError500Msg(true);
           // setError503(true);
-          setError500Render(true);
+          // setError500Page(true);
 
           const post = data.posts[0];
           setPostInfo(post);
@@ -332,17 +343,17 @@ export default function Post() {
           setLiked(post.liked);
         } else {
           if (res.status === 500) {
-            setError500Render(true);
-            setError500(true);
+            setError500Page(true);
           } else if (res.status === 503) {
             setError503(true);
           }
           setPostInfo(null);
+          console.error(data.error)
         }
       } catch (err) {
         //backend down; no internet
         // alert("Error: " + err.message);
-        console.error("Network error: ", err);
+        console.error("Error: " + err.message);
         setError503(true);
       } finally {
         setLoading(false);
@@ -388,16 +399,14 @@ export default function Post() {
         setIsEditing(false);
       } else {
         if (res.status === 500) {
-          alert(data.error);
+          setError500Msg(true);
         }
         console.error(data.error);
         setMsg("");
       }
     } catch (err) {
-      // alert("Error: " + err.message);
-      console.error("Network error: ", err);
-      setMsg();
       setError503(true);
+      console.error("Error: " + err.message);
     }
   };
 
@@ -405,7 +414,7 @@ export default function Post() {
 
   return error503 ? (
     <ServiceUnavailableError503 />
-  ) : error500 ? (
+  ) : error500Page ? (
     <InternalServerError500 />
   ) : loading ? (
     <Loading />
@@ -444,7 +453,9 @@ export default function Post() {
                   postId,
                   setDeleted,
                   setShowPopup,
-                  postInfo.video
+                  postInfo.video,
+                  setError500Msg,
+                  setError503
                 );
               }}
             />
@@ -513,8 +524,12 @@ export default function Post() {
             currentUser={currentUser}
             setShowLogin={setShowLogin}
             token={token}
-            error500={error500}
-            setError500={setError500}
+            error500Msg={error500Msg}
+            setError500Msg={setError500Msg}
+            error500Page={error500Page}
+            setError500Page={setError500Page}
+            error503={error503}
+            setError503={setError503}
           />
         }
       </div>

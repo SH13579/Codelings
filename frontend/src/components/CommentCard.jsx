@@ -5,6 +5,8 @@ import { handleNavigating } from "./Content";
 import KebabMenu from "./KebabMenu";
 import Loading from "./Loading";
 import CharCount from "./CharCount";
+import InternalServerError500 from "./InternalServerError500";
+import ServiceUnavailableError503 from "./ServiceUnavailableError503";
 
 function ReplyBox({
   onSubmit,
@@ -72,6 +74,13 @@ export default function CommentCard({
   setParentRepliesList,
   existingReplyStart,
   setExistingReplyStart,
+  //error handling
+  error500Msg,
+  setError500Msg,
+  error500Page,
+  setError500Page,
+  error503,
+  setError503
 }) {
   const isReply = parentComment.parent_comment_id !== null;
   const isCommenter =
@@ -149,10 +158,14 @@ export default function CommentCard({
           }
           setShowPopup(null);
         } else {
-          alert(data.error);
+          if (res.status === 500) {
+            setError500Msg(true);
+          }
+          console.error(data.error);
         }
       } catch (err) {
-        alert("Error: " + err.message);
+        console.error("Error: " + err.message);
+        setError503(true);
       }
     }
 
@@ -219,10 +232,14 @@ export default function CommentCard({
           );
         }
       } else {
-        alert(data.error);
+        if (res.status === 500) {
+          setError500Msg(true);
+        }
+        console.error(data.error);
       }
     } catch (err) {
-      alert("Error: " + err.message);
+      console.error("Error: " + err.message);
+      setError503(true);
     }
   };
 
@@ -272,10 +289,14 @@ export default function CommentCard({
         setReplyCommentId(null);
         setMsg(data.success);
       } else {
-        setMsg("");
+        if (res.status === 500) {
+          setError500Msg(true);
+        }
+        console.error(data.error);
       }
     } catch (err) {
-      alert("Error: " + err.message);
+      console.error("Error: " + err.message);
+      setError503(true);
     }
   };
 
@@ -314,10 +335,14 @@ export default function CommentCard({
         setReplyStart((prev) => prev + fetchedReplies.length);
         setHasMoreReplies(fetchedReplies.length === limit);
       } else {
-        alert(data.error);
+        if (res.status === 500) {
+          setError500Msg(true);
+        }
+        console.error(data.error);
       }
     } catch (err) {
-      alert("Error: " + err.message);
+      console.error("Error: " + err.message);
+      setError503(true);
     } finally {
       setViewMoreRepliesLoading(false);
     }
@@ -343,6 +368,13 @@ export default function CommentCard({
       setParentRepliesList={setRepliesList}
       existingReplyStart={replyStart}
       setExistingReplyStart={setReplyStart}
+      //error handling
+      error500Msg={error500Msg}
+      setError500Msg={setError500Msg}
+      error500Page={error500Page}
+      setError500Page={setError500Page}
+      error503={error503}
+      setError503={setError503}
     />
   ));
 

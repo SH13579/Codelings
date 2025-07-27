@@ -157,20 +157,11 @@
   align-items: center;
   background-color: lightpink;
   color:red;
-  top: 100%;
+  top: 103%;
   left: 0%;
   padding: 0.4rem;
   gap: 0.5rem;
-  /* animation: slideFadeIn 0.5s ease-out; */
   animation: shake 0.5s ease;
-}
-@keyframes slideFadeIn{
-  from{
-    opacity: 0;
-  }
-  to{
-    opacity:1;
-  }
 }
 @keyframes shake{
   0% { transform: translateX(0); }

@@ -19,9 +19,10 @@ export default function Header() {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const cachedUser = sessionStorage.getItem("currentUser");
-  const { error500, setError500 } = useContext(ErrorContext);
+  const { error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 } = useContext(ErrorContext);
+  
   // useEffect(() => {
-  //   setError500(true);
+  //   setError500Msg(true);
   // }, []);
 
   //remove ability to scroll any content outside of the account component
@@ -79,14 +80,24 @@ export default function Header() {
           sessionStorage.removeItem("token");
           sessionStorage.removeItem("currentUser");
           setCurrentUser(null);
+          if (res.status === 503) {
+            setError503(true);
+          }
+          else if (res.status === 500) {
+            setError500Page(true);
+          }
+          console.error(data.error);
         }
       } catch (err) {
         if (err.name !== "AbortError") {
-          alert("Error: " + err.message);
           sessionStorage.removeItem("token");
           sessionStorage.removeItem("currentUser");
           setCurrentUser(null);
+          
         }
+        console.error("Error: " + err.message);
+        //reminder: this causes issues (probably just ignore and remove)
+        // setError503(true);
       }
     };
 
@@ -157,10 +168,10 @@ export default function Header() {
           <img className="site-logo" src="/media/images/site-logo.svg" />
           <h2 className="site-name">Codelings</h2>
         </Link>
-        {error500 && (
+        {error500Msg && (
           <div className="error-500-msg">
             Something went wrong. Please try again.
-            <div className="exit-button" onClick={() => setError500(false)}>
+            <div className="exit-button" onClick={() => setError500Msg(false)}>
               &times;
             </div>
           </div>

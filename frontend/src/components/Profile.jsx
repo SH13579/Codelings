@@ -1,18 +1,22 @@
 import React, { useState, useContext, useEffect } from "react";
 import "../styles/profile.css";
-import { UserContext, UIContext } from "../utils";
+import { UserContext, UIContext, ErrorContext } from "../utils";
 import { useParams, Link } from "react-router-dom";
 import Loading from "./Loading";
 import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
 import NotExist from "./NotExist";
+import InternalServerError500 from "./InternalServerError500";
+import ServiceUnavailableError503 from "./ServiceUnavailableError503";
 
 export function showDeletePopup(
   e,
   post_id,
   setDeleted,
   setShowPopup,
-  video_file_path
+  video_file_path,
+  setError500Msg,
+  setError503
 ) {
   e.preventDefault();
   e.stopPropagation();
@@ -31,17 +35,19 @@ export function showDeletePopup(
         }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        // ❗ show the error from Python backend
-        alert("Error: " + data.error);
-        return;
-      }
       if (res.ok) {
         setDeleted(true);
         setShowPopup(null);
+      } else {
+        // ❗ show the error from Python backend
+        if (res.status === 500) {
+          setError500Msg(true)
+        }
+        alert("Error1: " + data.error);
       }
     } catch (err) {
-      alert("Error" + err.message);
+      alert("Error2: " + err.message);
+      setError503(true);
     }
   }
   setShowPopup({
@@ -99,7 +105,7 @@ async function fetchLikedPosts(
       setPosts((prev) => [...prev, ...data.liked_posts]);
     }
   } catch (err) {
-    alert("Error: " + err.message);
+    alert("Error3: " + err.message);
   } finally {
     reset ? setPostsLoading(false) : setViewMorePostsLoading(false);
   }
@@ -117,6 +123,7 @@ async function fetchPostsProfile(
   username,
   setPostsLoading,
   setViewMorePostsLoading,
+  setError503,
   token
 ) {
   const category = filter === "Best" ? "likes" : "post_date";
@@ -150,7 +157,8 @@ async function fetchPostsProfile(
       setStart((prev) => prev + limit);
     }
   } catch (err) {
-    alert("Error: " + err.message);
+    alert("Error4: " + err.message);
+    setError503(true);
   } finally {
     reset ? setPostsLoading(false) : setViewMorePostsLoading(false);
   }
@@ -159,7 +167,8 @@ async function fetchPostsProfile(
 export function useFetchProfileInfo(
   username,
   setProfileInfo,
-  setProfileLoading
+  setProfileLoading,
+  setError503
 ) {
   useEffect(() => {
     async function fetchProfile() {
@@ -186,7 +195,8 @@ export function useFetchProfileInfo(
           year_of_study: profile.year_of_study || "",
         });
       } catch (err) {
-        alert("Error: " + err.message);
+        alert("Error5: " + err.message);
+        setError503(true);
       } finally {
         setProfileLoading(false);
       }
@@ -214,8 +224,9 @@ export default function Profile() {
   const [postFilter, setPostFilter] = useState("Best");
   const location = "profile";
   const { username, currentSection = "project" } = useParams();
+  const { error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 } = useContext(ErrorContext);
 
-  useFetchProfileInfo(username, setProfileInfo, setProfileLoading);
+  useFetchProfileInfo(username, setProfileInfo, setProfileLoading, setError503);
 
   const navbar_sections = [
     {
@@ -236,7 +247,10 @@ export default function Profile() {
     },
   ];
 
-  return profileLoading ? (
+  return error503? (
+    <ServiceUnavailableError503 />
+  ) :
+  profileLoading ? (
     <Loading />
   ) : profileInfo ? (
     <div className="profile-wrapper">
@@ -311,6 +325,7 @@ export default function Profile() {
                   username,
                   setPostsLoading,
                   setViewMorePostsLoading,
+                  setError503,
                   token
                 )
               }

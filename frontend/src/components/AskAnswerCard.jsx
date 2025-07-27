@@ -49,7 +49,9 @@ export default function AskAnswerCard(props) {
                     props.id,
                     setDeleted,
                     setShowPopup,
-                    props.video
+                    props.video,
+                    setError500Msg,
+                    setError503
                   )
                 }
               />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import "../styles/profile.css";
 import { useFetchProfileInfo } from "./Profile";
-import { UserContext } from "../utils";
+import { UserContext, ErrorContext } from "../utils";
 import Loading from "./Loading";
 import CharCount from "./CharCount";
 import { ViewMoreLoading } from "./Loading";
@@ -14,7 +14,13 @@ async function handleEditProfile(
   setMsg,
   currentUser,
   setCurrentUser,
-  setEditProfileLoading
+  setEditProfileLoading,
+  error500Msg,
+  setError500Msg,
+  error500Page,
+  setError500Page,
+  error503,
+  setError503,
 ) {
   e.preventDefault();
   setEditProfileLoading(true);
@@ -70,10 +76,15 @@ async function handleEditProfile(
           }));
         }
       } else {
+        if (res.status === 500) {
+          setError500Msg(true);
+        }
         setMsg(data.error);
       }
     } catch (err) {
       alert("Error: " + err.message);
+      setError503(true);
+      setMsg("The service is temporariliy unavailable. Please try again later.");
     } finally {
       setEditProfileLoading(false);
     }
@@ -83,6 +94,7 @@ async function handleEditProfile(
 export default function EditProfile() {
   const { token, setShowLogin, currentUser, setCurrentUser } =
     useContext(UserContext);
+    const { error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 } = useContext(ErrorContext);
   if (!token) {
     setShowLogin(true);
     return;
@@ -164,7 +176,13 @@ export default function EditProfile() {
                 setMsg,
                 currentUser,
                 setCurrentUser,
-                setEditProfileLoading
+                setEditProfileLoading,
+                error500Msg,
+                setError500Msg,
+                error500Page,
+                setError500Page,
+                error503,
+                setError503,
               )
             }
             className="edit-profile-info"

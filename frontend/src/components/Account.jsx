@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef, useContext } from "react";
 import "../styles/account.css";
 import "../styles/createpost.css";
 import { useNavigate } from "react-router-dom";
-import { UserContext, useExitListener } from "../utils";
+import { UserContext, useExitListener, ErrorContext } from "../utils";
 
-function LoginPage({ setLoginOrRegister, setShowLogin }) {
+function LoginPage({ setLoginOrRegister, setShowLogin, error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 }) {
   const [msg, setMsg] = useState(null);
   const loginRef = useRef(null);
   const navigate = useNavigate();
@@ -47,10 +47,17 @@ function LoginPage({ setLoginOrRegister, setShowLogin }) {
         navigate("/");
       } else {
         //codes 400(bad request), 401(invalid credentials), 409(conflict, info already taken), 500(server error)
-        setMsg(data.error);
+        if (res.status === 500) {
+          setMsg("Something went wrong. Please try again.")
+        } else {
+          setMsg(data.error);
+        }
+        console.error(data.error);
       }
     } catch (err) {
-      alert("Error:" + err.message);
+      console.error("Error:" + err.message);
+      setMsg("The service is temporariliy unavailable. Please try again later.");
+      setError503(true);
     }
   };
 
@@ -152,11 +159,17 @@ function RegisterForm({ msg, setMsg, setLoginOrRegister }) {
       if (res.ok) {
         setMsg("Registration successful!");
       } else {
-        //!res.ok (Registration unsuccessful)
-        setMsg(data.error);
+        if (res.status === 500) {
+          setMsg("Something went wrong. Please try again.")
+        } else {
+          setMsg(data.error);
+        }
+        console.error(data.error)
       }
     } catch (err) {
-      alert("Error:" + err.message);
+      console.error("Error:" + err.message);
+      setMsg("The service is temporariliy unavailable. Please try again later.");
+      setError503(true);
     }
   };
   return (
@@ -209,7 +222,7 @@ function RegisterForm({ msg, setMsg, setLoginOrRegister }) {
   );
 }
 
-function RegisterPage({ setLoginOrRegister, setShowLogin }) {
+function RegisterPage({ setLoginOrRegister, setShowLogin, error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503  }) {
   const [msg, setMsg] = useState(null);
   const registerRef = useRef(null);
   useExitListener(setShowLogin, registerRef);
@@ -266,16 +279,29 @@ function RegisterPage({ setLoginOrRegister, setShowLogin }) {
 
 export default function Account({ setShowLogin }) {
   const [loginOrRegister, setLoginOrRegister] = useState("login");
+  const { error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 } = useContext(ErrorContext);
   console.log("Rendering account");
   return loginOrRegister === "login" ? (
     <LoginPage
       setShowLogin={setShowLogin}
       setLoginOrRegister={setLoginOrRegister}
+      error500Msg={error500Msg}
+      setError500Msg={setError500Msg}
+      error500Page={error500Page}
+      setError500Page={setError500Page}
+      error503={error503}
+      setError503={setError503}
     />
   ) : (
     <RegisterPage
       setShowLogin={setShowLogin}
       setLoginOrRegister={setLoginOrRegister}
+      error500Msg={error500Msg}
+      setError500Msg={setError500Msg}
+      error500Page={error500Page}
+      setError500Page={setError500Page}
+      error503={error503}
+      setError503={setError503}
     />
   );
 }
