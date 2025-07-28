@@ -41,7 +41,7 @@ export function showDeletePopup(
       } else {
         // ❗ show the error from Python backend
         if (res.status === 500) {
-          setError500Msg(true)
+          setError500Msg(true);
         }
         alert("Error1: " + data.error);
       }
@@ -224,7 +224,8 @@ export default function Profile() {
   const [postFilter, setPostFilter] = useState("Best");
   const location = "profile";
   const { username, currentSection = "project" } = useParams();
-  const { error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 } = useContext(ErrorContext);
+  const { error500Msg, setError500Msg, error503, setError503 } =
+    useContext(ErrorContext);
 
   useFetchProfileInfo(username, setProfileInfo, setProfileLoading, setError503);
 
@@ -247,10 +248,9 @@ export default function Profile() {
     },
   ];
 
-  return error503? (
+  return error503 ? (
     <ServiceUnavailableError503 />
-  ) :
-  profileLoading ? (
+  ) : profileLoading ? (
     <Loading />
   ) : profileInfo ? (
     <div className="profile-wrapper">
@@ -261,7 +261,7 @@ export default function Profile() {
               <button className="edit-profile">Edit Profile</button>
             </Link>
           )}
-          <img className="profile-pfp" src={currentUser.pfp} />
+          <img className="profile-pfp" src={profileInfo.pfp} />
           <h2 className="profile-name">@{username}</h2>
 
           <div className="profile-details-wrap">

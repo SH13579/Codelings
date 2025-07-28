@@ -17,19 +17,12 @@ async function handleEditProfile(
   setEditProfileLoading,
   error500Msg,
   setError500Msg,
-  error500Page,
-  setError500Page,
   error503,
-  setError503,
+  setError503
 ) {
   e.preventDefault();
   setEditProfileLoading(true);
-  if (profileInfo.about_me.length > 1000) {
-    setMsg("About Me section cannot be over 1000 characters");
-  } else if (
-    profileInfo.pfpFile &&
-    !profileInfo.pfpFile.type.startsWith("image/")
-  ) {
+  if (profileInfo.pfpFile && !profileInfo.pfpFile.type.startsWith("image/")) {
     setMsg("Only image files are allowed for profile picture");
   } else if (
     profileInfo.pfpFile &&
@@ -84,7 +77,9 @@ async function handleEditProfile(
     } catch (err) {
       alert("Error: " + err.message);
       setError503(true);
-      setMsg("The service is temporariliy unavailable. Please try again later.");
+      setMsg(
+        "The service is temporariliy unavailable. Please try again later."
+      );
     } finally {
       setEditProfileLoading(false);
     }
@@ -94,7 +89,8 @@ async function handleEditProfile(
 export default function EditProfile() {
   const { token, setShowLogin, currentUser, setCurrentUser } =
     useContext(UserContext);
-    const { error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 } = useContext(ErrorContext);
+  const { error500Msg, setError500Msg, error503, setError503 } =
+    useContext(ErrorContext);
   if (!token) {
     setShowLogin(true);
     return;
@@ -158,8 +154,11 @@ export default function EditProfile() {
               className="profile-pfp"
               src={imagePreview || profileInfo.pfp}
             />
+            <label for="edit-profile-pfp-file" class="custom-file-upload">
+              Change Photo
+            </label>
             <input
-              className="edit-profile-pfp-file"
+              id="edit-profile-pfp-file"
               type="file"
               accept="image/*"
               name="pfp"
@@ -179,10 +178,8 @@ export default function EditProfile() {
                 setEditProfileLoading,
                 error500Msg,
                 setError500Msg,
-                error500Page,
-                setError500Page,
                 error503,
-                setError503,
+                setError503
               )
             }
             className="edit-profile-info"

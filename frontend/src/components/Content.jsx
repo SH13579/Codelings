@@ -5,7 +5,6 @@ import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
 import NotFound404 from "./NotFound404";
 import { UserContext, UIContext, ErrorContext } from "../utils";
-import InternalServerError500 from "./InternalServerError500";
 import ServiceUnavailableError503 from "./ServiceUnavailableError503";
 
 export const SearchBar = () => {
@@ -199,7 +198,7 @@ export default function Content() {
   const askAnswerTags = tags
     .filter((item) => item.post_type === "qna")
     .map((item) => item.tag_name);
-  const { error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 } = useContext(ErrorContext);
+  const { error503, setError503 } = useContext(ErrorContext);
 
   if (!validSections.includes(currentSection)) {
     return <NotFound404 />;
@@ -231,10 +230,9 @@ export default function Content() {
 
   console.log("Rendering Content");
 
-  return (
-    error503 ? (
-      <ServiceUnavailableError503 />
-    ) :
+  return error503 ? (
+    <ServiceUnavailableError503 />
+  ) : (
     <section className="content-wrapper">
       <AboutUs />
       <div className="content-grid">

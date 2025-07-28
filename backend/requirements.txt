@@ -4,6 +4,7 @@ pip install psycopg2
 npm install uuid
 pip install PyJWT
 #new
-npm install @supabase/supabase-js
+pip install supabase
+npm install jwt-decode
 
 pip install psycopg2-binary (ignore for now; this might be better than just psycopg2; IDK YET)

@@ -23,8 +23,8 @@ export default function SectionsNavbar(props) {
       });
     //render the actual main section
     const renderSection = (
-      <div className="navbar-section">
-        <Link key={section} to={`${props.currentRoute}${section}`}>
+      <div key={section} className="navbar-section">
+        <Link to={`${props.currentRoute}${section}`}>
           <div
             // onClick={() => props.handleSectionChange(section)}
             className={

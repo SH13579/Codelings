@@ -19,7 +19,6 @@
 }
 .post-project label{
   font-weight: 500;
-  font-size: 1rem;
 }
 .create-post-title{
   resize: none;
@@ -65,6 +64,12 @@
   margin-top: 0.5rem;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
+}
+.create-post-files-links{
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 .project-submit{
   margin-left: auto;
@@ -74,6 +79,7 @@
   background-color: #0353A4;
   color: white;
   transition: background-color 0.15s ease;
+  min-width: 8rem;
 }
 .project-submit:hover{
   background-color: #001845;
@@ -148,4 +154,18 @@
 }
 .display-none{
   display: none;
+}
+.demo-file-wrapper{
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+#demo-file{
+  display: none;
+}
+.demo-file-name{
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }

@@ -5,7 +5,11 @@ export default function Tags({ tags }) {
     return null;
   }
   const all_tags = tags.map((item) => {
-    return <div className="post-tag">#{item}</div>;
+    return (
+      <div key={item} className="post-tag">
+        #{item}
+      </div>
+    );
   });
   return <div className="post-tags">{all_tags}</div>;
 }

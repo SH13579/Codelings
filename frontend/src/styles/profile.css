@@ -51,7 +51,7 @@
 }
 .edit-profile-sec{
   display: flex;
-  gap: 3rem;
+  gap: 4rem;
   margin-top: 2rem;
   flex-wrap: wrap;
   justify-content: center;
@@ -61,6 +61,23 @@
   flex-direction: column;
   align-items: center;
   gap: 2rem;
+}
+#edit-profile-pfp-file{
+  display: none;
+}
+.custom-file-upload{
+  cursor: pointer;
+  background-color: #0353a4;
+  color: white;
+  padding: 0.4rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.custom-file-upload:hover{
+  background-color: #002855;
+  transition: background-color 0.15s ease;
 }
 .edit-profile-wrap .profile-pfp{
   width: 8rem;

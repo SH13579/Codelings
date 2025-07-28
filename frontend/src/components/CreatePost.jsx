@@ -103,12 +103,18 @@ const MultiselectDropdown = ({
   );
 };
 
-const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost, error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 }) => {
+const CreatePostForm = ({
+  token,
+  msg,
+  setMsg,
+  setClickCreatePost,
+  error503,
+  setError503,
+}) => {
   const [projectPost, setProjectPost] = useState({
     post_date: "",
     post_type: "",
     post_title: "",
-    post_description: "",
     post_body: "",
     demoFile: "",
   });
@@ -126,7 +132,6 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost, error500Msg, s
 
   useExitListenerWithAlert(setAlertMsg, postFormRef);
   const limitedCharTitle = 200;
-  const limitedCharDesc = 200;
   const limitedCharBody = 4000;
   //set the states of all form values
   const handleChange = (e) => {
@@ -150,13 +155,7 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost, error500Msg, s
   //handles submitting the post
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!projectPost.post_type) {
-      setMsg("Post requires a type");
-    } else if (!projectPost.post_title) {
-      setMsg("Post needs a title");
-    } else if (!projectPost.post_description) {
-      setMsg("Post needs a description");
-    } else if (
+    if (
       projectPost.demoFile &&
       projectPost.demoFile.size / (1024 * 1024) > 50
     ) {
@@ -166,17 +165,10 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost, error500Msg, s
       !projectPost.demoFile.type.startsWith("video/")
     ) {
       setMsg("Only video files are allowed for demo");
-    } else if (projectPost.post_title.length > 200) {
-      setMsg("Post title cannot be over 200 characters");
-    } else if (projectPost.post_description.length > 200) {
-      setMsg("Post description cannot be over 200 characters");
-    } else if (projectPost.post_body.length > 4000) {
-      setMsg("Post body cannot be over 4000 characters");
     } else {
       const formData = new FormData();
       formData.append("title", projectPost.post_title);
       formData.append("post_type", projectPost.post_type);
-      formData.append("post_description", projectPost.post_description);
       formData.append("post_body", projectPost.post_body);
       formData.append("tags", JSON.stringify(selectedTags));
       formData.append("demoFile", projectPost.demoFile);
@@ -199,14 +191,16 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost, error500Msg, s
           navigate(`/post/${data.post_id}`);
         } else {
           if (res.status === 500) {
-            setMsg("Something went wrong. Please try again later.")
+            setMsg("Something went wrong. Please try again later.");
           }
           setMsg(data.error);
         }
       } catch (err) {
         console.error("Error:" + err.message);
         setError503(true);
-        setMsg("The service is temporariliy unavailable. Please try again later.");
+        setMsg(
+          "The service is temporariliy unavailable. Please try again later."
+        );
       }
     }
   };
@@ -262,21 +256,6 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost, error500Msg, s
           currentLength={projectPost.post_title.length}
           maxLength={limitedCharTitle}
         />
-        <label>
-          Description<span className="required"> *</span>
-        </label>
-        <textarea
-          value={projectPost.post_description}
-          onChange={handleChange}
-          className="create-post-description"
-          type="text"
-          name="post_description"
-          maxLength={limitedCharDesc}
-        />
-        <CharCount
-          currentLength={projectPost.post_description.length}
-          maxLength={limitedCharDesc}
-        />
         <label>Body</label>
         <textarea
           value={projectPost.post_body}
@@ -290,23 +269,30 @@ const CreatePostForm = ({ token, msg, setMsg, setClickCreatePost, error500Msg, s
           currentLength={projectPost.post_body.length}
           maxLength={limitedCharBody}
         />
-        <div className="post-project-last">
-          {projectPost.post_type === "project" && (
-            <div className="">
-              <label>Demo: </label>
-              <input
-                onChange={handleChange}
-                type="file"
-                accept="video/*"
-                name="demoFile"
-              />
-              <label>Github Link:</label>
+        {projectPost.post_type === "project" && (
+          <div className="create-post-files-links">
+            <div className="demo-file-wrapper">
+              <label>Demo </label>
+              <label for="demo-file" className="custom-file-upload">
+                Choose File
+              </label>
+              <div className="demo-file-name">{projectPost.demoFile.name}</div>
             </div>
-          )}
-          <div>
-            <button className="project-submit">Post</button>
+            <input
+              id="demo-file"
+              onChange={handleChange}
+              type="file"
+              accept="video/*"
+              name="demoFile"
+            />
           </div>
-        </div>
+        )}
+        <button
+          className="project-submit"
+          disabled={!projectPost.post_type || !projectPost.post_title}
+        >
+          Publish
+        </button>
       </form>
       {alertMsg && (
         <AlertMsg
@@ -374,7 +360,7 @@ const PostedMessage = ({ setClickCreatePost }) => {
 export default function CreatePost({ setClickCreatePost }) {
   const { token } = useContext(UserContext);
   const [msg, setMsg] = useState("");
-  const { error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 } = useContext(ErrorContext);
+  const { error503, setError503 } = useContext(ErrorContext);
 
   console.log("Rendering Create Post");
 
@@ -387,10 +373,6 @@ export default function CreatePost({ setClickCreatePost }) {
           msg={msg}
           setMsg={setMsg}
           setClickCreatePost={setClickCreatePost}
-          error500Msg={error500Msg}
-          setError500Msg={setError500Msg}
-          error500Page={error500Page}
-          setError500Page={setError500Page}
           error503={error503}
           setError503={setError503}
         />

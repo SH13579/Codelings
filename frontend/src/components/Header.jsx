@@ -9,21 +9,56 @@ import {
   ErrorContext,
 } from "../utils";
 import { Link, useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 export default function Header() {
   const { currentUser, setCurrentUser, showLogin, setShowLogin, token } =
     useContext(UserContext);
+  const { setShowPopup } = useContext(UIContext);
   const [isScrolled, setIsScrolled] = useState(false);
   const [clickCreatePost, setClickCreatePost] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const cachedUser = sessionStorage.getItem("currentUser");
-  const { error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 } = useContext(ErrorContext);
-  
-  // useEffect(() => {
-  //   setError500Msg(true);
-  // }, []);
+  const {
+    error500Msg,
+    setError500Msg,
+    error500Page,
+    setError500Page,
+    error503,
+    setError503,
+  } = useContext(ErrorContext);
+
+  // automatically sign the user out after the JWT token expires
+  token &&
+    setTimeout(() => {
+      setShowPopup({
+        message: (
+          <div>
+            <h3>Session Expired</h3>
+            <div>Please log in again</div>
+          </div>
+        ),
+        buttons: [
+          {
+            label: "Cancel",
+            action: () => setShowPopup(null),
+          },
+          {
+            label: "Login",
+            action: () => {
+              setShowPopup(null);
+              setShowLogin(true);
+            },
+          },
+        ],
+      });
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("currentUser");
+      setCurrentUser(null);
+      navigate("/");
+    }, jwtDecode(token).exp * 1000 - Date.now());
 
   //remove ability to scroll any content outside of the account component
   useEffect(() => {
@@ -82,8 +117,7 @@ export default function Header() {
           setCurrentUser(null);
           if (res.status === 503) {
             setError503(true);
-          }
-          else if (res.status === 500) {
+          } else if (res.status === 500) {
             setError500Page(true);
           }
           console.error(data.error);
@@ -93,18 +127,14 @@ export default function Header() {
           sessionStorage.removeItem("token");
           sessionStorage.removeItem("currentUser");
           setCurrentUser(null);
-          
         }
-        console.error("Error: " + err.message);
-        //reminder: this causes issues (probably just ignore and remove)
-        // setError503(true);
       }
     };
 
     getCurrentUser();
 
     return () => controller.abort();
-  }, [token, cachedUser]);
+  }, [token]);
 
   useExitListener(setShowProfileDropdown, dropdownRef);
 

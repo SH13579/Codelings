@@ -1,17 +1,26 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useRef, useContext, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { handleNavigating } from "./Content";
-import { likeUnlike, UserContext, UIContext, handleLikePost } from "../utils";
+import {
+  UserContext,
+  likeUnlike,
+  UIContext,
+  handleLikePost,
+  ErrorContext,
+} from "../utils";
 import Tags from "./Tags";
 import KebabMenu from "./KebabMenu";
 
-export default function AskAnswerCard(props) {
+//each individual project component
+export default function PostCard(props) {
   const [deleted, setDeleted] = useState(false);
   const [liked, setLiked] = useState(props.liked);
   const [likeCount, setLikeCount] = useState(props.upvotes);
-  const navigate = useNavigate();
-  const { currentUser, setShowLogin, token } = useContext(UserContext);
+  const { token } = useContext(UserContext);
+  const { currentUser, setShowLogin } = useContext(UserContext);
   const { setShowPopup } = useContext(UIContext);
+  const navigate = useNavigate();
+  const { setError500Msg, setError503 } = useContext(ErrorContext);
 
   useEffect(() => {
     setLiked(props.liked);
@@ -22,8 +31,8 @@ export default function AskAnswerCard(props) {
   };
 
   return !deleted ? (
-    <Link to={`/post/${props.id}`} className="ask-ans-wrapper">
-      <div className="ask-and-ans">
+    <Link to={`/post/${props.id}`} className="project-wrapper">
+      <div className="project">
         <div className="project-first-row">
           <div
             onClick={(e) => handleNavigating(e, navigate, props.name)}

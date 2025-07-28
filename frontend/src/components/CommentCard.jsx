@@ -5,8 +5,6 @@ import { handleNavigating } from "./Content";
 import KebabMenu from "./KebabMenu";
 import Loading from "./Loading";
 import CharCount from "./CharCount";
-import InternalServerError500 from "./InternalServerError500";
-import ServiceUnavailableError503 from "./ServiceUnavailableError503";
 
 function ReplyBox({
   onSubmit,
@@ -31,9 +29,6 @@ function ReplyBox({
             e.target.style.height = `${e.target.scrollHeight}px`;
           }}
         />
-        {/* <button className="comment-submit-icon-reply" type="submit">
-          <img src="/media/images/enter.svg" />
-        </button> */}
         <div className="bottom-row">
           <div className="bottom-row-buttons">
             <button
@@ -77,10 +72,8 @@ export default function CommentCard({
   //error handling
   error500Msg,
   setError500Msg,
-  error500Page,
-  setError500Page,
   error503,
-  setError503
+  setError503,
 }) {
   const isReply = parentComment.parent_comment_id !== null;
   const isCommenter =
@@ -371,8 +364,6 @@ export default function CommentCard({
       //error handling
       error500Msg={error500Msg}
       setError500Msg={setError500Msg}
-      error500Page={error500Page}
-      setError500Page={setError500Page}
       error503={error503}
       setError503={setError503}
     />

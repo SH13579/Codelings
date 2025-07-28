@@ -206,6 +206,9 @@ def login():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/refresh_token")
+
+
 # fetch the profile of the logged in user
 @app.route("/fetch_user_profile", methods=["GET"])
 @token_required
@@ -356,7 +359,6 @@ def post_project(decoded):
     title = data.get("title")
     post_type = data.get("post_type")
     post_date = now.strftime("%Y-%m-%d %H:%M:%S")
-    post_description = data.get("post_description")
     post_body = data.get("post_body")
     tags = json.loads(data["tags"])
     video_file_path = ""
@@ -366,15 +368,8 @@ def post_project(decoded):
             return jsonify({"error": "Post requires a type"}), 400
         elif not title:
             return jsonify({"error": "Post needs a title"}), 400
-        elif not post_description:
-            return jsonify({"error": "Post needs a description"}), 400
         elif len(title) > 200:
             return jsonify({"error": "Post title cannot be over 200 characters"}), 400
-        elif len(post_description) > 200:
-            return (
-                jsonify({"error": "Post description cannot be over 200 characters"}),
-                400,
-            )
         elif len(post_body) > 4000:
             return jsonify({"error": "Post body cannot be over 4000 characters"}), 400
         else:
@@ -402,13 +397,12 @@ def post_project(decoded):
             with conn.cursor() as cursor:
                 user_id = decoded["user_id"]
                 cursor.execute(
-                    "INSERT INTO posts (post_date, post_type, user_id, title, post_description, post_body, video_file_path, likes, comments) VALUES (%s, %s, %s, %s, %s, %s, %s, 0, 0) RETURNING id",
+                    "INSERT INTO posts (post_date, post_type, user_id, title, post_body, video_file_path, likes, comments) VALUES (%s, %s, %s, %s, %s, %s, %s, 0, 0) RETURNING id",
                     (
                         post_date,
                         post_type,
                         user_id,
                         title,
-                        post_description,
                         post_body,
                         video_file_path,
                     ),
@@ -512,8 +506,7 @@ def get_posts(decoded):
           posts.id,
           posts.post_date,
           posts.post_type,
-          posts.title, 
-          posts.post_description, 
+          posts.title,  
           posts.likes,
           posts.comments,
           posts.video_file_path,
@@ -529,7 +522,7 @@ def get_posts(decoded):
         LEFT JOIN tags ON post_tags.tag_id = tags.id
         WHERE posts.post_type = %s
         GROUP BY posts.id, posts.post_date, posts.post_type, posts.title,
-        posts.post_description, posts.likes, posts.comments, users.username, users.profile_picture
+     posts.likes, posts.comments, users.username, users.profile_picture
         ORDER BY posts.{category} DESC
         LIMIT %s OFFSET %s
       """
@@ -542,7 +535,6 @@ def get_posts(decoded):
             "date",
             "type",
             "title",
-            "description",
             "upvotes",
             "comments_count",
             "video",
@@ -590,7 +582,7 @@ def get_posts_byUser(decoded):
           posts.post_date,
           posts.post_type,
           posts.title,
-          posts.post_description,
+          
           posts.likes,
           posts.comments,
           users.username,
@@ -605,7 +597,7 @@ def get_posts_byUser(decoded):
         LEFT JOIN tags ON post_tags.tag_id = tags.id
         WHERE users.username = %s AND posts.post_type = %s
         GROUP BY posts.id, posts.post_date, posts.post_type, posts.title,
-        posts.post_description, posts.likes, posts.comments, users.username, users.profile_picture
+        posts.likes, posts.comments, users.username, users.profile_picture
         ORDER BY posts.{category} DESC
         LIMIT %s OFFSET %s 
       """
@@ -618,7 +610,6 @@ def get_posts_byUser(decoded):
             "date",
             "type",
             "title",
-            "description",
             "upvotes",
             "comments_count",
             "name",
@@ -691,7 +682,6 @@ def get_specific_post(decoded):
         posts.post_date, 
         posts.post_type, 
         posts.title, 
-        posts.post_description, 
         posts.post_body, 
         posts.video_file_path, 
         posts.likes, 
@@ -707,7 +697,7 @@ def get_specific_post(decoded):
       LEFT JOIN post_tags ON post_tags.post_id = posts.id
       LEFT JOIN tags ON post_tags.tag_id = tags.id
       WHERE posts.id = %s
-      GROUP BY posts.id, posts.post_date, posts.post_type, posts.title, posts.post_description, posts.post_body, posts.video_file_path,
+      GROUP BY posts.id, posts.post_date, posts.post_type, posts.title, posts.post_body, posts.video_file_path,
       posts.likes, posts.comments, users.username, users.profile_picture
       """,
                 (user_id, user_id, post_id, post_id),
@@ -721,7 +711,6 @@ def get_specific_post(decoded):
             "date",
             "type",
             "title",
-            "description",
             "body",
             "video",
             "upvotes",
@@ -1116,7 +1105,6 @@ def fetch_liked_posts(decoded):
                     posts.post_date,
                     posts.post_type,
                     posts.title,
-                    posts.post_description,
                     posts.likes,
                     posts.comments,
                     users.username,
@@ -1140,7 +1128,6 @@ def fetch_liked_posts(decoded):
             "date",
             "type",
             "title",
-            "description",
             "upvotes",
             "comments_count",
             "name",
@@ -1178,7 +1165,6 @@ def search_posts(decoded):
                       posts.post_date,
                       posts.post_type,
                       posts.title, 
-                      posts.post_description, 
                       posts.likes,
                       posts.comments,
                       users.username,
@@ -1192,7 +1178,7 @@ def search_posts(decoded):
                     LEFT JOIN post_tags ON post_tags.post_id = posts.id
                     LEFT JOIN tags ON post_tags.tag_id = tags.id
                     WHERE posts.title LIKE %s AND posts.post_type = %s
-                    GROUP BY posts.id, posts.post_date, posts.post_type, posts.title, posts.post_description, posts.likes, posts.comments, users.username, users.profile_picture
+                    GROUP BY posts.id, posts.post_date, posts.post_type, posts.title,  posts.likes, posts.comments, users.username, users.profile_picture
                     LIMIT %s OFFSET %s
                   """
             search_str = f"%{search_term}%"
@@ -1206,7 +1192,6 @@ def search_posts(decoded):
             "date",
             "type",
             "title",
-            "description",
             "upvotes",
             "comments_count",
             "name",
@@ -1299,7 +1284,6 @@ def fetch_specific_tag(decoded):
                         posts.post_date,
                         posts.post_type,
                         posts.title, 
-                        posts.post_description, 
                         posts.likes,
                         posts.comments,
                         users.username,
@@ -1314,7 +1298,7 @@ def fetch_specific_tag(decoded):
                         LEFT JOIN tags ON post_tags.tag_id = tags.id
                         WHERE tags.post_type = %s
                         GROUP BY posts.id, posts.post_date, posts.post_type, posts.title, 
-                        posts.post_description, posts.likes, posts.comments,
+                        posts.likes, posts.comments,
                         users.username, users.profile_picture
                         HAVING %s = ANY(array_agg(tags.tag_name))
                         ORDER BY posts.{category} DESC
@@ -1329,7 +1313,6 @@ def fetch_specific_tag(decoded):
                 "date",
                 "type",
                 "title",
-                "description",
                 "upvotes",
                 "comments_count",
                 "name",

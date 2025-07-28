@@ -67,7 +67,14 @@ function App() {
   return (
     <div className="site">
       <ErrorContext.Provider
-        value={{ error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 }}
+        value={{
+          error500Msg,
+          setError500Msg,
+          error500Page,
+          setError500Page,
+          error503,
+          setError503,
+        }}
       >
         <UserContext.Provider
           value={{

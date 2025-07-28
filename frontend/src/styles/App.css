@@ -112,10 +112,13 @@
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  margin-bottom: 0.5rem;
+  margin-top: 1.5rem;
 }
 .popup-button{
   padding: 0.5rem 2.5rem 0.5rem 2.5rem;
   flex: calc(50% - 0.5rem);
   color: white;
+}
+.popup-message{
+
 }

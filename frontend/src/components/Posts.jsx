@@ -3,8 +3,7 @@ import { UIContext } from "../utils";
 import Loading, { ViewMoreLoading } from "./Loading";
 import { EmptyContainer } from "../utils";
 import { showDeletePopup } from "./Profile";
-import ProjectCard from "./ProjectCard";
-import AskAnswerCard from "./AskAnswerCard";
+import PostCard from "./PostCard";
 
 export default function Posts(props) {
   useEffect(() => {
@@ -14,7 +13,6 @@ export default function Posts(props) {
   //map through all the projects, default state of posts is null so we only map when posts are finished being fetched from the backend
   const all_posts = props.posts
     ? props.posts.map((item) => {
-        const PostCard = item.type === "project" ? ProjectCard : AskAnswerCard;
         return (
           <PostCard
             location={props.location}

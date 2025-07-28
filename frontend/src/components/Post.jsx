@@ -151,7 +151,7 @@ function Comments({
         if (res.status === 500) {
           setError500Msg(true);
         } else if (res.status === 503) {
-          setError503(true)
+          setError503(true);
         }
         console.error(data.error);
       }
@@ -237,16 +237,12 @@ function Comments({
                 currentLength={commentText.length}
                 maxLength={limitedCharComment}
               />
-              {/* <button className="comment-submit-icon" type="submit">
-                <img src="/media/images/enter.svg" />
-              </button> */}
             </div>
           )}
         </form>
       ) : (
         <div className="comment-login-msg">Sign in to comment</div>
       )}
-
       {commentsLoading ? (
         <Loading />
       ) : (
@@ -270,8 +266,6 @@ function Comments({
               setStart={setStart}
               error500Msg={error500Msg}
               setError500Msg={setError500Msg}
-              error500Page={error500Page}
-              setError500Page={setError500Page}
               error503={error503}
               setError503={setError503}
             />
@@ -304,7 +298,14 @@ export default function Post() {
   const query = new URLSearchParams(location.search);
   const { postId } = useParams();
   const { setShowPopup } = useContext(UIContext);
-  const { error500Msg, setError500Msg, error500Page, setError500Page, error503, setError503 } = useContext(ErrorContext);
+  const {
+    error500Msg,
+    setError500Msg,
+    error500Page,
+    setError500Page,
+    error503,
+    setError503,
+  } = useContext(ErrorContext);
   const limitedCharBody = 200;
 
   const handlePropagation = (e) => {
@@ -348,7 +349,7 @@ export default function Post() {
             setError503(true);
           }
           setPostInfo(null);
-          console.error(data.error)
+          console.error(data.error);
         }
       } catch (err) {
         //backend down; no internet
@@ -524,9 +525,7 @@ export default function Post() {
             currentUser={currentUser}
             setShowLogin={setShowLogin}
             token={token}
-            error500Msg={error500Msg}
             setError500Msg={setError500Msg}
-            error500Page={error500Page}
             setError500Page={setError500Page}
             error503={error503}
             setError503={setError503}
