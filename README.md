@@ -7,7 +7,7 @@
 ## Features
 * Showcase user-created tech projects with demo
 * Post and answer technical questions
-* Browse projects by category or tag
+* Browse projects and questions by category or tag
 * Customizable user profiles
 * Commenting and upvote system
 * User authentication
