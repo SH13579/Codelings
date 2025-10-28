@@ -1,10 +1,20 @@
 # Codelings
+***A place for tech students to showcase their work and exchange knowledge***
 
-# Description/Goal
-**A tech community platform dedicated to allowing students to showcase their projects, explore innovative work from others, and ask questions to deepen their knowledge and skills**
+## Description
+**Codelings is a tech community platform dedicated to allowing students to showcase their projects, explore innovative work from others, and ask questions to deepen their knowledge and skills**
 
-# How It's Made
-**Technologies Used: HTML, CSS, Javascript, React, Python, Supabase, Flask**
+## Features
+* Showcase user-created tech projects with demo
+* Post and answer technical questions
+* Browse projects by category or tag
+* Customizable user profiles
+* Commenting and upvote system
+* User authentication
+
+## How It's Made
+* **Frontend:** HTML, CSS, Javascript, React
+* **Backend:** Python, Supabase, Flask
 
 
 
