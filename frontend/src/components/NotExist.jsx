@@ -8,7 +8,7 @@ export default function NotExist({ msg }) {
     <div className="not-exist-wrapper">
       <img
         className="exclamation-point"
-        src="/media/images/exclamation-point.svg"
+        src="/public/images/exclamation-point.svg"
       />
       <h2 className="not-exist-msg">{msg}</h2>
       <button className="not-exist-button" onClick={() => navigate("/")}>

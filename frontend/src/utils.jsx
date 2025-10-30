@@ -1,5 +1,5 @@
 import React, { useEffect, createContext } from "react";
-import empty_logo from "../media/images/empty.svg";
+import empty_logo from "../public/images/empty.svg";
 
 export function useExitListener(setCond, ref) {
   useEffect(() => {

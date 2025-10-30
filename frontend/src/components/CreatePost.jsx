@@ -89,7 +89,7 @@ const MultiselectDropdown = ({
         </span>
         <img
           className="dropdown-arrow"
-          src="/media/images/dropdown-arrow.svg"
+          src="/public/images/dropdown-arrow.svg"
           onClick={() =>
             tags.length === 0
               ? setShowDropdown(false)
@@ -353,7 +353,7 @@ const PostedMessage = ({ setClickCreatePost }) => {
       </button>
       <div className="post-success-wrapper">
         <div className="success-logo-wrapper">
-          <img className="success-logo" src="/media/images/success.svg" />
+          <img className="success-logo" src="/public/images/success.svg" />
         </div>
         <h3>Your submission has been sent</h3>
       </div>

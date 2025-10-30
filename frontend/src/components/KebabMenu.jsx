@@ -34,7 +34,7 @@ export default function KebabMenu({ onEdit, onDelete }) {
               setMenuOpen(false);
             }}
           >
-            <img className="edit-icon" src="/media/images/edit.svg" />
+            <img className="edit-icon" src="/public/images/edit.svg" />
             Edit
           </div>
           <div
@@ -46,7 +46,7 @@ export default function KebabMenu({ onEdit, onDelete }) {
               setMenuOpen(false);
             }}
           >
-            <img className="delete-icon" src="/media/images/delete-icon.svg" />
+            <img className="delete-icon" src="/public/images/delete-icon.svg" />
             Delete
           </div>
         </div>

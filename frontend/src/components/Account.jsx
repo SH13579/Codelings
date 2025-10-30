@@ -245,7 +245,7 @@ function RegisterPage({ setLoginOrRegister, setShowLogin, setError503 }) {
     return (
       <div className="register-success-wrapper">
         <div className="success-logo-wrapper">
-          <img className="success-logo" src="/media/images/success.svg" />
+          <img className="success-logo" src="/public/images/success.svg" />
         </div>
         <h2 className="register-success">Thank you for registering</h2>
         <button

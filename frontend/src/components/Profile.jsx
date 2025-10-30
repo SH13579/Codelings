@@ -233,17 +233,17 @@ export default function Profile() {
   const navbar_sections = [
     {
       sectionDbName: "project",
-      imagePath: "/media/images/projects-logo.svg",
+      imagePath: "/public/images/projects-logo.svg",
       sectionName: "Projects",
     },
     {
       sectionDbName: "qna",
-      imagePath: "/media/images/askAnswer.svg",
+      imagePath: "/public/images/askAnswer.svg",
       sectionName: "Ask & Answer",
     },
     {
       sectionDbName: "liked_posts",
-      imagePath: "/media/images/liked_section_icon.svg",
+      imagePath: "/public/images/liked_section_icon.svg",
       sectionName: "Liked Posts",
       condition: Boolean(currentUser && currentUser.username === username),
     },
@@ -274,7 +274,7 @@ export default function Profile() {
                 <span className="profile-email">
                   <img
                     className="profile-email-logo"
-                    src="/media/images/email-logo.svg"
+                    src="/public/images/email-logo.svg"
                   />
                   {profileInfo.email}
                 </span>
@@ -283,7 +283,7 @@ export default function Profile() {
                 <span className="profile-yos">
                   <img
                     className="profile-yos-logo"
-                    src="/media/images/year-study-logo.svg"
+                    src="/public/images/year-study-logo.svg"
                   />
                   {profileInfo.year_of_study}
                 </span>
@@ -297,7 +297,7 @@ export default function Profile() {
                 >
                   <img
                     className="profile-github-logo"
-                    src="/media/images/github-logo.svg"
+                    src="/public/images/github-logo.svg"
                   />
                 </a>
               )}

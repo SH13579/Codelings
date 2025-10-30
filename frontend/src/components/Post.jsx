@@ -167,7 +167,7 @@ function Comments({
             {filter}
             <img
               className="dropdown-arrow"
-              src="/media/images/dropdown-arrow.svg"
+              src="/public/images/dropdown-arrow.svg"
               alt="Dropdown"
             />
           </div>
@@ -503,12 +503,12 @@ export default function Post() {
                 )
               }
               className={liked ? "upvote-icon-liked" : "upvote-icon"}
-              src="/media/images/thumbs-up.svg"
+              src="/public/images/thumbs-up.svg"
             />
             <div className="upvote-count">{likeCount}</div>
           </span>
           <span className="comments">
-            <img className="comments-icon" src="/media/images/comments.svg" />
+            <img className="comments-icon" src="/public/images/comments.svg" />
             <div className="comment-count">{postInfo.comments_count}</div>
           </span>
         </div>
