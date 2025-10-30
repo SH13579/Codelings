@@ -16,54 +16,30 @@ from urllib.parse import urlparse
 app = Flask(__name__)
 CORS(app)
 
-# DB_HOST = 'ep-noisy-glitter-a54at3s3-pooler.us-east-2.aws.neon.tech'
-# DB_NAME = 'codelings'
-# DB_USER = os.getenv('PG_NEON_USER')
-# DB_PASS = os.getenv('PG_NEON_PASSWORD') #access environment variable PG_PASSWORD
-# DB_PORT = '5432'
-
 load_dotenv()
 
-DB_HOST = "localhost"
-DB_NAME = "codelings"
-DB_USER = "postgres"
-DB_PASS = os.getenv("PG_PASSWORD")  # access environment variable PG_PASSWORD
-DB_PORT = "5432"
-SECRET_KEY = "codelings541"
+DB_HOST = os.getenv("DB_HOST")
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_PORT = os.getenv("DB_PORT")
 
-# Fetch variables
-# USER = os.getenv("user")
-# PASSWORD = os.getenv("password")
-# HOST = os.getenv("host")
-# PORT = os.getenv("port")
-# DBNAME = os.getenv("dbname")
+# DB_HOST = "localhost"
+# DB_NAME = "codelings"
+# DB_USER = "postgres"
+# DB_PASS = os.getenv("PG_PASSWORD")  # access environment variable PG_PASSWORD
+# DB_PORT = "5432"
+# SECRET_KEY = "codelings541"
 
 # # Connect to the database
-# try:
-#     connection = psycopg2.connect(
-#         user=USER,
-#         password=PASSWORD,
-#         host=HOST,
-#         port=PORT,
-#         dbname=DBNAME
-#     )
-#     print("Connection successful!")
+try:
+    conn = psycopg2.connect(
+        user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT, dbname=DB_NAME
+    )
+    print("Connection successful!")
+except Exception as e:
+    print(f"Failed to connect: {e}")
 
-#     # Create a cursor to execute SQL queries
-#     cursor = connection.cursor()
-
-#     # Example query
-#     cursor.execute("SELECT NOW();")
-#     result = cursor.fetchone()
-#     print("Current Time:", result)
-
-#     # Close the cursor and connection
-#     cursor.close()
-#     connection.close()
-#     print("Connection closed.")
-
-# except Exception as e:
-#     print(f"Failed to connect: {e}")
 
 # env
 # DATABASE_URL=postgresql://postgres:6pg7h9NAsMJcnLRS@db.azxfokxbsfmqibzjduky.supabase.co:5432/postgres
@@ -81,12 +57,12 @@ SECRET_KEY = "codelings541"
 # postgres
 
 # connect to PostgreSQL database
-try:
-    conn = psycopg2.connect(
-        host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASS, port=DB_PORT
-    )
-except Exception as e:
-    print("Error connecting to database:", e)
+# try:
+#     conn = psycopg2.connect(
+#         host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASS, port=DB_PORT
+#     )
+# except Exception as e:
+#     print("Error connecting to database:", e)
 
 # connect to Supabase storage
 SUPABASE_URL = "https://azxfokxbsfmqibzjduky.supabase.co"
