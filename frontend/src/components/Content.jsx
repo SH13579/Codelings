@@ -214,13 +214,13 @@ export default function Content() {
   const navbar_sections = [
     {
       sectionDbName: "project",
-      imagePath: "/public/images/projects-logo.svg",
+      imagePath: "/images/projects-logo.svg",
       sectionName: "Projects",
       subsections: projectTags,
     },
     {
       sectionDbName: "qna",
-      imagePath: "/public/images/askAnswer.svg",
+      imagePath: "/images/askAnswer.svg",
       sectionName: "Ask & Answer",
       subsections: askAnswerTags,
     },

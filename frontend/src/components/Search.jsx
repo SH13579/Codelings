@@ -66,17 +66,17 @@ export default function Search() {
   const navbar_sections = [
     {
       sectionDbName: "project",
-      imagePath: "/public/images/projects-logo.svg",
+      imagePath: "/images/projects-logo.svg",
       sectionName: "Projects",
     },
     {
       sectionDbName: "qna",
-      imagePath: "/public/images/askAnswer.svg",
+      imagePath: "/images/askAnswer.svg",
       sectionName: "Ask & Answer",
     },
     {
       sectionDbName: "profile",
-      imagePath: "/public/images/profile-icon.svg",
+      imagePath: "/images/profile-icon.svg",
       sectionName: "Profiles",
     },
   ];

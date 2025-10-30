@@ -6,10 +6,7 @@ export default function NotExist({ msg }) {
   const navigate = useNavigate();
   return (
     <div className="not-exist-wrapper">
-      <img
-        className="exclamation-point"
-        src="/public/images/exclamation-point.svg"
-      />
+      <img className="exclamation-point" src="/images/exclamation-point.svg" />
       <h2 className="not-exist-msg">{msg}</h2>
       <button className="not-exist-button" onClick={() => navigate("/")}>
         Back to Home

@@ -11,7 +11,7 @@ export default function Footer() {
           href="https://github.com/jpljason/Skill-Exchange/tree/main"
           target="_blank"
         >
-          <img className="github-logo" src="/public/images/github-logo.svg" />
+          <img className="github-logo" src="/images/github-logo.svg" />
         </a>
       </div>
     </section>

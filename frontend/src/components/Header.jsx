@@ -278,7 +278,7 @@ export default function Header() {
           </Link>
           <a onClick={() => signOut(navigate)} className="dropdown-signout">
             <div className="dropdown-icons">
-              <img className="sign-out-svg" src="/public/images/sign-out.svg" />
+              <img className="sign-out-svg" src="/images/sign-out.svg" />
             </div>
             <div className="dropdown-logout">Sign Out</div>
           </a>
@@ -322,7 +322,7 @@ export default function Header() {
           onClick={() => refreshPage(e, "/")}
           className="site-info"
         >
-          <img className="site-logo" src="/public/images/site-logo.svg" />
+          <img className="site-logo" src="/images/site-logo.svg" />
           <h2 className="site-name">Codelings</h2>
         </Link>
         {error500Msg && (

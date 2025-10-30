@@ -7,7 +7,7 @@ export default function NotFound404() {
   return (
     <section className="notfound-wrapper">
       <h1 className="notfound-header">
-        4<img className="notfound-svg" src="/public/images/notfound.svg" />4
+        4<img className="notfound-svg" src="/images/notfound.svg" />4
       </h1>
       <h2>Page Not Found</h2>
       <button onClick={() => navigate("/")} className="notfound-button">

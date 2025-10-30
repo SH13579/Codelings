@@ -126,7 +126,7 @@ function RegisterForm({ msg, setMsg, setLoginOrRegister }) {
   const [register, setRegister] = useState({
     username: "",
     email: "",
-    pfp: "https://azxfokxbsfmqibzjduky.supabase.co/storage/v1/object/public/uploads/users-pfp/Default_pfp.svg",
+    pfp: "https://azxfokxbsfmqibzjduky.supabase.co/storage/v1/object/uploads/users-pfp/Default_pfp.svg",
     password: "",
     confirmPassword: "",
   });
@@ -245,7 +245,7 @@ function RegisterPage({ setLoginOrRegister, setShowLogin, setError503 }) {
     return (
       <div className="register-success-wrapper">
         <div className="success-logo-wrapper">
-          <img className="success-logo" src="/public/images/success.svg" />
+          <img className="success-logo" src="/images/success.svg" />
         </div>
         <h2 className="register-success">Thank you for registering</h2>
         <button

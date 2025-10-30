@@ -77,12 +77,12 @@ export default function PostCard(props) {
                 )
               }
               className={liked ? "upvote-icon-liked" : "upvote-icon"}
-              src="/public/images/thumbs-up.svg"
+              src="/images/thumbs-up.svg"
             />
             <div className="upvote-count">{likeCount}</div>
           </span>
           <span className="comments">
-            <img className="comments-icon" src="/public/images/comments.svg" />
+            <img className="comments-icon" src="/images/comments.svg" />
             <div className="comment-count">{props.comments_count}</div>
           </span>
         </div>
