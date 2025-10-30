@@ -7,13 +7,12 @@ import { UserContext, useExitListener, ErrorContext } from "../utils";
 function LoginPage({
   setLoginOrRegister,
   setShowLogin,
-  error503,
   setError503,
+  setToken,
 }) {
   const [msg, setMsg] = useState(null);
   const loginRef = useRef(null);
   const navigate = useNavigate();
-  const { setCurrentUser } = useContext(UserContext);
 
   //click anywhere outside of the box and it will exit out
   useExitListener(setShowLogin, loginRef);
@@ -48,6 +47,7 @@ function LoginPage({
       if (res.ok) {
         //codes 200(ok), 201(created)
         sessionStorage.setItem("token", data.token);
+        setToken(data.token);
         setShowLogin(false);
         navigate("/");
       } else {
@@ -72,15 +72,17 @@ function LoginPage({
     <div>
       <div className="blur"></div>
       <div ref={loginRef} className="account-container">
-        <button
-          type="button"
-          className="exit-button"
-          onClick={() => {
-            setShowLogin(false);
-          }}
-        >
-          &times;
-        </button>
+        {setShowLogin && (
+          <button
+            type="button"
+            className="exit-button"
+            onClick={() => {
+              setShowLogin(false);
+            }}
+          >
+            &times;
+          </button>
+        )}
         <form className="form-section" onSubmit={handleLogin}>
           <h2 className="form-title">Sign in</h2>
           {msg && <div className="error-message">{msg}</div>}
@@ -176,7 +178,7 @@ function RegisterForm({ msg, setMsg, setLoginOrRegister }) {
     } catch (err) {
       console.error("Error:" + err.message);
       setMsg(
-        "The service is temporariliy unavailable. Please try again later."
+        "Error 503. The service is temporariliy unavailable. Please try again later."
       );
       setError503(true);
     }
@@ -231,12 +233,7 @@ function RegisterForm({ msg, setMsg, setLoginOrRegister }) {
   );
 }
 
-function RegisterPage({
-  setLoginOrRegister,
-  setShowLogin,
-  error503,
-  setError503,
-}) {
+function RegisterPage({ setLoginOrRegister, setShowLogin, setError503 }) {
   const [msg, setMsg] = useState(null);
   const registerRef = useRef(null);
   useExitListener(setShowLogin, registerRef);
@@ -267,15 +264,17 @@ function RegisterPage({
     <div>
       <div className="blur"></div>
       <div ref={registerRef} className="account-container">
-        <button
-          type="button"
-          className="exit-button"
-          onClick={() => {
-            setShowLogin(false);
-          }}
-        >
-          &times;
-        </button>
+        {setShowLogin && (
+          <button
+            type="button"
+            className="exit-button"
+            onClick={() => {
+              setShowLogin(false);
+            }}
+          >
+            &times;
+          </button>
+        )}
         {msg !== "Registration successful!" ? (
           // register, handleChange, handleRegister, msg, setLoginOrRegister
           <RegisterForm
@@ -291,22 +290,21 @@ function RegisterPage({
   );
 }
 
-export default function Account({ setShowLogin }) {
+export default function Account({ setShowLogin, setToken }) {
   const [loginOrRegister, setLoginOrRegister] = useState("login");
-  const { error503, setError503 } = useContext(ErrorContext);
+  const { setError503 } = useContext(ErrorContext);
   console.log("Rendering account");
   return loginOrRegister === "login" ? (
     <LoginPage
       setShowLogin={setShowLogin}
       setLoginOrRegister={setLoginOrRegister}
-      error503={error503}
       setError503={setError503}
+      setToken={setToken}
     />
   ) : (
     <RegisterPage
       setShowLogin={setShowLogin}
       setLoginOrRegister={setLoginOrRegister}
-      error503={error503}
       setError503={setError503}
     />
   );

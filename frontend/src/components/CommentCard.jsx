@@ -70,9 +70,7 @@ export default function CommentCard({
   existingReplyStart,
   setExistingReplyStart,
   //error handling
-  error500Msg,
   setError500Msg,
-  error503,
   setError503,
 }) {
   const isReply = parentComment.parent_comment_id !== null;
@@ -362,9 +360,7 @@ export default function CommentCard({
       existingReplyStart={replyStart}
       setExistingReplyStart={setReplyStart}
       //error handling
-      error500Msg={error500Msg}
       setError500Msg={setError500Msg}
-      error503={error503}
       setError503={setError503}
     />
   ));
@@ -376,7 +372,7 @@ export default function CommentCard({
           className="user-info"
           onClick={(e) => handleNavigating(e, navigate, parentComment.name)}
         >
-          <img className="pfp" src={`/media/images/${parentComment.pfp}`} />
+          <img className="pfp" src={`${parentComment.pfp}`} />
           <div className="user-name">{parentComment.name}</div>
         </div>
         <div className="post-date">

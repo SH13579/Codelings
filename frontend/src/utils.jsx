@@ -1,7 +1,11 @@
-import React, { useEffect, createContext, useRef } from "react";
+import React, { useEffect, createContext } from "react";
+import empty_logo from "../media/images/empty.svg";
 
 export function useExitListener(setCond, ref) {
   useEffect(() => {
+    if (!setCond || !ref) {
+      return;
+    }
     //handles click outside of the box
     function handleClickOutside(event) {
       if (
@@ -46,7 +50,7 @@ export function useExitListenerWithAlert(setAlert, ref) {
 export const EmptyContainer = () => {
   return (
     <div className="empty-container-wrapper">
-      <img className="empty-icon" src="../media/images/empty.svg" />
+      <img className="empty-icon" src={empty_logo} />
       <div>Empty here...</div>
     </div>
   );

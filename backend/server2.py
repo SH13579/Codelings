@@ -1,0 +1,1346 @@
+from flask import Flask, request, jsonify
+import psycopg2
+from flask_cors import CORS
+import datetime
+import os
+import jwt
+from functools import wraps
+import math
+import time
+import json
+from werkzeug.security import generate_password_hash, check_password_hash
+from supabase import create_client, Client
+from urllib.parse import urlparse
+
+app = Flask(__name__)
+CORS(app)
+
+# DB_HOST = 'ep-noisy-glitter-a54at3s3-pooler.us-east-2.aws.neon.tech'
+# DB_NAME = 'codelings'
+# DB_USER = os.getenv('PG_NEON_USER')
+# DB_PASS = os.getenv('PG_NEON_PASSWORD') #access environment variable PG_PASSWORD
+# DB_PORT = '5432'
+
+DB_HOST = "localhost"
+DB_NAME = "codelings"
+DB_USER = "postgres"
+DB_PASS = os.getenv("PG_PASSWORD")  # access environment variable PG_PASSWORD
+DB_PORT = "5432"
+SECRET_KEY = "codelings541"
+
+# connect to PostgreSQL database
+try:
+    conn = psycopg2.connect(
+        host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASS, port=DB_PORT
+    )
+except Exception as e:
+    print("Error connecting to database:", e)
+
+# connect to Supabase storage
+SUPABASE_URL = "https://azxfokxbsfmqibzjduky.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6eGZva3hic2ZtcWliempkdWt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzMyNjgsImV4cCI6MjA2ODYwOTI2OH0.9PL3bH-aMUGoleViasmPKGoE2AKTWFBOkEjfEKCqt9U"
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split()[1]
+
+        if not token:
+            return jsonify({"error": "Missing token"}), 401
+
+        try:
+            decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        except jwt.ExpiredSignatureError:
+            return jsonify({"error": "Token expired"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+        return f(decoded, *args, **kwargs)
+
+    return decorated
+
+
+def token_optional(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        decoded = None
+        auth_header = request.headers.get("Authorization")
+        token = None
+
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split()[1]
+        else:
+            return
+
+        if token:
+            try:
+                decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            except jwt.ExpiredSignatureError:
+                pass
+            except jwt.InvalidTokenError:
+                pass
+
+        return f(decoded, *args, **kwargs)
+
+    return decorated
+
+
+# remove a file from the supabase storage
+def removeFile(url):
+    base_segment = "/storage/v1/object/public/"
+    if base_segment not in url:
+        return None, None
+
+    # remove the question mark at the end of the url, supabase requires the EXACT path when removing a file
+    url = urlparse(url.rstrip("?"))
+    relative_path = url.path.split(base_segment)[1]
+    parts = relative_path.split("/", 1)
+    if len(parts) != 2:
+        return None, None
+
+    bucket, file_path = parts
+
+    response = supabase.storage.from_(bucket).remove(file_path)
+
+    if not response:
+        return None, None
+
+
+# route to handle registration
+@app.route("/register", methods=["POST"])
+def register():
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    data = request.json
+    username = data.get("username")
+    email = data.get("email")
+    password = data.get("password")
+    confirm_password = data.get("confirm_password")
+    pfp = data.get("pfp")
+
+    # codes error type: 400(bad request), 401(invalid credentials), 409(conflict, info already taken), 500(server error)
+    try:
+        # if fields are empty
+        if not username or not email or not password or not confirm_password:
+            return jsonify({"error": "Please fill in the blanks!"}), 400
+        # if password does not match with confirm_password
+        if password != confirm_password:
+            return jsonify({"error": "Passwords do not match!"}), 400
+
+        with conn.cursor() as cursor:  # "with" closes cursor automatically at end of block
+            # hash the password to pass into database
+            hashed_password = generate_password_hash(password)
+            # check if username is taken
+            cursor.execute(
+                "SELECT * FROM users WHERE username =%s", (username,)
+            )  # single element tuple. psycopg2 only accepts tuples
+            if (
+                cursor.fetchone()
+            ):  # fetch from database (tuple) and check if username exists
+                return jsonify({"error": "Username is taken"}), 409
+
+            # check if email is taken
+            cursor.execute(
+                "SELECT * FROM users WHERE email =%s", (email,)
+            )  # single element tuple. psycopg2 only accepts tuples
+            if (
+                cursor.fetchone()
+            ):  # fetch from database (tuple) and check if email exists
+                return jsonify({"error": "Email is taken"}), 409
+
+            # insert new account
+            cursor.execute(
+                "INSERT INTO users (username, email, password, profile_picture) VALUES (%s, %s, %s, %s)",
+                (username, email, hashed_password, pfp),
+            )
+            cursor.execute()
+        conn.commit()
+        return jsonify({"message": "User registered successfully"}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# route to handle logging in
+@app.route("/login", methods=["POST"])
+def login():
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    data = request.json
+    username = data.get("username")
+    password = data.get("password")  # reminder to hash passwords and sensitive info
+
+    try:
+        # if fields are empty
+        if not username or not password:
+            return jsonify({"error": "Please fill in the blanks!"}), 400
+
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT id, password FROM users WHERE username=%s",
+                (username,),
+            )
+            user = cursor.fetchone()
+            if user and check_password_hash(
+                user[1], password
+            ):  # check if username and hashed password is same as password inserted
+                token = jwt.encode(
+                    {
+                        "user_id": user[0],
+                        "exp": datetime.datetime.now(datetime.timezone.utc)
+                        + datetime.timedelta(seconds=30),
+                    },
+                    SECRET_KEY,
+                    algorithm="HS256",
+                )
+                return jsonify({"token": token})
+            else:
+                return jsonify({"error": "Invalid username or password"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# extend the session by providing a new token when the user prefers not to log out
+@app.route("/extend_session", methods=["POST"])
+@token_required
+def extend_session(decoded):
+    try:
+        new_token = jwt.encode(
+            {
+                "user_id": decoded["user_id"],
+                "exp": datetime.datetime.now(datetime.timezone.utc)
+                + datetime.timedelta(seconds=30),
+            },
+            SECRET_KEY,
+            algorithm="HS256",
+        )
+        return jsonify({"token": new_token})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# fetch the profile of the logged in user
+@app.route("/fetch_user_profile", methods=["GET"])
+@token_required
+def fetch_user_profile(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection is not established"}), 503
+
+    try:
+        user_id = decoded["user_id"]
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT username, profile_picture FROM users WHERE id=%s",
+                (user_id,),
+            )
+            user = cursor.fetchone()
+        return jsonify({"username": user[0], "pfp": user[1]})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# fetch the profile details of any user
+@app.route("/fetch_profile", methods=["GET"])
+def fetch_profile():
+    if not conn:
+        return jsonify({"error": "Database connection is not established"}), 503
+
+    username = request.args.get("username")
+
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                    SELECT 
+                    profiles.about_me, 
+                    profiles.github_link, 
+                    profiles.year_of_study, 
+                    users.profile_picture, 
+                    users.email 
+                    FROM profiles
+                    RIGHT JOIN users ON profiles.user_id = users.id
+                    WHERE users.username = %s
+                    """,
+                (username,),
+            )
+            profile = cursor.fetchone()
+            if not profile:
+                return (
+                    jsonify({"error": "User not found!"}),
+                    404,
+                )
+
+        columns = ["about_me", "github_link", "year_of_study", "pfp", "email"]
+        profile_dict = dict(zip(columns, profile))
+        return jsonify({"profile": profile_dict})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/edit_profile", methods=["POST"])
+@token_required
+def edit_profile(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection is not established"}), 503
+
+    data = request.form
+    user_id = decoded["user_id"]
+    about_me = data.get("about_me")
+    email = data.get("email")
+    github_link = data.get("github_link")
+    year_of_study = data.get("year_of_study")
+    pfp = data.get("pfp")
+    new_pfp_url = None
+
+    try:
+        if len(about_me) > 1000:
+            return jsonify({"error": "About Me cannot be over 1000 characters!"}), 409
+        elif github_link and not github_link.startswith("https://github.com/"):
+            return jsonify({"error": "Invalid Github link"}), 409
+        else:
+            # if user inserted a new profile picture, take that file and give it a unique name to insert into supabase
+            if "pfpFile" in request.files:
+                pfpFile = request.files["pfpFile"]
+                file_ext = pfpFile.filename.split(".")[-1]
+                filename = f"{int(time.time() * 1000)}.{file_ext}"
+                path = f"users-pfp/{filename}"
+
+                # supabase does not allow fileobject to be stored, convert into binary bytes
+                file_bytes = pfpFile.read()
+
+                try:
+                    response = supabase.storage.from_("uploads").upload(
+                        path, file_bytes
+                    )
+
+                    if response:
+                        new_pfp_url = supabase.storage.from_("uploads").get_public_url(
+                            path
+                        )
+                    else:
+                        return jsonify({"error": "Upload failed - empty response"}), 400
+
+                    if (
+                        pfp
+                        != "https://azxfokxbsfmqibzjduky.supabase.co/storage/v1/object/public/uploads/users-pfp/Default_pfp.svg"
+                    ):
+                        removeFile(pfp)
+
+                except Exception as e:
+                    return jsonify({"error": str(e)}), 500
+
+            pfp_url = new_pfp_url if new_pfp_url is not None else pfp
+
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE users SET email = %s, profile_picture = %s WHERE id = %s",
+                    (email, pfp_url, user_id),
+                )
+                cursor.execute(
+                    "UPDATE profiles SET about_me = %s, github_link = %s, year_of_study = %s WHERE user_id = %s",
+                    (about_me, github_link, year_of_study, user_id),
+                )
+            conn.commit()
+            return (
+                jsonify(
+                    {"success": "Your profile has been updated!", "pfp_url": pfp_url}
+                ),
+                201,
+            )
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# -------------------- routes related to posts below ------------------------
+
+
+# route to create a post and insert into database
+@app.route("/create_post", methods=["POST"])
+@token_required
+def post_project(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection is not established"}), 503
+
+    now = datetime.datetime.now()
+    data = request.form
+
+    title = data.get("title")
+    post_type = data.get("post_type")
+    post_date = now.strftime("%Y-%m-%d %H:%M:%S")
+    post_body = data.get("post_body")
+    tags = json.loads(data["tags"])
+    video_file_path = ""
+
+    try:
+        if not post_type:
+            return jsonify({"error": "Post requires a type"}), 400
+        elif not title:
+            return jsonify({"error": "Post needs a title"}), 400
+        elif len(title) > 200:
+            return jsonify({"error": "Post title cannot be over 200 characters"}), 400
+        elif len(post_body) > 4000:
+            return jsonify({"error": "Post body cannot be over 4000 characters"}), 400
+        else:
+            if "demoFile" in request.files:
+                demoFile = request.files["demoFile"]
+                file_ext = demoFile.filename.split(".")[-1]
+                filename = f"{int(time.time() * 1000)}.{file_ext}"
+                path = f"project-demos/{filename}"
+
+                file_bytes = demoFile.read()
+
+                try:
+                    res = supabase.storage.from_("uploads").upload(path, file_bytes)
+
+                    if res:
+                        video_file_path = supabase.storage.from_(
+                            "uploads"
+                        ).get_public_url(path)
+                    else:
+                        return jsonify({"error": "Upload failed - empty response"}), 400
+
+                except Exception as e:
+                    return jsonify({"error": str(e)}), 500
+
+            with conn.cursor() as cursor:
+                user_id = decoded["user_id"]
+                cursor.execute(
+                    "INSERT INTO posts (post_date, post_type, user_id, title, post_body, video_file_path, likes, comments) VALUES (%s, %s, %s, %s, %s, %s, 0, 0) RETURNING id",
+                    (
+                        post_date,
+                        post_type,
+                        user_id,
+                        title,
+                        post_body,
+                        video_file_path,
+                    ),
+                )
+                post_id = cursor.fetchone()[0]
+                # fetch all the ids for the tag names
+                if len(tags) > 0:
+                    post_tags_arr = []
+                    cursor.execute(
+                        "SELECT id FROM tags WHERE tag_name = ANY(%s)", (tags,)
+                    )
+                    tag_ids = cursor.fetchall()
+                    # append it into array of tuple values (post_id, tag_id)
+                    for tag_id in tag_ids:
+                        post_tags_arr.append((post_id, tag_id))
+                    # executemany executes the same statement for all the values in the array
+                    cursor.executemany(
+                        "INSERT INTO post_tags (post_id, tag_id) VALUES (%s, %s)",
+                        post_tags_arr,
+                    )
+            conn.commit()
+            return (
+                jsonify(
+                    {"success": "Your project has been posted", "post_id": post_id}
+                ),
+                201,
+            )
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# changes the date from each row to the difference between date posted and today's date
+def get_post_date(row):
+    now = datetime.datetime.now()
+    time_difference = now - row[1]
+    seconds = round(time_difference.total_seconds())
+    minutes = round(seconds / 60)
+    hours = round(seconds / 3600)
+    days = time_difference.days
+    if minutes < 1:
+        difference = "Just now"
+    elif hours < 1:
+        if minutes <= 1:
+            difference = f"A minute ago"
+        else:
+            difference = f"{minutes} minutes ago"
+    elif hours <= 24:
+        if hours <= 1:
+            difference = f"An hour ago"
+        else:
+            difference = f"{hours} hours ago"
+    else:
+        if days <= 1:
+            difference = f"{days} day ago"
+        else:
+            difference = f"{days} days ago"
+    return difference
+
+
+# turn each row into a object with corresponding dictionary values
+def get_posts_helper(rows, columns):
+    posts = []
+    now = datetime.datetime.now()
+
+    # iterate through columns and fill in the dictionary with each row fetched from rows
+    for row in rows:
+        difference = get_post_date(row)
+        post_dict = dict(zip(columns, row))
+        post_dict["date"] = difference
+
+        posts.append(post_dict)
+
+    return posts
+
+
+# route to fetch projects from database to display on Content.jsx
+@app.route("/get_postsByCategory", methods=["GET"])
+@token_optional
+def get_posts(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    post_type = request.args.get("post_type")
+    start = request.args.get("start")
+    limit = request.args.get("limit")
+    category = request.args.get("category")
+    user_id = decoded["user_id"] if decoded else None
+
+    if not post_type:
+        return jsonify({"error": "Missing post type"}), 400
+    if category not in {"post_date", "likes"}:
+        return jsonify({"error": "Invalid sort category"}), 400
+
+    try:
+        with conn.cursor() as cursor:
+            # psycopg2 doesn't interpolate SQL keywords using {} or %s so we need a string to do it, %s only works for column names or table names
+            query = f"""
+        SELECT 
+          posts.id,
+          posts.post_date,
+          posts.post_type,
+          posts.title,  
+          posts.likes,
+          posts.comments,
+          posts.video_file_path,
+          users.username,
+          users.profile_picture,
+          array_agg(tags.tag_name) AS tag_name,
+          %s IS NOT NULL AND EXISTS (
+            SELECT 1 FROM likes WHERE user_id = %s AND target_id = posts.id AND type = 'posts'
+          ) AS user_liked_post
+        FROM posts
+        JOIN users ON posts.user_id = users.id
+        LEFT JOIN post_tags ON posts.id = post_tags.post_id
+        LEFT JOIN tags ON post_tags.tag_id = tags.id
+        WHERE posts.post_type = %s
+        GROUP BY posts.id, posts.post_date, posts.post_type, posts.title,
+     posts.likes, posts.comments, users.username, users.profile_picture
+        ORDER BY posts.{category} DESC
+        LIMIT %s OFFSET %s
+      """
+            cursor.execute(query, (user_id, user_id, post_type, limit, start))
+
+            rows = cursor.fetchall()  # returns list of tuples;
+
+        columns = [
+            "id",
+            "date",
+            "type",
+            "title",
+            "upvotes",
+            "comments_count",
+            "video",
+            "name",
+            "pfp",
+            "tags",
+            "liked",
+        ]
+
+        posts = get_posts_helper(rows, columns)
+        return jsonify({"posts": posts})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# used to fetch the posts for a specific user on a profile
+@app.route("/get_posts_byUserAndCategory", methods=["GET"])
+@token_optional
+def get_posts_byUser(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    username = request.args.get("username")
+    post_type = request.args.get("post_type")
+    start = request.args.get("start")
+    limit = request.args.get("limit")
+    category = request.args.get("category")
+    user_id = decoded["user_id"] if decoded else None
+
+    # shouldn't directly inject column names or SQL keywords unless safely controlling what's allowed to prevent SQL injection
+    if category not in {"post_date", "likes"}:
+        return jsonify({"error": "Invalid sort category"}), 400
+
+    if not username:
+        return jsonify({"error": "Missing username"}), 400
+    if not post_type:
+        return jsonify({"error": "Missing post type"}), 400
+
+    try:
+        with conn.cursor() as cursor:
+            query = f"""
+        SELECT
+          posts.id,
+          posts.post_date,
+          posts.post_type,
+          posts.title,
+          
+          posts.likes,
+          posts.comments,
+          users.username,
+          users.profile_picture,
+          array_agg(tags.tag_name) AS tag_name,
+          %s IS NOT NULL AND EXISTS (
+            SELECT 1 FROM likes WHERE user_id = %s AND target_id = posts.id AND type = 'posts'
+        ) AS user_liked_post
+        FROM posts 
+        JOIN users on posts.user_id = users.id
+        LEFT JOIN post_tags ON posts.id = post_tags.post_id
+        LEFT JOIN tags ON post_tags.tag_id = tags.id
+        WHERE users.username = %s AND posts.post_type = %s
+        GROUP BY posts.id, posts.post_date, posts.post_type, posts.title,
+        posts.likes, posts.comments, users.username, users.profile_picture
+        ORDER BY posts.{category} DESC
+        LIMIT %s OFFSET %s 
+      """
+            cursor.execute(query, (user_id, user_id, username, post_type, limit, start))
+
+            rows = cursor.fetchall()
+
+        columns = [
+            "id",
+            "date",
+            "type",
+            "title",
+            "upvotes",
+            "comments_count",
+            "name",
+            "pfp",
+            "tags",
+            "liked",
+        ]
+
+        posts = get_posts_helper(rows, columns)
+
+        return jsonify({"posts": posts})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# route to delete post
+@app.route("/delete_post", methods=["DELETE"])
+@token_required
+def delete_post(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    data = request.get_json()
+    post_id = data.get("post_id")
+    video_file_path = data.get("video_file_path")
+
+    try:
+        with conn.cursor() as cursor:
+            user_id = decoded["user_id"]
+            cursor.execute("SELECT user_id FROM posts WHERE id = %s", (post_id,))
+            post_user_id = cursor.fetchone()[0]
+
+            if user_id != post_user_id:
+                return jsonify({"error": "403 Forbidden"}), 403
+
+            cursor.execute("DELETE FROM posts WHERE id = %s", (post_id,))
+            cursor.execute(
+                "DELETE FROM likes WHERE type = 'posts' AND target_id = %s",
+                (post_id,),
+            )
+            conn.commit()
+            if video_file_path:
+                removeFile(video_file_path)
+
+            return jsonify({"success": "Post has been deleted"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# route to get a specific post (after clicking a post in Content.jsx)
+@app.route("/get_specific_post", methods=["GET"])
+@token_optional
+def get_specific_post(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    post_id = request.args.get("post_id")
+    user_id = decoded["user_id"] if decoded else None
+
+    try:
+        # post_type???
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+      SELECT 
+        posts.id, 
+        posts.post_date, 
+        posts.post_type, 
+        posts.title, 
+        posts.post_body, 
+        posts.video_file_path, 
+        posts.likes, 
+        posts.comments, 
+        users.username, 
+        users.profile_picture,
+        array_agg(tags.tag_name) AS tag_name,
+        %s IS NOT NULL AND EXISTS (
+            SELECT 1 FROM likes WHERE user_id = %s AND target_id = %s AND type = 'posts'
+        ) AS user_liked_post
+      FROM posts
+      JOIN users ON posts.user_id = users.id
+      LEFT JOIN post_tags ON post_tags.post_id = posts.id
+      LEFT JOIN tags ON post_tags.tag_id = tags.id
+      WHERE posts.id = %s
+      GROUP BY posts.id, posts.post_date, posts.post_type, posts.title, posts.post_body, posts.video_file_path,
+      posts.likes, posts.comments, users.username, users.profile_picture
+      """,
+                (user_id, user_id, post_id, post_id),
+            )
+
+            row = cursor.fetchone()  # returns 1 row
+            if not row:
+                return jsonify({"error": "Post not found"}), 404
+        columns = [
+            "id",
+            "date",
+            "type",
+            "title",
+            "body",
+            "video",
+            "upvotes",
+            "comments_count",
+            "name",
+            "pfp",
+            "tags",
+            "liked",
+        ]
+
+        posts = get_posts_helper([row], columns)
+
+        return jsonify({"posts": posts})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# route to edit the body of a post
+@app.route("/edit_post", methods=["POST"])
+@token_optional
+def edit_post(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    data = request.get_json()
+    new_post_body = data.get("new_post_body")
+    post_id = request.args.get("post_id")
+    user_id = decoded["user_id"] if decoded else None
+
+    try:
+        if len(new_post_body) > 4000:
+            return jsonify({"error": "Post body cannot be over 4000 characters"}), 400
+
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE posts 
+                SET post_body = %s 
+                WHERE id = %s AND user_id = %s
+                """,
+                (new_post_body, post_id, user_id),
+            )
+
+            conn.commit()
+            return jsonify({"success": "Post edited!"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# -------------------- routes related to comments below ------------------------
+
+
+# route to add comment(s) to a post
+@app.route("/post_comment", methods=["POST"])
+@token_required
+def post_comment(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    now = datetime.datetime.now()
+    comment_date = now.strftime("%Y-%m-%d %H:%M:%S")
+
+    data = request.json
+    comment = data.get("comment_text")
+    post_id = data.get("post_id")
+    parent_comment_id = data.get("parent_comment_id")
+
+    try:
+        # if fields are empty
+        user_id = decoded["user_id"]
+        if not comment:
+            return jsonify({"error": "Please fill in the blanks!"}), 400
+
+        cooldown_seconds = 10
+
+        with conn.cursor() as cursor:
+
+            cursor.execute(
+                "SELECT comment_date FROM comments WHERE user_id = %s ORDER BY comment_date DESC LIMIT 1",
+                (user_id,),
+            )
+            last_comment = cursor.fetchone()
+            if last_comment:
+                last_comment_time = last_comment[0]
+                diff = (now - last_comment_time).total_seconds()
+                if diff < cooldown_seconds:
+                    return jsonify({"error": "You are commenting too quickly!"}), 429
+
+            # insert new comment into comments table THEN immediately fetch the id(necessary if user deletes comment right after adding comment) by SQL code: "RETURNING ID"
+            cursor.execute(
+                "INSERT INTO comments (comment, comment_date, parent_comment_id, user_id, post_id, likes_count, comments_count) VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id",
+                (comment, comment_date, parent_comment_id, user_id, post_id, 0, 0),
+            )
+            new_comment_id = cursor.fetchone()[0]
+
+            # update number of counts in posts table
+            cursor.execute(
+                "UPDATE posts SET comments = comments + 1 WHERE id = %s ", (post_id,)
+            )
+
+            # update number of counts in comments table
+            if parent_comment_id:  # if deleting reply
+                cursor.execute(
+                    "UPDATE comments SET comments_count = comments_count + 1 WHERE id = %s",
+                    (parent_comment_id,),
+                )
+
+            conn.commit()
+
+        return (
+            jsonify(
+                {"success": "Your comment has been posted", "commentId": new_comment_id}
+            ),
+            201,
+        )
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# route to delete comment
+@app.route("/delete_comment", methods=["DELETE"])
+@token_required
+def delete_comment(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    data = request.get_json()
+    comment_id = data.get("comment_id")
+    post_id = data.get("post_id")
+    parent_comment_id = data.get("parent_comment_id")
+    replies_count = int(data.get("replies_count"))
+    decrement = 1
+
+    try:
+        with conn.cursor() as cursor:
+            user_id = decoded["user_id"]
+            cursor.execute("SELECT user_id FROM comments WHERE id = %s", (comment_id,))
+            comment_user_id_row = cursor.fetchone()
+            if comment_user_id_row is None:
+                return jsonify({"error": "Comment not found"}), 404
+            comment_user_id = comment_user_id_row[0]
+
+            # check if commenter is the samee as user logged in
+            if comment_user_id != user_id:
+                return jsonify({"error": "Cannot delete"})
+
+            cursor.execute("DELETE FROM comments WHERE id = %s", (comment_id,))
+            cursor.execute(
+                "DELETE FROM likes WHERE type = 'comments' AND target_id = %s",
+                (comment_id,),
+            )
+
+            # if deleting parent comment, include replies_count and update posts table
+            if parent_comment_id is None:
+                decrement = replies_count + 1
+                cursor.execute(
+                    "UPDATE posts SET comments = comments - %s WHERE id = %s",
+                    (decrement, post_id),
+                )
+
+            # if deleting reply, update comments and posts table
+            elif parent_comment_id:
+                cursor.execute(
+                    "UPDATE comments SET comments_count = comments_count - 1 WHERE id = %s",
+                    (parent_comment_id,),
+                )
+
+                cursor.execute(
+                    "UPDATE posts SET comments = comments - 1 WHERE id = %s",
+                    (post_id,),
+                )
+            conn.commit()
+
+            return jsonify({"success": "Comment deleted successfully"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# route to get comments from a post
+@app.route("/get_comments", methods=["GET"])
+@token_optional
+def get_comments(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    start = int(request.args.get("start"))
+    limit = int(request.args.get("limit"))
+    post_id = request.args.get("post_id")
+    category = request.args.get("category")
+    user_id = decoded["user_id"] if decoded else None
+
+    if category not in {"comment_date", "likes_count"}:
+        return jsonify({"error": "Invalid sort category"}), 400
+
+    try:
+        with conn.cursor() as cursor:
+            # get parents comments, if like count is equal, secondary condition is just return in order of date
+            cursor.execute(
+                f"""
+                SELECT comments.id, comments.comment_date, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username,
+                %s IS NOT NULL AND EXISTS (
+                    SELECT 1 FROM likes WHERE user_id = %s AND target_id = comments.id AND type = 'comments'
+                ) AS user_liked_comment
+                FROM comments
+                JOIN users ON comments.user_id = users.id
+                WHERE comments.post_id = %s AND comments.parent_comment_id IS NULL
+                ORDER BY comments.{category} DESC {",comments.comment_date DESC" if category == "likes_count" else ""}
+                LIMIT %s OFFSET %s
+            """,
+                (user_id, user_id, post_id, limit, start),
+            )
+            parents = cursor.fetchall()
+            columns = [
+                "comment_id",
+                "date",
+                "comment",
+                "parent_comment_id",
+                "upvotes",
+                "comments_count",
+                "name",
+                "liked",
+            ]
+            parents_list = get_posts_helper(parents, columns)
+            for parent in parents_list:
+                parent["has_replies"] = int(parent["comments_count"]) > 0
+
+            return jsonify({"comments": parents_list})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# route to get replies from a comment
+@app.route("/get_replies", methods=["GET"])
+@token_optional
+def get_replies(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    start = int(request.args.get("start"))
+    limit = int(request.args.get("limit"))
+    parent_comment_id = request.args.get("parent_comment_id")
+    user_id = decoded["user_id"] if decoded else None
+
+    try:
+
+        with conn.cursor() as cursor:
+            # get parents comments
+            cursor.execute(
+                """
+                SELECT comments.id, comments.comment_date, comments.comment, comments.parent_comment_id, comments.likes_count, comments.comments_count, users.username,
+                %s IS NOT NULL AND EXISTS (
+                    SELECT 1 FROM likes WHERE user_id = %s AND target_id = comments.id AND type = 'comments'
+                ) AS user_liked_reply
+                FROM comments
+                JOIN users ON comments.user_id = users.id
+                WHERE comments.parent_comment_id = %s
+                ORDER BY comments.id ASC
+                LIMIT %s OFFSET %s
+            """,
+                (user_id, user_id, parent_comment_id, limit, start),
+            )
+            replies = cursor.fetchall()
+            columns = [
+                "comment_id",
+                "date",
+                "comment",
+                "parent_comment_id",
+                "upvotes",
+                "comments_count",
+                "name",
+                "liked",
+            ]
+            replies_list = get_posts_helper(replies, columns)
+
+            return jsonify({"replies": replies_list})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# route to edit a comment
+@app.route("/edit_comment", methods=["POST"])
+@token_optional
+def edit_comment(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    data = request.get_json()
+    comment_id = data.get("comment_id")
+    new_comment = data.get("new_comment")
+    # post_id = request.args.get("post_id")
+    user_id = decoded["user_id"] if decoded else None
+
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE comments
+                SET comment = %s
+                WHERE id = %s AND user_id = %s
+                """,
+                (new_comment, comment_id, user_id),
+            )
+
+            conn.commit()
+            return jsonify({"success": "Comment edited!"})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# allows the user to like and unlike a post
+@app.route("/like_unlike", methods=["POST"])
+@token_required
+def like_unlike_post(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    data = request.get_json()
+    user_id = decoded["user_id"]
+    target_id = data.get("target_id")
+    type = data.get("type")
+    action = ""
+
+    if type not in {"posts", "comments"}:
+        return jsonify({"error": "Invalid type"}), 400
+
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT id FROM likes WHERE user_id = %s AND target_id = %s AND type = %s",
+                (user_id, target_id, type),
+            )
+            if cursor.fetchone():
+                cursor.execute(
+                    "DELETE FROM likes WHERE user_id = %s AND target_id = %s AND type = %s",
+                    (user_id, target_id, type),
+                )
+                likes_column = "likes" if type == "posts" else "likes_count"
+                query = f"""
+                UPDATE {type}
+                SET {likes_column} = {likes_column} - 1
+                WHERE id = %s
+                """
+                cursor.execute(query, (target_id,))
+                action = "unliked"
+            else:
+                cursor.execute(
+                    "INSERT INTO likes (user_id, type, target_id) VALUES (%s, %s, %s)",
+                    (user_id, type, target_id),
+                )
+                likes_column = "likes" if type == "posts" else "likes_count"
+                query = f"""
+                UPDATE {type}
+                SET {likes_column} = {likes_column} + 1
+                WHERE id = %s
+                """
+                cursor.execute(query, (target_id,))
+                action = "liked"
+
+            conn.commit()
+            return jsonify({"success": action}), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+# fetch all the posts the user liked
+@app.route("/fetch_liked_posts", methods=["GET"])
+@token_required
+def fetch_liked_posts(decoded):
+
+    limit = request.args.get("limit")
+    offset = request.args.get("offset")
+    user_id = decoded["user_id"]
+    try:
+        with conn.cursor() as cursor:
+            query = f"""
+                SELECT
+                    posts.id,
+                    posts.post_date,
+                    posts.post_type,
+                    posts.title,
+                    posts.likes,
+                    posts.comments,
+                    users.username,
+                    users.profile_picture,
+                    array_agg(DISTINCT tags.tag_name) AS tag_name,
+                    true AS user_liked_post
+                FROM posts
+                JOIN users ON posts.user_id = users.id
+                JOIN likes ON posts.id = likes.target_id
+                LEFT JOIN post_tags ON posts.id = post_tags.post_id
+                LEFT JOIN tags ON post_tags.tag_id = tags.id
+                WHERE likes.user_id = %s AND likes.type = 'posts'
+                GROUP BY posts.id, users.username, users.profile_picture
+                LIMIT %s OFFSET %s
+            """
+            cursor.execute(query, (user_id, limit, offset))
+            liked_posts = cursor.fetchall()
+
+        columns = [
+            "id",
+            "date",
+            "type",
+            "title",
+            "upvotes",
+            "comments_count",
+            "name",
+            "pfp",
+            "tags",
+            "liked",
+        ]
+
+        liked_posts_arr = get_posts_helper(liked_posts, columns)
+
+        return jsonify({"liked_posts": liked_posts_arr})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# fetches the posts that contains the keyword the user entered
+@app.route("/search_posts", methods=["GET"])
+@token_optional
+def search_posts(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    search_term = request.args.get("search_term")
+    limit = request.args.get("limit")
+    offset = request.args.get("offset")
+    post_type = request.args.get("post_type")
+    user_id = decoded["user_id"] if decoded else None
+
+    try:
+        with conn.cursor() as cursor:
+            query = f"""
+                    SELECT 
+                      posts.id,
+                      posts.post_date,
+                      posts.post_type,
+                      posts.title, 
+                      posts.likes,
+                      posts.comments,
+                      users.username,
+                      users.profile_picture,
+                      array_agg(tags.tag_name) AS tag_name,
+                      %s IS NOT NULL AND EXISTS (
+                        SELECT 1 FROM likes WHERE user_id = %s AND target_id = posts.id AND type = 'posts'
+                    ) AS user_liked_post
+                    FROM posts
+                    JOIN users ON posts.user_id = users.id
+                    LEFT JOIN post_tags ON post_tags.post_id = posts.id
+                    LEFT JOIN tags ON post_tags.tag_id = tags.id
+                    WHERE posts.title LIKE %s AND posts.post_type = %s
+                    GROUP BY posts.id, posts.post_date, posts.post_type, posts.title,  posts.likes, posts.comments, users.username, users.profile_picture
+                    LIMIT %s OFFSET %s
+                  """
+            search_str = f"%{search_term}%"
+            cursor.execute(
+                query, (user_id, user_id, search_str, post_type, limit, offset)
+            )
+            posts = cursor.fetchall()
+
+        columns = [
+            "id",
+            "date",
+            "type",
+            "title",
+            "upvotes",
+            "comments_count",
+            "name",
+            "pfp",
+            "tags",
+            "liked",
+        ]
+
+        posts_arr = get_posts_helper(posts, columns)
+
+        return jsonify({"posts": posts_arr})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# fetches the profiles that has contains the keyword the user entered
+@app.route("/search_profiles", methods=["GET"])
+def search_profiles():
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    search_term = request.args.get("search_term")
+    limit = request.args.get("limit")
+    offset = request.args.get("offset")
+
+    try:
+        with conn.cursor() as cursor:
+            profiles_arr = []
+            search_str = f"%{search_term}%"
+            cursor.execute(
+                "SELECT id, profile_picture, username FROM users WHERE username LIKE %s LIMIT %s OFFSET %s",
+                (search_str, limit, offset),
+            )
+
+            profiles = cursor.fetchall()
+
+            columns = ["id", "pfp", "name"]
+            for profile in profiles:
+                profiles_dict = dict(zip(columns, profile))
+                profiles_arr.append(profiles_dict)
+
+        return jsonify({"profiles": profiles_arr})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# fetch all the tags on the website
+# @app.route("/fetch_tags", methods=["GET"])
+# def fetch_tags():
+#     if not conn:
+#         return jsonify({"error": "Database connection not established"}), 503
+
+#     try:
+#         with conn.cursor() as cursor:
+#             cursor.execute("SELECT tag_name, post_type FROM tags")
+#             tags = cursor.fetchall()
+#         all_tags = []
+#         for tag in tags:
+#             all_tags.append({"tag_name": tag[0], "post_type": tag[1]})
+
+#         return jsonify({"tags": all_tags})
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
+
+# fetch all the posts for a specific tag
+@app.route("/fetch_specific_tag", methods=["GET"])
+@token_optional
+def fetch_specific_tag(decoded):
+    if not conn:
+        return jsonify({"error": "Database connection not established"}), 503
+
+    target_tag = request.args.get("target_tag")
+    post_type = request.args.get("post_type")
+    start = request.args.get("start")
+    limit = request.args.get("limit")
+    user_id = decoded["user_id"] if decoded else None
+    category = request.args.get("category")
+    categories = ["likes", "post_date"]
+    if category not in categories:
+        return jsonify({"Error: ": "Invalid filter type"})
+
+    try:
+        with conn.cursor() as cursor:
+            query = f"""SELECT 
+                        posts.id,
+                        posts.post_date,
+                        posts.post_type,
+                        posts.title, 
+                        posts.likes,
+                        posts.comments,
+                        users.username,
+                        users.profile_picture,
+                        array_agg(tags.tag_name) AS tag_name,
+                        %s IS NOT NULL AND EXISTS (
+                            SELECT 1 FROM likes WHERE user_id = %s AND target_id = posts.id AND type = 'posts'
+                        ) AS user_liked_post
+                        FROM posts
+                        JOIN users ON posts.user_id = users.id
+                        LEFT JOIN post_tags ON posts.id = post_tags.post_id
+                        LEFT JOIN tags ON post_tags.tag_id = tags.id
+                        WHERE tags.post_type = %s
+                        GROUP BY posts.id, posts.post_date, posts.post_type, posts.title, 
+                        posts.likes, posts.comments,
+                        users.username, users.profile_picture
+                        HAVING %s = ANY(array_agg(tags.tag_name))
+                        ORDER BY posts.{category} DESC
+                        LIMIT %s OFFSET %s"""
+            cursor.execute(
+                query,
+                (user_id, user_id, post_type, target_tag, limit, start),
+            )
+            posts = cursor.fetchall()
+            columns = [
+                "id",
+                "date",
+                "type",
+                "title",
+                "upvotes",
+                "comments_count",
+                "name",
+                "pfp",
+                "tags",
+                "liked",
+            ]
+            posts_arr = get_posts_helper(posts, columns)
+            return jsonify({"posts": posts_arr})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+if __name__ == "__main__":
+    app.run(debug=True)

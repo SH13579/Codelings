@@ -3,6 +3,7 @@ import { useExitListener, useExitListenerWithAlert } from "../utils";
 import { UserContext, UIContext, ErrorContext } from "../utils";
 import { useNavigate } from "react-router-dom";
 import CharCount from "./CharCount";
+import { ViewMoreLoading } from "./Loading";
 
 const MultiselectDropdown = ({
   tags,
@@ -108,7 +109,6 @@ const CreatePostForm = ({
   msg,
   setMsg,
   setClickCreatePost,
-  error503,
   setError503,
 }) => {
   const [projectPost, setProjectPost] = useState({
@@ -124,6 +124,7 @@ const CreatePostForm = ({
   const [selectedTags, setSelectedTags] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [alertMsg, setAlertMsg] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -172,6 +173,7 @@ const CreatePostForm = ({
       formData.append("post_body", projectPost.post_body);
       formData.append("tags", JSON.stringify(selectedTags));
       formData.append("demoFile", projectPost.demoFile);
+      setLoading(true);
       for (const [key, value] of formData.entries()) {
         console.log(`${key}:`, value);
       }
@@ -201,6 +203,8 @@ const CreatePostForm = ({
         setMsg(
           "The service is temporariliy unavailable. Please try again later."
         );
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -291,7 +295,7 @@ const CreatePostForm = ({
           className="project-submit"
           disabled={!projectPost.post_type || !projectPost.post_title}
         >
-          Publish
+          {loading ? <ViewMoreLoading /> : "Publish"}
         </button>
       </form>
       {alertMsg && (
@@ -360,7 +364,7 @@ const PostedMessage = ({ setClickCreatePost }) => {
 export default function CreatePost({ setClickCreatePost }) {
   const { token } = useContext(UserContext);
   const [msg, setMsg] = useState("");
-  const { error503, setError503 } = useContext(ErrorContext);
+  const { setError503 } = useContext(ErrorContext);
 
   console.log("Rendering Create Post");
 
@@ -373,7 +377,6 @@ export default function CreatePost({ setClickCreatePost }) {
           msg={msg}
           setMsg={setMsg}
           setClickCreatePost={setClickCreatePost}
-          error503={error503}
           setError503={setError503}
         />
       ) : (

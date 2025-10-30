@@ -6,7 +6,6 @@ import Loading from "./Loading";
 import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
 import NotExist from "./NotExist";
-import InternalServerError500 from "./InternalServerError500";
 import ServiceUnavailableError503 from "./ServiceUnavailableError503";
 
 export function showDeletePopup(
@@ -172,6 +171,9 @@ export function useFetchProfileInfo(
 ) {
   useEffect(() => {
     async function fetchProfile() {
+      if (!username) {
+        return;
+      }
       setProfileLoading(true);
       try {
         const res = await fetch(
@@ -224,8 +226,7 @@ export default function Profile() {
   const [postFilter, setPostFilter] = useState("Best");
   const location = "profile";
   const { username, currentSection = "project" } = useParams();
-  const { error500Msg, setError500Msg, error503, setError503 } =
-    useContext(ErrorContext);
+  const { setError500Msg, error503, setError503 } = useContext(ErrorContext);
 
   useFetchProfileInfo(username, setProfileInfo, setProfileLoading, setError503);
 

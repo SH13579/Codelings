@@ -24,11 +24,8 @@ function Comments({
   currentUser,
   setShowLogin,
   token,
-  error500Msg,
   setError500Msg,
-  error500Page,
   setError500Page,
-  error503,
   setError503,
 }) {
   const [viewMoreLoading, setViewMoreLoading] = useState(false);
@@ -264,9 +261,7 @@ function Comments({
               setReplyCommentId={setReplyCommentId}
               setParentCommentsList={setParentCommentsList}
               setStart={setStart}
-              error500Msg={error500Msg}
               setError500Msg={setError500Msg}
-              error503={error503}
               setError503={setError503}
             />
           ))}
@@ -434,7 +429,7 @@ export default function Post() {
             }}
             className="user-info"
           >
-            <img className="pfp" src={`/media/images/${postInfo.pfp}`} />
+            <img className="pfp" src={`${postInfo.pfp}`} />
             <span className="user-name">{postInfo.name}</span>
           </div>
           <div className="post-date">
@@ -470,7 +465,6 @@ export default function Post() {
             {/* reminder to remove video for ask & answer section */}
             <video controls>
               <source src={postInfo.video} type="video/mp4" />
-              Your browser does not support the video tag.
             </video>
           </div>
         )}
@@ -527,7 +521,6 @@ export default function Post() {
             token={token}
             setError500Msg={setError500Msg}
             setError500Page={setError500Page}
-            error503={error503}
             setError503={setError503}
           />
         }

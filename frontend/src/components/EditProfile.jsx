@@ -15,9 +15,7 @@ async function handleEditProfile(
   currentUser,
   setCurrentUser,
   setEditProfileLoading,
-  error500Msg,
   setError500Msg,
-  error503,
   setError503
 ) {
   e.preventDefault();
@@ -89,12 +87,7 @@ async function handleEditProfile(
 export default function EditProfile() {
   const { token, setShowLogin, currentUser, setCurrentUser } =
     useContext(UserContext);
-  const { error500Msg, setError500Msg, error503, setError503 } =
-    useContext(ErrorContext);
-  if (!token) {
-    setShowLogin(true);
-    return;
-  }
+  const { setError500Msg, setError503 } = useContext(ErrorContext);
   const [msg, setMsg] = useState(null);
   const [profileInfo, setProfileInfo] = useState({
     about_me: "",
@@ -105,17 +98,26 @@ export default function EditProfile() {
     pfpFile: null,
   });
   const [profileLoading, setProfileLoading] = useState(true);
-  // const username = JSON.parse(sessionStorage.getItem("currentUser")).username;
   const [imagePreview, setImagePreview] = useState(null);
   const maxAboutMeLength = 1000;
   const [editProfileLoading, setEditProfileLoading] = useState(false);
+
+  useEffect(() => {
+    if (!token) {
+      setShowLogin(true);
+    }
+  }, [token]);
 
   useEffect(() => {
     console.log(profileInfo);
   }, [profileInfo]);
 
   //fetch all the details for the profile of the current user
-  useFetchProfileInfo(currentUser.username, setProfileInfo, setProfileLoading);
+  useFetchProfileInfo(currentUser?.username, setProfileInfo, setProfileLoading);
+
+  if (!token) {
+    return null;
+  }
 
   function handleChange(e) {
     if (e.target.name === "pfp") {
@@ -145,7 +147,7 @@ export default function EditProfile() {
   return profileLoading ? (
     <Loading />
   ) : (
-    token && (
+    currentUser && (
       <section className="edit-profile-wrap">
         <h2 className="edit-profile-header">Edit Profile</h2>
         <div className="edit-profile-sec">
@@ -154,7 +156,10 @@ export default function EditProfile() {
               className="profile-pfp"
               src={imagePreview || profileInfo.pfp}
             />
-            <label for="edit-profile-pfp-file" class="custom-file-upload">
+            <label
+              htmlFor="edit-profile-pfp-file"
+              className="custom-file-upload"
+            >
               Change Photo
             </label>
             <input
@@ -176,9 +181,7 @@ export default function EditProfile() {
                 currentUser,
                 setCurrentUser,
                 setEditProfileLoading,
-                error500Msg,
                 setError500Msg,
-                error503,
                 setError503
               )
             }

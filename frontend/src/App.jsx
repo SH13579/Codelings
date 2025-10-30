@@ -11,9 +11,10 @@ import EditProfile from "./components/EditProfile";
 import NotFound404 from "./components/NotFound404";
 import { UserContext, UIContext, ErrorContext } from "./utils";
 import "./styles/App.css";
+import { jwtDecode } from "jwt-decode";
 
 function App() {
-  const token = sessionStorage.getItem("token");
+  const [token, setToken] = useState(() => sessionStorage.getItem("token"));
   const cachedUser = sessionStorage.getItem("currentUser");
   const [currentUser, setCurrentUser] = useState(JSON.parse(cachedUser));
   const [showPopup, setShowPopup] = useState(null);
@@ -79,6 +80,7 @@ function App() {
         <UserContext.Provider
           value={{
             token,
+            setToken,
             currentUser,
             setCurrentUser,
             showLogin,
@@ -110,7 +112,7 @@ function App() {
                   path="/search/:searchTerm/:currentSection?"
                   element={<Search />}
                 />
-                <Route path="/" element={<NotFound404 />} />
+                {/* <Route path="/" element={<NotFound404 />} /> */}
                 <Route path="*" element={<NotFound404 />} />
               </Routes>
             </div>

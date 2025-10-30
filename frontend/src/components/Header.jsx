@@ -8,12 +8,84 @@ import {
   UIContext,
   ErrorContext,
 } from "../utils";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
+async function extendSession(token, setToken) {
+  try {
+    const res = await fetch("http://localhost:5000/extend_session", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      sessionStorage.setItem("token", data.token);
+      setToken(data.token);
+    }
+  } catch (err) {
+    console.log(err.message);
+  }
+}
+
+const ExpPopup = ({
+  expTimer,
+  token,
+  setToken,
+  extendSession,
+  setShowExpPopup,
+  setCurrentUser,
+  navigate,
+}) => {
+  return (
+    <div>
+      <div className="blur"></div>
+      <div className="popup-wrapper">
+        <div className="popup">
+          <div className="popup-message">
+            <h3>Session will expire in {expTimer} seconds</h3>
+            <div>Continue or logout?</div>
+          </div>
+          <div className="popup-buttons-wrapper">
+            <button
+              onClick={() => {
+                extendSession(token, setToken);
+                setShowExpPopup(false);
+              }}
+              className="popup-button"
+            >
+              Continue
+            </button>
+            <button
+              onClick={() => {
+                sessionStorage.removeItem("token");
+                sessionStorage.removeItem("currentUser");
+                setToken(null);
+                setCurrentUser(null);
+                setShowExpPopup(null);
+                navigate("/");
+              }}
+              className="popup-button"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Header() {
-  const { currentUser, setCurrentUser, showLogin, setShowLogin, token } =
-    useContext(UserContext);
+  const {
+    currentUser,
+    setCurrentUser,
+    showLogin,
+    setShowLogin,
+    token,
+    setToken,
+  } = useContext(UserContext);
   const { setShowPopup } = useContext(UIContext);
   const [isScrolled, setIsScrolled] = useState(false);
   const [clickCreatePost, setClickCreatePost] = useState(false);
@@ -21,44 +93,44 @@ export default function Header() {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const cachedUser = sessionStorage.getItem("currentUser");
-  const {
-    error500Msg,
-    setError500Msg,
-    error500Page,
-    setError500Page,
-    error503,
-    setError503,
-  } = useContext(ErrorContext);
+  const { error500Msg, setError500Msg, setError500Page, setError503 } =
+    useContext(ErrorContext);
+  const [expTimer, setExpTimer] = useState(
+    token ? jwtDecode(token).exp - Math.floor(Date.now() / 1000) : null
+  );
+  const [showExpPopup, setShowExpPopup] = useState(
+    expTimer && expTimer <= 30 ? true : false
+  );
+  const location = useLocation();
 
-  // automatically sign the user out after the JWT token expires
-  token &&
-    setTimeout(() => {
-      setShowPopup({
-        message: (
-          <div>
-            <h3>Session Expired</h3>
-            <div>Please log in again</div>
-          </div>
-        ),
-        buttons: [
-          {
-            label: "Cancel",
-            action: () => setShowPopup(null),
-          },
-          {
-            label: "Login",
-            action: () => {
-              setShowPopup(null);
-              setShowLogin(true);
-            },
-          },
-        ],
-      });
+  useEffect(() => {
+    if (token) {
+      setExpTimer(jwtDecode(token).exp - Math.floor(Date.now() / 1000));
+      const intervalId = setInterval(() => {
+        setExpTimer((prev) => prev - 1);
+      }, 1000);
+      console.log("yo");
+      return () => clearInterval(intervalId);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (expTimer === 30) {
+      if (clickCreatePost) {
+        extendSession(token, setToken);
+      } else {
+        setShowExpPopup(true);
+      }
+    } else if (expTimer && expTimer <= 0) {
       sessionStorage.removeItem("token");
       sessionStorage.removeItem("currentUser");
+      setToken(null);
       setCurrentUser(null);
+      setShowExpPopup(null);
+      console.log(expTimer);
       navigate("/");
-    }, jwtDecode(token).exp * 1000 - Date.now());
+    }
+  }, [expTimer]);
 
   //remove ability to scroll any content outside of the account component
   useEffect(() => {
@@ -138,10 +210,49 @@ export default function Header() {
 
   useExitListener(setShowProfileDropdown, dropdownRef);
 
+  // if (token && expTimer === 3000) {
+  //   if (clickCreatePost) {
+  //     extendSession(token);
+  //   } else {
+  //     setShowPopup({
+  //       message: (
+  //         <div>
+  //           <h3>Session will expire in {expTimer}</h3>
+  //           <div>Please log in again</div>
+  //         </div>
+  //       ),
+  //       buttons: [
+  //         {
+  //           label: "Cancel",
+  //           action: () => setShowPopup(null),
+  //         },
+  //         {
+  //           label: "Login",
+  //           action: () => {
+  //             setShowPopup(null);
+  //             setShowLogin(true);
+  //           },
+  //         },
+  //       ],
+  //     });
+  //     // sessionStorage.removeItem("token");
+  //     // sessionStorage.removeItem("currentUser");
+  //     // setCurrentUser(null);
+  //     // navigate("/");
+  //   }
+  // }
+
   //Only allow the user to create a post if they're logged in
   function checkLoggedIn() {
     token ? setClickCreatePost(true) : setShowLogin(true);
   }
+
+  const refreshPage = (e, pageName) => {
+    if (location.pathname === pageName) {
+      e.preventDefault();
+      window.location.reload();
+    }
+  };
 
   const ProfileDropdown = () => {
     return (
@@ -153,6 +264,9 @@ export default function Header() {
           <Link
             to={`/profile/${currentUser.username}`}
             className="dropdown-profile"
+            onClick={() =>
+              refreshPage(e, "/profile/:username/:currentSection?")
+            }
           >
             <div className="dropdown-icons">
               <img className="header-pfp" src={currentUser.pfp} />
@@ -183,16 +297,29 @@ export default function Header() {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("currentUser");
     setCurrentUser(null);
+    setToken(null);
     setShowProfileDropdown(false);
     navigate("/");
   }
 
   return (
     <section className={`header ${isScrolled ? "scrolled" : ""}`}>
+      {showExpPopup && (
+        <ExpPopup
+          expTimer={expTimer}
+          token={token}
+          setToken={setToken}
+          extendSession={extendSession}
+          setShowExpPopup={setShowExpPopup}
+          setCurrentUser={setCurrentUser}
+          navigate={navigate}
+        />
+      )}
       <nav className="header-info">
         <Link
           to="/"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          // onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={() => refreshPage(e, "/")}
           className="site-info"
         >
           <img className="site-logo" src="/media/images/site-logo.svg" />
@@ -232,7 +359,7 @@ export default function Header() {
       {clickCreatePost && (
         <CreatePost setClickCreatePost={setClickCreatePost} />
       )}
-      {showLogin && <Account setShowLogin={setShowLogin} />}
+      {showLogin && <Account setShowLogin={setShowLogin} setToken={setToken} />}
     </section>
   );
 }

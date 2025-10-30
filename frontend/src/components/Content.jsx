@@ -34,10 +34,10 @@ const AboutUs = () => {
   return (
     <section className="about-us">
       <div className="about-us-wrapper">
-        <h1 className="about-us-title">Share your Coding Projects</h1>
+        <h1 className="about-us-title">Show. Share. Learn.</h1>
         <h2 className="about-us-description">
-          A place for tech students to showcase their work and connect with
-          others
+          A place for tech students to showcase their work and exchange
+          knowledge
         </h2>
         <SearchBar />
       </div>
@@ -63,7 +63,6 @@ async function fetchSpecificTag(
   limit,
   setLoading,
   setViewMoreLoading,
-  error503,
   setError503,
   reset = false,
   token
@@ -111,7 +110,6 @@ async function fetchPostsHomePage(
   limit,
   setLoading,
   setViewMoreLoading,
-  error503,
   setError503,
   reset = false,
   token
@@ -258,7 +256,6 @@ export default function Content() {
                 10,
                 setPostsLoading,
                 setViewMorePostsLoading,
-                error503,
                 setError503,
                 true,
                 token
@@ -275,7 +272,6 @@ export default function Content() {
                 10,
                 setPostsLoading,
                 setViewMorePostsLoading,
-                error503,
                 setError503,
                 false,
                 token
@@ -308,7 +304,6 @@ export default function Content() {
                 10,
                 setPostsLoading,
                 setViewMorePostsLoading,
-                error503,
                 setError503,
                 true,
                 token
@@ -326,7 +321,6 @@ export default function Content() {
                 10,
                 setPostsLoading,
                 setViewMorePostsLoading,
-                error503,
                 setError503,
                 false,
                 token
@@ -358,7 +352,6 @@ export default function Content() {
                 10,
                 setPostsLoading,
                 setViewMorePostsLoading,
-                error503,
                 setError503,
                 true,
                 token
@@ -375,7 +368,6 @@ export default function Content() {
                 10,
                 setPostsLoading,
                 setViewMorePostsLoading,
-                error503,
                 setError503,
                 false,
                 token
@@ -407,7 +399,6 @@ export default function Content() {
                 10,
                 setPostsLoading,
                 setViewMorePostsLoading,
-                error503,
                 setError503,
                 true,
                 token
@@ -425,7 +416,6 @@ export default function Content() {
                 10,
                 setPostsLoading,
                 setViewMorePostsLoading,
-                error503,
                 setError503,
                 false,
                 token
