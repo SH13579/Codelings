@@ -1,12 +1,20 @@
-# React + Vite
+# Codelings
+***A place for tech students to showcase their work and exchange knowledge***
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Description
+**Codelings is a tech community platform dedicated to allowing students to showcase their projects, explore innovative work from others, and ask questions to deepen their knowledge and skills**
 
-Currently, two official plugins are available:
+## Features
+* Showcase user-created tech projects with demo
+* Post and answer technical questions
+* Browse projects and questions by category or tag
+* Customizable user profiles
+* Commenting and upvote system
+* User authentication
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## How It's Made
+* **Frontend:** HTML, CSS, Javascript, React
+* **Backend:** Python, Supabase, Flask
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
