@@ -1,9 +1,7 @@
 import React from "react";
 import "../styles/notfound.css";
-import { useNavigate } from "react-router-dom";
 
 export default function InternalServerError500() {
-  const navigate = useNavigate();
   return (
     <section className="notfound-wrapper">
       <h1 className="notfound-header">
@@ -11,9 +9,6 @@ export default function InternalServerError500() {
       </h1>
       <h1>Service Unavailable</h1>
       <h3>The service is temporarily unavailable. Please try again later.</h3>
-      {/* <button onClick={() => navigate("/")} className="notfound-button">
-        Back to Home
-      </button> */}
     </section>
   );
 }

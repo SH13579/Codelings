@@ -1,18 +1,11 @@
 from flask import Blueprint, request, jsonify
 import datetime
-import jwt
-from functools import wraps
-import time
-import json
 
 from app import (
     conn,
     token_required,
     token_optional,
-    removeFile,
     get_posts_helper,
-    supabase,
-    SECRET_KEY,
 )
 
 comments_bp = Blueprint("comments", __name__)

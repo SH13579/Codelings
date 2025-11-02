@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import React, { useState, useRef } from "react";
 import "../styles/post.css";
-import { UserContext, UIContext, useExitListener } from "../utils";
-import { handleNavigating } from "./Content";
+import { useExitListener } from "../utils";
 
+// kebab menu for a post
 export default function KebabMenu({ onEdit, onDelete }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -21,7 +20,6 @@ export default function KebabMenu({ onEdit, onDelete }) {
         }}
       >
         &#8942;
-        {/* use svg instead */}
       </div>
       {menuOpen && (
         <div className="kebab-menu-dropdown">

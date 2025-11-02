@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 
+//component indicating the sections and the tags associated with each section on the site
 export default function SectionsNavbar(props) {
   const all_sections = props.sections.map((item) => {
     const section = item.sectionDbName;

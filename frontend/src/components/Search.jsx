@@ -6,8 +6,9 @@ import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
 import Loading, { ViewMoreLoading } from "./Loading";
 import "../styles/search.css";
-import { UIContext, EmptyContainer, UserContext } from "../utils";
+import { EmptyContainer, UserContext } from "../utils";
 
+//profile icon for the searching section
 const SearchProfileCard = (props) => {
   const navigate = useNavigate();
   return (
@@ -23,6 +24,7 @@ const SearchProfileCard = (props) => {
   );
 };
 
+//display all the profiles associated to the search term
 const SearchProfiles = (props) => {
   useEffect(() => {
     props.setHasMore(true);
@@ -61,8 +63,6 @@ export default function Search() {
   const [viewMorePostsLoading, setViewMorePostsLoading] = useState(false);
   const location = "search-page";
 
-  console.log("Search");
-
   const navbar_sections = [
     {
       sectionDbName: "project",
@@ -72,7 +72,7 @@ export default function Search() {
     {
       sectionDbName: "qna",
       imagePath: "/images/askAnswer.svg",
-      sectionName: "Ask & Answer",
+      sectionName: "Q&A",
     },
     {
       sectionDbName: "profile",
@@ -81,6 +81,7 @@ export default function Search() {
     },
   ];
 
+  //find the posts associated to the search term
   async function search_posts(
     postStart,
     setPostsHasMore,
@@ -123,6 +124,7 @@ export default function Search() {
     }
   }
 
+  //find the profiles associated to the search term
   async function search_profiles(
     profileStart,
     setProfilesHasMore,
@@ -216,7 +218,7 @@ export default function Search() {
             postsLoading={postsLoading}
             viewMorePostsLoading={viewMorePostsLoading}
             dependencies={[currentSection, searchTerm]}
-            postLabel="Ask & Answers"
+            postLabel="Q&A"
             location={location}
             posts={posts}
             hasMorePosts={hasMore}

@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/not-exist.css";
 
+//component indicating a post/user does not exist
 export default function NotExist({ msg }) {
   const navigate = useNavigate();
   return (

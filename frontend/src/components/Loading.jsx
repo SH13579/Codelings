@@ -1,6 +1,7 @@
 import React from "react";
 import "../styles/loader.css";
 
+//loading component that displays "Loading..." followed by a spinner
 export const ViewMoreLoading = () => {
   return (
     <div className="view-more-loader-wrapper">
@@ -10,6 +11,7 @@ export const ViewMoreLoading = () => {
   );
 };
 
+//loading component that just displays the spinner
 export default function Loading() {
   return (
     <div className="loader-wrapper">

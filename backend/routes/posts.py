@@ -1,7 +1,5 @@
 from flask import Blueprint, request, jsonify
 import datetime
-import jwt
-from functools import wraps
 import time
 import json
 
@@ -12,7 +10,6 @@ from app import (
     removeFile,
     get_posts_helper,
     supabase,
-    SECRET_KEY,
 )
 
 posts_bp = Blueprint("posts", __name__)
@@ -108,7 +105,7 @@ def post_project(decoded):
         return jsonify({"error": str(e)}), 500
 
 
-# route to fetch projects from database to display on Content.jsx
+# route to fetch posts by distinct category (projects or questions)
 @posts_bp.route("/get_postsByCategory", methods=["GET"])
 @token_optional
 def get_posts(decoded):
@@ -179,7 +176,7 @@ def get_posts(decoded):
         return jsonify({"error": str(e)}), 500
 
 
-# used to fetch the posts for a specific user on a profile
+# used to fetch the posts for a specific user to display on their personal profile
 @posts_bp.route("/get_posts_byUserAndCategory", methods=["GET"])
 @token_optional
 def get_posts_byUser(decoded):
@@ -254,7 +251,7 @@ def get_posts_byUser(decoded):
         return jsonify({"error": str(e)}), 500
 
 
-# route to delete post
+# route to delete a post
 @posts_bp.route("/delete_post", methods=["DELETE"])
 @token_required
 def delete_post(decoded):
@@ -290,7 +287,7 @@ def delete_post(decoded):
         return jsonify({"error": str(e)}), 500
 
 
-# route to get a specific post (after clicking a post in Content.jsx)
+# route to fetch the details for a specific individual post
 @posts_bp.route("/get_specific_post", methods=["GET"])
 @token_optional
 def get_specific_post(decoded):
@@ -357,7 +354,7 @@ def get_specific_post(decoded):
         return jsonify({"error": str(e)}), 500
 
 
-# route to edit the body of a post
+# route to edit the body of a specific post
 @posts_bp.route("/edit_post", methods=["POST"])
 @token_optional
 def edit_post(decoded):

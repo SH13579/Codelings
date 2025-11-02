@@ -22,6 +22,7 @@ export default function PostCard(props) {
   const navigate = useNavigate();
   const { setError500Msg, setError503 } = useContext(ErrorContext);
 
+  //display whether the post is liked by the user
   useEffect(() => {
     setLiked(props.liked);
   }, [props.liked]);

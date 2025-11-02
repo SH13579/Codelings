@@ -6,6 +6,7 @@ import Loading from "./Loading";
 import CharCount from "./CharCount";
 import { ViewMoreLoading } from "./Loading";
 
+// function handling the user changing the details of their profile
 async function handleEditProfile(
   e,
   token,
@@ -102,15 +103,12 @@ export default function EditProfile() {
   const maxAboutMeLength = 1000;
   const [editProfileLoading, setEditProfileLoading] = useState(false);
 
+  //if user tries to access this part of the site without logging in, prompt them to login first
   useEffect(() => {
     if (!token) {
       setShowLogin(true);
     }
   }, [token]);
-
-  useEffect(() => {
-    console.log(profileInfo);
-  }, [profileInfo]);
 
   //fetch all the details for the profile of the current user
   useFetchProfileInfo(currentUser?.username, setProfileInfo, setProfileLoading);
@@ -119,6 +117,7 @@ export default function EditProfile() {
     return null;
   }
 
+  //handle profile picture change
   function handleChange(e) {
     if (e.target.name === "pfp") {
       const file = e.target.files[0];

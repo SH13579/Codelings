@@ -2,6 +2,7 @@ import React from "react";
 import "../styles/notfound.css";
 import { useNavigate } from "react-router-dom";
 
+//component indicating a page does not exist on the site
 export default function NotFound404() {
   const navigate = useNavigate();
   return (

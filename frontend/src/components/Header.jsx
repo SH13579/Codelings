@@ -11,6 +11,7 @@ import {
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
+//function to extend the session of the current user, prompting a new token
 async function extendSession(token, setToken) {
   try {
     const res = await fetch("http://localhost:5000/extend_session", {
@@ -22,13 +23,16 @@ async function extendSession(token, setToken) {
     if (res.ok) {
       const data = await res.json();
       sessionStorage.setItem("token", data.token);
+      console.log("Extended");
       setToken(data.token);
     }
   } catch (err) {
-    console.log(err.message);
+    console.error("Error:" + err.message);
+    alert("Something went wrong, please try again later");
   }
 }
 
+//popup indiciating the expiration timer and prompting the user to log out or continue
 const ExpPopup = ({
   expTimer,
   token,
@@ -103,19 +107,21 @@ export default function Header() {
   );
   const location = useLocation();
 
+  //set expiration timer to count down every second once user is logged in
   useEffect(() => {
     if (token) {
       setExpTimer(jwtDecode(token).exp - Math.floor(Date.now() / 1000));
       const intervalId = setInterval(() => {
         setExpTimer((prev) => prev - 1);
       }, 1000);
-      console.log("yo");
       return () => clearInterval(intervalId);
     }
   }, [token]);
 
+  //if expiration timer reaches 30 seconds left, allow the user to decide whether to continue session or logout
   useEffect(() => {
     if (expTimer === 30) {
+      //if user is in the middle of creating a post, automatically extend their session
       if (clickCreatePost) {
         extendSession(token, setToken);
       } else {
@@ -127,7 +133,6 @@ export default function Header() {
       setToken(null);
       setCurrentUser(null);
       setShowExpPopup(null);
-      console.log(expTimer);
       navigate("/");
     }
   }, [expTimer]);
@@ -210,38 +215,6 @@ export default function Header() {
 
   useExitListener(setShowProfileDropdown, dropdownRef);
 
-  // if (token && expTimer === 3000) {
-  //   if (clickCreatePost) {
-  //     extendSession(token);
-  //   } else {
-  //     setShowPopup({
-  //       message: (
-  //         <div>
-  //           <h3>Session will expire in {expTimer}</h3>
-  //           <div>Please log in again</div>
-  //         </div>
-  //       ),
-  //       buttons: [
-  //         {
-  //           label: "Cancel",
-  //           action: () => setShowPopup(null),
-  //         },
-  //         {
-  //           label: "Login",
-  //           action: () => {
-  //             setShowPopup(null);
-  //             setShowLogin(true);
-  //           },
-  //         },
-  //       ],
-  //     });
-  //     // sessionStorage.removeItem("token");
-  //     // sessionStorage.removeItem("currentUser");
-  //     // setCurrentUser(null);
-  //     // navigate("/");
-  //   }
-  // }
-
   //Only allow the user to create a post if they're logged in
   function checkLoggedIn() {
     token ? setClickCreatePost(true) : setShowLogin(true);
@@ -254,6 +227,7 @@ export default function Header() {
     }
   };
 
+  //dropdown component when the user clicks on their profile icon in the header
   const ProfileDropdown = () => {
     return (
       currentUser && (
@@ -293,6 +267,7 @@ export default function Header() {
       : setShowProfileDropdown(true);
   }
 
+  //sign out the user from their account
   function signOut(navigate) {
     sessionStorage.removeItem("token");
     sessionStorage.removeItem("currentUser");

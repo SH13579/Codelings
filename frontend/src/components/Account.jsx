@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, { useState, useRef, useContext } from "react";
 import "../styles/account.css";
 import "../styles/createpost.css";
 import { useNavigate } from "react-router-dom";
-import { UserContext, useExitListener, ErrorContext } from "../utils";
+import { useExitListener, ErrorContext } from "../utils";
 
+//display the login section
 function LoginPage({
   setLoginOrRegister,
   setShowLogin,
@@ -14,7 +15,7 @@ function LoginPage({
   const loginRef = useRef(null);
   const navigate = useNavigate();
 
-  //click anywhere outside of the box and it will exit out
+  //click anywhere outside of the popup and it will exit out
   useExitListener(setShowLogin, loginRef);
 
   const [login, setLogin] = useState({
@@ -29,6 +30,7 @@ function LoginPage({
     }));
   };
 
+  // handle the response of user logging in with account details
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
@@ -42,16 +44,14 @@ function LoginPage({
         body: JSON.stringify(login),
       });
 
-      const data = await res.json(); //frontend receives JSON object from backend
+      const data = await res.json();
 
       if (res.ok) {
-        //codes 200(ok), 201(created)
         sessionStorage.setItem("token", data.token);
         setToken(data.token);
         setShowLogin(false);
         navigate("/");
       } else {
-        //codes 400(bad request), 401(invalid credentials), 409(conflict, info already taken), 500(server error)
         if (res.status === 500) {
           setMsg("Something went wrong. Please try again.");
         } else {
@@ -120,7 +120,6 @@ function LoginPage({
   );
 }
 
-//RegisterForm is now a separete component for existing input to not be removed after an error (something with re-rendering issues)
 //display the actual registration form
 function RegisterForm({ msg, setMsg, setLoginOrRegister }) {
   const [register, setRegister] = useState({
@@ -137,6 +136,7 @@ function RegisterForm({ msg, setMsg, setLoginOrRegister }) {
     }));
   };
 
+  // handle the response of user registering with account details
   const handleRegister = async (e) => {
     e.preventDefault();
     if (
@@ -159,11 +159,11 @@ function RegisterForm({ msg, setMsg, setLoginOrRegister }) {
         },
         body: JSON.stringify({
           ...register,
-          confirm_password: register.confirmPassword, //change to python format/rules
+          confirm_password: register.confirmPassword,
         }),
       });
 
-      const data = await res.json(); //frontend receives JSON object from backend
+      const data = await res.json();
 
       if (res.ok) {
         setMsg("Registration successful!");
@@ -176,7 +176,6 @@ function RegisterForm({ msg, setMsg, setLoginOrRegister }) {
         console.error(data.error);
       }
     } catch (err) {
-      console.error("Error:" + err.message);
       setMsg(
         "Error 503. The service is temporariliy unavailable. Please try again later."
       );
@@ -233,12 +232,11 @@ function RegisterForm({ msg, setMsg, setLoginOrRegister }) {
   );
 }
 
-function RegisterPage({ setLoginOrRegister, setShowLogin, setError503 }) {
+//display the registeration section, including success message after user registers with valid account details
+function RegisterPage({ setLoginOrRegister, setShowLogin }) {
   const [msg, setMsg] = useState(null);
   const registerRef = useRef(null);
   useExitListener(setShowLogin, registerRef);
-  //display the actual registration form
-  //RegisteredForm is now a function/component (located below)
 
   //display message after user successfully registers
   const RegisteredMsg = () => {
@@ -293,7 +291,6 @@ function RegisterPage({ setLoginOrRegister, setShowLogin, setError503 }) {
 export default function Account({ setShowLogin, setToken }) {
   const [loginOrRegister, setLoginOrRegister] = useState("login");
   const { setError503 } = useContext(ErrorContext);
-  console.log("Rendering account");
   return loginOrRegister === "login" ? (
     <LoginPage
       setShowLogin={setShowLogin}

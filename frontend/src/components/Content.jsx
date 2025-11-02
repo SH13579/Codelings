@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import React, { useState, useContext } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import "../styles/content.css";
 import SectionsNavbar from "./SectionsNavbar";
 import Posts from "./Posts";
@@ -7,6 +7,7 @@ import NotFound404 from "./NotFound404";
 import { UserContext, UIContext, ErrorContext } from "../utils";
 import ServiceUnavailableError503 from "./ServiceUnavailableError503";
 
+// search function of the site
 export const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
@@ -45,6 +46,7 @@ const AboutUs = () => {
   );
 };
 
+// handle navigating to a specific user's profile
 export const handleNavigating = (e, navigate, username) => {
   e.stopPropagation();
   e.preventDefault();
@@ -151,33 +153,6 @@ async function fetchPostsHomePage(
   }
 }
 
-// async function fetchTags(setTags) {
-//   try {
-//     const res = await fetch("http://localhost:5000/fetch_tags");
-//     const data = await res.json();
-//     setTags(data.tags);
-//   } catch (err) {
-//     alert("Error: " + err.message);
-//   }
-// }
-
-// export function useDisplayTagsOnPage(setTags) {
-//   useEffect(() => {
-//     fetchTags(setTags);
-//   }, []);
-// }
-
-//fetch respective tags for specific category on the site (projects, ask & answer, ...)
-// function fetchTagsForPostType(tags, post_type) {
-//   const tags_arr = [];
-//   tags.forEach((element) => {
-//     if (element.post_type === post_type) {
-//       tags_arr.push(element.tag_name);
-//     }
-//   });
-//   return tags_arr;
-// }
-
 export default function Content() {
   const { token } = useContext(UserContext);
   const { tags } = useContext(UIContext);
@@ -198,10 +173,12 @@ export default function Content() {
     .map((item) => item.tag_name);
   const { error503, setError503 } = useContext(ErrorContext);
 
+  //if the section inserted into the URL is not a valid section
   if (!validSections.includes(currentSection)) {
     return <NotFound404 />;
   }
 
+  //if the tag for a section is not a valid tag
   if (currentTag) {
     if (
       !projectTags.includes(currentTag) &&
@@ -221,12 +198,10 @@ export default function Content() {
     {
       sectionDbName: "qna",
       imagePath: "/images/askAnswer.svg",
-      sectionName: "Ask & Answer",
+      sectionName: "Q&A",
       subsections: askAnswerTags,
     },
   ];
-
-  console.log("Rendering Content");
 
   return error503 ? (
     <ServiceUnavailableError503 />
@@ -377,7 +352,7 @@ export default function Content() {
             viewMorePostsLoading={viewMorePostsLoading}
             dependencies={[currentSection, currentTag, token, postFilter]}
             location={location}
-            postLabel="Ask & Answers"
+            postLabel="Q&A"
             posts={posts}
             hasMorePosts={hasMore}
             setHasMorePosts={setHasMore}
@@ -425,7 +400,7 @@ export default function Content() {
             viewMorePostsLoading={viewMorePostsLoading}
             dependencies={[currentSection, currentTag, token, postFilter]}
             location={location}
-            postLabel="Ask & Answers"
+            postLabel="Q&A"
             posts={posts}
             hasMorePosts={hasMore}
             setHasMorePosts={setHasMore}

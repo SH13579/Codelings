@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import CharCount from "./CharCount";
 import { ViewMoreLoading } from "./Loading";
 
+// multiselect dropdown for the user to select all the corresponding tags for their post
 const MultiselectDropdown = ({
   tags,
   selectedTags,
@@ -104,6 +105,7 @@ const MultiselectDropdown = ({
   );
 };
 
+// display the form for creating a post
 const CreatePostForm = ({
   token,
   msg,
@@ -127,13 +129,10 @@ const CreatePostForm = ({
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    console.log(selectedTags);
-  }, [selectedTags]);
-
   useExitListenerWithAlert(setAlertMsg, postFormRef);
   const limitedCharTitle = 200;
   const limitedCharBody = 4000;
+
   //set the states of all form values
   const handleChange = (e) => {
     if (e.target.name === "post_type") {
@@ -174,9 +173,6 @@ const CreatePostForm = ({
       formData.append("tags", JSON.stringify(selectedTags));
       formData.append("demoFile", projectPost.demoFile);
       setLoading(true);
-      for (const [key, value] of formData.entries()) {
-        console.log(`${key}:`, value);
-      }
       try {
         const res = await fetch("http://localhost:5000/create_post", {
           method: "POST",
@@ -365,8 +361,6 @@ export default function CreatePost({ setClickCreatePost }) {
   const { token } = useContext(UserContext);
   const [msg, setMsg] = useState("");
   const { setError503 } = useContext(ErrorContext);
-
-  console.log("Rendering Create Post");
 
   return (
     <div>

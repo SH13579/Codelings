@@ -8,6 +8,7 @@ import Posts from "./Posts";
 import NotExist from "./NotExist";
 import ServiceUnavailableError503 from "./ServiceUnavailableError503";
 
+//allow the user to delete a post on their profile
 export function showDeletePopup(
   e,
   post_id,
@@ -38,7 +39,6 @@ export function showDeletePopup(
         setDeleted(true);
         setShowPopup(null);
       } else {
-        // ❗ show the error from Python backend
         if (res.status === 500) {
           setError500Msg(true);
         }
@@ -69,6 +69,7 @@ export function showDeletePopup(
   });
 }
 
+//fetch all the liked posts for the current user
 async function fetchLikedPosts(
   start,
   setStart,
@@ -110,6 +111,7 @@ async function fetchLikedPosts(
   }
 }
 
+//fetch all the posts for a specific user
 async function fetchPostsProfile(
   postType,
   setPosts,
@@ -163,6 +165,7 @@ async function fetchPostsProfile(
   }
 }
 
+//fetch all the profile info for a specific user
 export function useFetchProfileInfo(
   username,
   setProfileInfo,
@@ -239,7 +242,7 @@ export default function Profile() {
     {
       sectionDbName: "qna",
       imagePath: "/images/askAnswer.svg",
-      sectionName: "Ask & Answer",
+      sectionName: "Q&A",
     },
     {
       sectionDbName: "liked_posts",
@@ -396,7 +399,7 @@ export default function Profile() {
               viewMorePostsLoading={viewMorePostsLoading}
               dependencies={[currentSection, postFilter, username]}
               location={location}
-              postLabel="Ask & Answers"
+              postLabel="Q&A"
               posts={posts}
               hasMorePosts={hasMore}
               setHasMorePosts={setHasMore}

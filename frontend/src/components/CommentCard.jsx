@@ -64,12 +64,11 @@ export default function CommentCard({
   setReplyCommentId,
   setParentCommentsList,
   setStart,
-  //below are for recursive calls (to update existing repliesList and replyStart)
   parentRepliesList,
   setParentRepliesList,
   existingReplyStart,
   setExistingReplyStart,
-  //error handling
+
   setError500Msg,
   setError503,
 }) {
@@ -77,8 +76,6 @@ export default function CommentCard({
   const isCommenter =
     currentUser && currentUser.username === parentComment.name;
   const showReplyBox = replyCommentId === parentComment.comment_id;
-  //if <CommentCard /> is parent comment, set repliesList to []
-  //if <CommentCard /> is reply, set repliesList to existing repliesList in order for replying to reply to work
   const [repliesList, setRepliesList] = useState(
     isReply ? parentRepliesList : []
   );
@@ -100,16 +97,12 @@ export default function CommentCard({
   const replyInputRef = useRef(null);
 
   useEffect(() => {
-    console.log(repliesList);
-  }, [repliesList]);
-
-  //focus the reply textarea when clicking reply and reply box appears
-  useEffect(() => {
     if (showReplyBox && replyInputRef.current) {
       replyInputRef.current.focus();
     }
   }, [showReplyBox]);
 
+  //delete comment/reply
   const handleDeleteComment = async (
     commentId,
     parentCommentId = null,
@@ -132,16 +125,12 @@ export default function CommentCard({
         });
         const data = await res.json();
         if (res.ok) {
-          //if reply, delete reply
           if (isReply) {
-            //use setParentRepliesList if deleting reply
             setParentRepliesList((prev) =>
               prev.filter((reply) => reply.comment_id !== commentId)
             );
             setExistingReplyStart((prev) => prev - 1);
-          }
-          //if parent comment, delete comment along with its replies
-          else {
+          } else {
             setParentCommentsList((prev) => {
               return prev.filter((comment) => comment.comment_id !== commentId);
             });
@@ -187,6 +176,7 @@ export default function CommentCard({
     });
   };
 
+  //edit comment/reply
   const handleEditComment = async () => {
     try {
       const res = await fetch(`http://localhost:5000/edit_comment`, {
@@ -204,9 +194,7 @@ export default function CommentCard({
       if (res.ok) {
         setIsEditing(false);
         if (isReply) {
-          //when replacing
           setParentRepliesList((prev) =>
-            //parentComment = {reply}
             prev.map((reply) =>
               reply.comment_id === parentComment.comment_id
                 ? { ...reply, comment: existingComment }
@@ -234,10 +222,10 @@ export default function CommentCard({
     }
   };
 
+  //submit reply
   const handleReplySubmit = async (e, parentCommentId) => {
     e.preventDefault();
     try {
-      //call the same route, but send different data (include parent_comment_id)
       const res = await fetch("http://localhost:5000/post_comment", {
         method: "POST",
         headers: {
@@ -268,7 +256,6 @@ export default function CommentCard({
 
         //to update frontend immediately after posting reply
         if (!hasMoreReplies) {
-          //both cases add to the same repliesList. depends on variable name which is based on which <CommentCarad /> is being called
           if (isReply) {
             setParentRepliesList((prev) => [newReply, ...prev]);
           } else {
@@ -291,11 +278,12 @@ export default function CommentCard({
     }
   };
 
+  //show input box after clicking "reply"
   const handleReplyClick = (commentId, username, isReplyingToReply) => {
     //commentId refers to parent comment's id or reply's id depending on which <CommentCard /> is called
     const parentId = isReplyingToReply
-      ? parentComment.parent_comment_id //connect to reply's parent_comment_id
-      : parentComment.comment_id; //connect to parent_comment's id
+      ? parentComment.parent_comment_id
+      : parentComment.comment_id;
 
     setTargetParentId(parentId);
     setReplyCommentId(currentUser ? commentId : null); //if not logged in, do not show textarea
@@ -303,9 +291,10 @@ export default function CommentCard({
       isReplyingToReply && username !== currentUser.username
         ? `@${username} `
         : ""
-    ); //if replying to reply, @username. Refer to showReplyBox below
+    );
   };
 
+  //fetch replies after clicking "view more"
   const fetchReplies = async () => {
     try {
       setViewMoreRepliesLoading(true);
@@ -345,7 +334,7 @@ export default function CommentCard({
       token={token}
       postId={postId}
       setMsg={setMsg}
-      parentComment={reply} //rename?
+      parentComment={reply}
       currentUser={currentUser}
       navigate={navigate}
       replyCommentId={replyCommentId}
@@ -354,12 +343,10 @@ export default function CommentCard({
       setReplyCommentId={setReplyCommentId}
       setRepliesList={setRepliesList}
       setParentCommentsList={setParentCommentsList}
-      //when adding or deleting
       parentRepliesList={repliesList}
       setParentRepliesList={setRepliesList}
       existingReplyStart={replyStart}
       setExistingReplyStart={setReplyStart}
-      //error handling
       setError500Msg={setError500Msg}
       setError503={setError503}
     />
@@ -474,7 +461,6 @@ export default function CommentCard({
       {/* map through repliesList and call <CommentCard /> */}
       {!isReply && (
         <div className="all-replies">
-          {/* issue: when doing recursive call, it maps again, leading to infinite loop/recursive calls. add "!isReply" so that it ONLY maps ONCE when <CommentCard /> is a parent comment. avoid going through repliesList when it's a reply */}
           {all_replies}
           {hasMoreReplies && (
             <div

@@ -1,17 +1,10 @@
 from flask import Blueprint, request, jsonify
 import datetime
 import jwt
-from functools import wraps
-import time
-import json
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import (
     conn,
-    token_required,
-    token_optional,
-    removeFile,
-    supabase,
     SECRET_KEY,
 )
 
@@ -66,7 +59,6 @@ def register():
                 "INSERT INTO users (username, email, password, profile_picture) VALUES (%s, %s, %s, %s)",
                 (username, email, hashed_password, pfp),
             )
-            cursor.execute()
         conn.commit()
         return jsonify({"message": "User registered successfully"}), 201
     except Exception as e:
@@ -102,7 +94,7 @@ def login():
                     {
                         "user_id": user[0],
                         "exp": datetime.datetime.now(datetime.timezone.utc)
-                        + datetime.timedelta(minutes=30),
+                        + datetime.timedelta(minutes=1),
                     },
                     SECRET_KEY,
                     algorithm="HS256",

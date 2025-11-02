@@ -6,10 +6,6 @@ import datetime
 import os
 import jwt
 from functools import wraps
-import math
-import time
-import json
-from werkzeug.security import generate_password_hash, check_password_hash
 from supabase import create_client, Client
 from urllib.parse import urlparse
 
@@ -23,46 +19,22 @@ DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_PORT = os.getenv("DB_PORT")
+SECRET_KEY = "codelings541"
 
-# DB_HOST = "localhost"
-# DB_NAME = "codelings"
-# DB_USER = "postgres"
-# DB_PASS = os.getenv("PG_PASSWORD")  # access environment variable PG_PASSWORD
-# DB_PORT = "5432"
-# SECRET_KEY = "codelings541"
+print(DB_PASSWORD)
 
-# # Connect to the database
+# Connect to the database
 try:
     conn = psycopg2.connect(
-        user=DB_USER, password=DB_PASSWORD, host=DB_HOST, port=DB_PORT, dbname=DB_NAME
+        user=DB_USER,
+        password=DB_PASSWORD,
+        host=DB_HOST,
+        port=DB_PORT,
+        dbname=DB_NAME,
     )
     print("Connection successful!")
 except Exception as e:
     print(f"Failed to connect: {e}")
-
-
-# env
-# DATABASE_URL=postgresql://postgres:6pg7h9NAsMJcnLRS@db.azxfokxbsfmqibzjduky.supabase.co:5432/postgres
-
-# host:
-# db.azxfokxbsfmqibzjduky.supabase.co
-
-# port:
-# 5432
-
-# database:
-# postgres
-
-# user:
-# postgres
-
-# connect to PostgreSQL database
-# try:
-#     conn = psycopg2.connect(
-#         host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASS, port=DB_PORT
-#     )
-# except Exception as e:
-#     print("Error connecting to database:", e)
 
 # connect to Supabase storage
 SUPABASE_URL = "https://azxfokxbsfmqibzjduky.supabase.co"
@@ -71,6 +43,7 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
+# helper function that is used on any actions on the site that require a valid user to be logged in
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -92,6 +65,7 @@ def token_required(f):
     return decorated
 
 
+# helper function that is used on any actions on the site where a valid user can optionally be logged in
 def token_optional(f):
     @wraps(f)
     def decorated(*args, **kwargs):

@@ -1,14 +1,7 @@
 from flask import Blueprint, request, jsonify
-import psycopg2
-from flask_cors import CORS
 import datetime
-import os
 import jwt
-from functools import wraps
-import math
 import time
-import json
-from urllib.parse import urlparse
 
 from app import (
     conn,
@@ -32,7 +25,7 @@ def extend_session(decoded):
             {
                 "user_id": decoded["user_id"],
                 "exp": datetime.datetime.now(datetime.timezone.utc)
-                + datetime.timedelta(minutes=30),
+                + datetime.timedelta(minutes=1),
             },
             SECRET_KEY,
             algorithm="HS256",
@@ -101,6 +94,7 @@ def fetch_profile():
         return jsonify({"error": str(e)}), 500
 
 
+# update the details of a user's profile
 @other_bp.route("/edit_profile", methods=["POST"])
 @token_required
 def edit_profile(decoded):
@@ -132,6 +126,7 @@ def edit_profile(decoded):
                 # supabase does not allow fileobject to be stored, convert into binary bytes
                 file_bytes = pfpFile.read()
 
+                # upload the new profile picture onto supabase storage
                 try:
                     response = supabase.storage.from_("uploads").upload(
                         path, file_bytes
@@ -320,7 +315,7 @@ def search_posts(decoded):
                     JOIN users ON posts.user_id = users.id
                     LEFT JOIN post_tags ON post_tags.post_id = posts.id
                     LEFT JOIN tags ON post_tags.tag_id = tags.id
-                    WHERE posts.title LIKE %s AND posts.post_type = %s
+                    WHERE posts.title ILIKE %s AND posts.post_type = %s
                     GROUP BY posts.id, posts.post_date, posts.post_type, posts.title,  posts.likes, posts.comments, users.username, users.profile_picture
                     LIMIT %s OFFSET %s
                   """

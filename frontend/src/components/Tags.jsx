@@ -1,5 +1,6 @@
 import React from "react";
 
+//component that indicates all the tags associated with a post
 export default function Tags({ tags }) {
   if (!tags || tags[0] === null) {
     return null;

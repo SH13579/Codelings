@@ -17,7 +17,7 @@ import CharCount from "./CharCount";
 import NotExist from "./NotExist";
 import InternalServerError500 from "./InternalServerError500";
 import ServiceUnavailableError503 from "./ServiceUnavailableError503";
-import { showDeletePopup } from "./Profile"; //delete post
+import { showDeletePopup } from "./Profile";
 
 function Comments({
   postId,
@@ -43,13 +43,7 @@ function Comments({
   const navigate = useNavigate();
   const limitedCharComment = 1000;
   const textareaRef = useRef(null);
-  const [lastCommentTime, setLastCommentTime] = useState(null);
 
-  useEffect(() => {
-    console.log(parentCommentsList);
-  }, [parentCommentsList]);
-
-  //cant put useEffect around this because fetchComments() is called when user clicks "view more"
   //fetch parent comments once first load in or refresh
   async function fetchComments(reset = false) {
     reset ? setCommentsLoading(true) : setViewMoreLoading(true);
@@ -120,13 +114,11 @@ function Comments({
       const data = await res.json();
 
       if (res.ok) {
-        //testing purposes
-        // setError500(true);
         const newComment = {
-          comment_id: data.commentId, //fetch comment_id from database table(necessary to delete comment immediately)
+          comment_id: data.commentId,
           date: "Just now",
           name: currentUser.username,
-          comment: commentText, //data.commentText unnecessary
+          comment: commentText,
           pfp: currentUser.pfp,
           parent_comment_id: null,
           upvotes: 0,
@@ -135,13 +127,7 @@ function Comments({
         };
         setParentCommentsList((prev) => [newComment, ...prev]);
         setStart((prev) => prev + 1);
-        //only show newly created comment imemdiately on frontend if there are less than 5 comments OR no more comments left (view more button gone)
-        //to update frontend immediately after submitting a comment
-        // if (!hasMoreComments) {
-        //   setParentCommentsList((prev) => [...prev, newComment]);
-        //   setStart((prev) => prev + 1); //increase offset by 1 to prevent duplicates
-        // }
-        setCommentText(""); //empty input after adding comment
+        setCommentText("");
         setShowCommentButtons(false);
         setMsg(data.success);
       } else {
@@ -176,7 +162,6 @@ function Comments({
               <div
                 onClick={() => {
                   setFilter("Best");
-                  // setViewMoreLoading(true);
                 }}
                 className="filter"
               >
@@ -191,9 +176,10 @@ function Comments({
           </div>
         </div>
       </div>
+
+      {/* comment input box */}
       {token ? (
         <form className="comment-input-wrapper" onSubmit={handleCommentSubmit}>
-          {/*cannot add comment if not logged in*/}
           <textarea
             className="comment-input"
             value={commentText}
@@ -240,6 +226,8 @@ function Comments({
       ) : (
         <div className="comment-login-msg">Sign in to comment</div>
       )}
+
+      {/* Fetch from database to display 5 parent comments of current post*/}
       {commentsLoading ? (
         <Loading />
       ) : (
@@ -294,7 +282,6 @@ export default function Post() {
   const { postId } = useParams();
   const { setShowPopup } = useContext(UIContext);
   const {
-    error500Msg,
     setError500Msg,
     error500Page,
     setError500Page,
@@ -307,10 +294,6 @@ export default function Post() {
     e.stopPropagation();
     e.preventDefault();
   };
-
-  useEffect(() => {
-    console.log(postInfo);
-  }, [postInfo]);
 
   //fetch post's info
   useEffect(() => {
@@ -328,11 +311,6 @@ export default function Post() {
         );
         const data = await res.json();
         if (res.ok) {
-          //testing purposes
-          // setError500Msg(true);
-          // setError503(true);
-          // setError500Page(true);
-
           const post = data.posts[0];
           setPostInfo(post);
           setLikeCount(post.upvotes);
@@ -348,8 +326,6 @@ export default function Post() {
         }
       } catch (err) {
         //backend down; no internet
-        // alert("Error: " + err.message);
-        console.error("Error: " + err.message);
         setError503(true);
       } finally {
         setLoading(false);
@@ -358,7 +334,7 @@ export default function Post() {
     fetchPost();
   }, [postId]);
 
-  //this is for clicking "Edit" in Profile
+  //to handle clicking "Edit" in Profile
   useEffect(() => {
     if (query.get("edit") === "true" && postInfo.body) {
       setIsEditing(true);
@@ -366,10 +342,6 @@ export default function Post() {
       navigate(location.pathname, { replace: true }); //remove "edit=true" from URL
     }
   }, [postInfo]);
-
-  useEffect(() => {
-    console.log(existingBody);
-  }, [existingBody]);
 
   //edit post
   const handleEdit = async () => {
@@ -402,11 +374,8 @@ export default function Post() {
       }
     } catch (err) {
       setError503(true);
-      console.error("Error: " + err.message);
     }
   };
-
-  console.log("Rendering Post");
 
   return error503 ? (
     <ServiceUnavailableError503 />
@@ -462,7 +431,6 @@ export default function Post() {
         <Tags tags={postInfo.tags} />
         {postInfo.video && (
           <div className="post-video">
-            {/* reminder to remove video for ask & answer section */}
             <video controls>
               <source src={postInfo.video} type="video/mp4" />
             </video>

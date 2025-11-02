@@ -2,6 +2,7 @@ import React, { useRef, useContext } from "react";
 import { useExitListener } from "../utils";
 import { UIContext } from "../utils";
 
+//custom component allowing the display of a popup with any custom message and buttons
 export default function Popup({ message, buttons }) {
   const popupRef = useRef(null);
   const { setShowPopup } = useContext(UIContext);
