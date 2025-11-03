@@ -34,79 +34,20 @@ async function extendSession(token, setToken) {
 
 //popup indiciating the expiration timer and prompting the user to log out or continue
 const ExpPopup = ({
-  expTimer,
   token,
   setToken,
   extendSession,
-  setShowExpPopup,
   setCurrentUser,
   navigate,
+  clickCreatePost,
 }) => {
-  return (
-    <div>
-      <div className="blur"></div>
-      <div className="popup-wrapper">
-        <div className="popup">
-          <div className="popup-message">
-            <h3>Session will expire in {expTimer} seconds</h3>
-            <div>Continue or logout?</div>
-          </div>
-          <div className="popup-buttons-wrapper">
-            <button
-              onClick={() => {
-                extendSession(token, setToken);
-                setShowExpPopup(false);
-              }}
-              className="popup-button"
-            >
-              Continue
-            </button>
-            <button
-              onClick={() => {
-                sessionStorage.removeItem("token");
-                sessionStorage.removeItem("currentUser");
-                setToken(null);
-                setCurrentUser(null);
-                setShowExpPopup(null);
-                navigate("/");
-              }}
-              className="popup-button"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default function Header() {
-  const {
-    currentUser,
-    setCurrentUser,
-    showLogin,
-    setShowLogin,
-    token,
-    setToken,
-  } = useContext(UserContext);
-  const { setShowPopup } = useContext(UIContext);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [clickCreatePost, setClickCreatePost] = useState(false);
-  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const dropdownRef = useRef(null);
-  const navigate = useNavigate();
-  const cachedUser = sessionStorage.getItem("currentUser");
-  const { error500Msg, setError500Msg, setError500Page, setError503 } =
-    useContext(ErrorContext);
   const [expTimer, setExpTimer] = useState(
     token ? jwtDecode(token).exp - Math.floor(Date.now() / 1000) : null
   );
+
   const [showExpPopup, setShowExpPopup] = useState(
     expTimer && expTimer <= 30 ? true : false
   );
-  const location = useLocation();
-
   //set expiration timer to count down every second once user is logged in
   useEffect(() => {
     if (token) {
@@ -136,6 +77,66 @@ export default function Header() {
       navigate("/");
     }
   }, [expTimer]);
+  return (
+    showExpPopup && (
+      <div>
+        <div className="blur"></div>
+        <div className="popup-wrapper">
+          <div className="popup">
+            <div className="popup-message">
+              <h3>Session will expire in {expTimer} seconds</h3>
+              <div>Continue or logout?</div>
+            </div>
+            <div className="popup-buttons-wrapper">
+              <button
+                onClick={() => {
+                  extendSession(token, setToken);
+                  setShowExpPopup(false);
+                }}
+                className="popup-button"
+              >
+                Continue
+              </button>
+              <button
+                onClick={() => {
+                  sessionStorage.removeItem("token");
+                  sessionStorage.removeItem("currentUser");
+                  setToken(null);
+                  setCurrentUser(null);
+                  setShowExpPopup(null);
+                  navigate("/");
+                }}
+                className="popup-button"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  );
+};
+
+export default function Header() {
+  const {
+    currentUser,
+    setCurrentUser,
+    showLogin,
+    setShowLogin,
+    token,
+    setToken,
+  } = useContext(UserContext);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [clickCreatePost, setClickCreatePost] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+  const navigate = useNavigate();
+  const cachedUser = sessionStorage.getItem("currentUser");
+  const { error500Msg, setError500Msg, setError500Page, setError503 } =
+    useContext(ErrorContext);
+  const location = useLocation();
+  console.log("Header");
 
   //remove ability to scroll any content outside of the account component
   useEffect(() => {
@@ -279,17 +280,14 @@ export default function Header() {
 
   return (
     <section className={`header ${isScrolled ? "scrolled" : ""}`}>
-      {showExpPopup && (
-        <ExpPopup
-          expTimer={expTimer}
-          token={token}
-          setToken={setToken}
-          extendSession={extendSession}
-          setShowExpPopup={setShowExpPopup}
-          setCurrentUser={setCurrentUser}
-          navigate={navigate}
-        />
-      )}
+      <ExpPopup
+        token={token}
+        setToken={setToken}
+        extendSession={extendSession}
+        setCurrentUser={setCurrentUser}
+        navigate={navigate}
+        clickCreatePost={clickCreatePost}
+      />
       <nav className="header-info">
         <Link
           to="/"

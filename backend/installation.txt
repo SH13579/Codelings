@@ -1,0 +1,9 @@
+pip install flask
+pip install flask-cors
+pip install psycopg2
+pip install psycopg2-binary
+npm install uuid
+pip install PyJWT
+pip install supabase
+npm install jwt-decode
+pip install python-dotenv psycopg2

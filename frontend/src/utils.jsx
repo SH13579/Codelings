@@ -1,5 +1,4 @@
 import React, { useEffect, createContext } from "react";
-import empty_logo from "../public/images/empty.svg";
 
 export function useExitListener(setCond, ref) {
   useEffect(() => {
@@ -50,7 +49,7 @@ export function useExitListenerWithAlert(setAlert, ref) {
 export const EmptyContainer = () => {
   return (
     <div className="empty-container-wrapper">
-      <img className="empty-icon" src={empty_logo} />
+      <img className="empty-icon" src="/images/empty.svg" />
       <div>Empty here...</div>
     </div>
   );

@@ -25,7 +25,7 @@ def extend_session(decoded):
             {
                 "user_id": decoded["user_id"],
                 "exp": datetime.datetime.now(datetime.timezone.utc)
-                + datetime.timedelta(minutes=1),
+                + datetime.timedelta(minutes=30),
             },
             SECRET_KEY,
             algorithm="HS256",

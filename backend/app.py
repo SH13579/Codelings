@@ -11,17 +11,18 @@ from urllib.parse import urlparse
 
 app = Flask(__name__)
 CORS(app)
-
 load_dotenv()
 
+# connect to Supabase database
 DB_HOST = os.getenv("DB_HOST")
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_PORT = os.getenv("DB_PORT")
-SECRET_KEY = "codelings541"
-
-print(DB_PASSWORD)
+SECRET_KEY = os.getenv("SECRET_KEY")
+# connect to Supabase storage
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 # Connect to the database
 try:
@@ -36,10 +37,7 @@ try:
 except Exception as e:
     print(f"Failed to connect: {e}")
 
-# connect to Supabase storage
-SUPABASE_URL = "https://azxfokxbsfmqibzjduky.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6eGZva3hic2ZtcWliempkdWt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwMzMyNjgsImV4cCI6MjA2ODYwOTI2OH0.9PL3bH-aMUGoleViasmPKGoE2AKTWFBOkEjfEKCqt9U"
-
+# Connect to the supabase storage
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 

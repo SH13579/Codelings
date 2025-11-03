@@ -94,7 +94,7 @@ def login():
                     {
                         "user_id": user[0],
                         "exp": datetime.datetime.now(datetime.timezone.utc)
-                        + datetime.timedelta(minutes=1),
+                        + datetime.timedelta(minutes=30),
                     },
                     SECRET_KEY,
                     algorithm="HS256",
