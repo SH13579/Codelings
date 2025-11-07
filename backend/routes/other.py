@@ -85,9 +85,9 @@ def fetch_profile():
         profile = res.data
 
         result = {
-            # "about_me": profile["profiles"][0]["about_me"],
-            # "github_link": profile["profiles"][0]["github_link"],
-            # "year_of_study": profile["profiles"][0]["year_of_study"],
+            "about_me": profile["profiles"][0]["about_me"],
+            "github_link": profile["profiles"][0]["github_link"],
+            "year_of_study": profile["profiles"][0]["year_of_study"],
             "pfp": profile["profile_picture"],
             "email": profile["email"],
         }
