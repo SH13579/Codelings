@@ -190,7 +190,14 @@ def like_unlike_post(decoded):
             supabase.table("likes").delete().eq("user_id", user_id).eq(
                 "target_id", target_id
             ).eq("type", type).execute()
-            supabase.table(type).update({"likes": supabase.func("likes - 1")}).eq(
+            likes_count = (
+                supabase.table(type)
+                .select("likes")
+                .eq("id", target_id)
+                .single()
+                .execute()
+            )
+            supabase.table(type).update({"likes": likes_count.data["likes"] - 1}).eq(
                 "id", target_id
             ).execute()
             action = "unliked"
@@ -199,7 +206,14 @@ def like_unlike_post(decoded):
             supabase.table("likes").insert(
                 {"user_id": user_id, "target_id": target_id, "type": type}
             ).execute()
-            supabase.table(type).update({"likes": supabase.func("likes + 1")}).eq(
+            likes_count = (
+                supabase.table(type)
+                .select("likes")
+                .eq("id", target_id)
+                .single()
+                .execute()
+            )
+            supabase.table(type).update({"likes": likes_count.data["likes"] + 1}).eq(
                 "id", target_id
             ).execute()
             action = "liked"
