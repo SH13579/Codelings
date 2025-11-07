@@ -93,7 +93,7 @@ export default function Search() {
     reset ? setPostsLoading(true) : setViewMorePostsLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/search_posts?search_term=${searchTerm}&limit=${limit}&offset=${
+        `https://sh12345.pythonanywhere.com/search_posts?search_term=${searchTerm}&limit=${limit}&offset=${
           reset ? 0 : postStart
         }&post_type=${currentSection}`,
         {
@@ -135,7 +135,7 @@ export default function Search() {
     reset ? setPostsLoading(true) : setViewMorePostsLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/search_profiles?search_term=${searchTerm}&limit=${limit}&offset=${
+        `https://sh12345.pythonanywhere.com/search_profiles?search_term=${searchTerm}&limit=${limit}&offset=${
           reset ? 0 : profileStart
         }`,
         {

@@ -110,19 +110,22 @@ export default function CommentCard({
   ) => {
     async function deleteComment() {
       try {
-        const res = await fetch(`http://localhost:5000/delete_comment`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            comment_id: commentId,
-            post_id: postId,
-            parent_comment_id: parentCommentId,
-            replies_count: repliesCount,
-          }),
-        });
+        const res = await fetch(
+          `https://sh12345.pythonanywhere.com/delete_comment`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              comment_id: commentId,
+              post_id: postId,
+              parent_comment_id: parentCommentId,
+              replies_count: repliesCount,
+            }),
+          }
+        );
         const data = await res.json();
         if (res.ok) {
           if (isReply) {
@@ -179,17 +182,20 @@ export default function CommentCard({
   //edit comment/reply
   const handleEditComment = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/edit_comment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          comment_id: parentComment.comment_id,
-          new_comment: existingComment,
-        }),
-      });
+      const res = await fetch(
+        `https://sh12345.pythonanywhere.com/edit_comment`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            comment_id: parentComment.comment_id,
+            new_comment: existingComment,
+          }),
+        }
+      );
       const data = await res.json();
       if (res.ok) {
         setIsEditing(false);
@@ -226,18 +232,21 @@ export default function CommentCard({
   const handleReplySubmit = async (e, parentCommentId) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/post_comment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          post_id: postId,
-          comment_text: replyText,
-          parent_comment_id: parentCommentId,
-        }),
-      });
+      const res = await fetch(
+        "https://sh12345.pythonanywhere.com/post_comment",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            post_id: postId,
+            comment_text: replyText,
+            parent_comment_id: parentCommentId,
+          }),
+        }
+      );
 
       const data = await res.json();
 
@@ -299,7 +308,7 @@ export default function CommentCard({
     try {
       setViewMoreRepliesLoading(true);
       const res = await fetch(
-        `http://localhost:5000/get_replies?parent_comment_id=${parentComment.comment_id}&start=${replyStart}&limit=${limit}`,
+        `https://sh12345.pythonanywhere.com/get_replies?parent_comment_id=${parentComment.comment_id}&start=${replyStart}&limit=${limit}`,
         {
           method: "GET",
           headers: {

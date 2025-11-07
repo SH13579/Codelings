@@ -38,7 +38,7 @@ function LoginPage({
         setMsg("Please fill in the blanks!");
         return;
       }
-      const res = await fetch("http://localhost:5000/login", {
+      const res = await fetch("https://sh12345.pythonanywhere.com/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(login),
@@ -152,7 +152,7 @@ function RegisterForm({ msg, setMsg, setLoginOrRegister }) {
       return;
     }
     try {
-      const res = await fetch("http://localhost:5000/register", {
+      const res = await fetch("https://sh12345.pythonanywhere.com/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

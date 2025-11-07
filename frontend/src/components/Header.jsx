@@ -14,12 +14,15 @@ import { jwtDecode } from "jwt-decode";
 //function to extend the session of the current user, prompting a new token
 async function extendSession(token, setToken) {
   try {
-    const res = await fetch("http://localhost:5000/extend_session", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const res = await fetch(
+      "https://sh12345.pythonanywhere.com/extend_session",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     if (res.ok) {
       const data = await res.json();
       sessionStorage.setItem("token", data.token);
@@ -170,13 +173,16 @@ export default function Header() {
 
     const getCurrentUser = async () => {
       try {
-        const res = await fetch("http://localhost:5000/fetch_user_profile", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          signal: signal,
-        });
+        const res = await fetch(
+          "https://sh12345.pythonanywhere.com/fetch_user_profile",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            signal: signal,
+          }
+        );
 
         const data = await res.json();
 

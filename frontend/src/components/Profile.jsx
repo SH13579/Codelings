@@ -23,17 +23,20 @@ export function showDeletePopup(
   const token = sessionStorage.getItem("token");
   async function deletePost() {
     try {
-      const res = await fetch("http://localhost:5000/delete_post", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          post_id: post_id,
-          video_file_path: video_file_path,
-        }),
-      });
+      const res = await fetch(
+        "https://sh12345.pythonanywhere.com/delete_post",
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            post_id: post_id,
+            video_file_path: video_file_path,
+          }),
+        }
+      );
       const data = await res.json();
       if (res.ok) {
         setDeleted(true);
@@ -84,7 +87,7 @@ async function fetchLikedPosts(
   reset ? setPostsLoading(true) : setViewMorePostsLoading(true);
   try {
     const res = await fetch(
-      `http://localhost:5000/fetch_liked_posts?limit=${limit}&offset=${
+      `https://sh12345.pythonanywhere.com/fetch_liked_posts?limit=${limit}&offset=${
         reset ? 0 : start
       }`,
       {
@@ -131,7 +134,7 @@ async function fetchPostsProfile(
   reset ? setPostsLoading(true) : setViewMorePostsLoading(true);
   try {
     const res = await fetch(
-      `http://localhost:5000/get_posts_byUserAndCategory?username=${encodeURIComponent(
+      `https://sh12345.pythonanywhere.com/get_posts_byUserAndCategory?username=${encodeURIComponent(
         username
       )}&post_type=${encodeURIComponent(postType)}&category=${category}&start=${
         reset ? 0 : start
@@ -180,7 +183,7 @@ export function useFetchProfileInfo(
       setProfileLoading(true);
       try {
         const res = await fetch(
-          `http://localhost:5000/fetch_profile?username=${encodeURIComponent(
+          `https://sh12345.pythonanywhere.com/fetch_profile?username=${encodeURIComponent(
             username
           )}`
         );

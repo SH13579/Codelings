@@ -50,7 +50,7 @@ function Comments({
     const category = filter === "Best" ? "likes_count" : "comment_date";
     try {
       const res = await fetch(
-        `http://localhost:5000/get_comments?post_id=${postId}&category=${category}&start=${
+        `https://sh12345.pythonanywhere.com/get_comments?post_id=${postId}&category=${category}&start=${
           reset ? 0 : start
         }&limit=${limit}`,
         {
@@ -99,17 +99,20 @@ function Comments({
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch("http://localhost:5000/post_comment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          post_id: postId,
-          comment_text: commentText,
-        }),
-      });
+      const res = await fetch(
+        "https://sh12345.pythonanywhere.com/post_comment",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            post_id: postId,
+            comment_text: commentText,
+          }),
+        }
+      );
 
       const data = await res.json();
 
@@ -300,7 +303,7 @@ export default function Post() {
     const fetchPost = async () => {
       try {
         const res = await fetch(
-          `http://localhost:5000/get_specific_post?post_id=${postId}`,
+          `https://sh12345.pythonanywhere.com/get_specific_post?post_id=${postId}`,
           {
             method: "GET",
             headers: {
@@ -347,7 +350,7 @@ export default function Post() {
   const handleEdit = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/edit_post?post_id=${postId}`,
+        `https://sh12345.pythonanywhere.com/edit_post?post_id=${postId}`,
         {
           method: "POST",
           headers: {

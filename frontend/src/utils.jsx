@@ -66,7 +66,7 @@ export async function likeUnlike(
   setLiked(!liked);
   const token = sessionStorage.getItem("token");
   try {
-    const res = await fetch("http://localhost:5000/like_unlike", {
+    const res = await fetch("https://sh12345.pythonanywhere.com/like_unlike", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

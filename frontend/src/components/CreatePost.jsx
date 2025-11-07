@@ -174,13 +174,16 @@ const CreatePostForm = ({
       formData.append("demoFile", projectPost.demoFile);
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:5000/create_post", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
+        const res = await fetch(
+          "https://sh12345.pythonanywhere.com/create_post",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          }
+        );
 
         const data = await res.json();
 

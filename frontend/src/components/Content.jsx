@@ -73,7 +73,7 @@ async function fetchSpecificTag(
   const category = filter === "Best" ? "likes" : "post_date";
   try {
     const res = await fetch(
-      `http://localhost:5000/fetch_specific_tag?target_tag=${section}&post_type=${post_type}&category=${category}&start=${
+      `https://sh12345.pythonanywhere.com/fetch_specific_tag?target_tag=${section}&post_type=${post_type}&category=${category}&start=${
         reset ? 0 : start
       }&limit=${limit}`,
       {
@@ -120,7 +120,7 @@ async function fetchPostsHomePage(
   const category = filter === "Best" ? "likes" : "post_date";
   try {
     const res = await fetch(
-      `http://localhost:5000/get_postsByCategory?post_type=${encodeURIComponent(
+      `https://sh12345.pythonanywhere.com/get_postsByCategory?post_type=${encodeURIComponent(
         postType
       )}&category=${category}&start=${reset ? 0 : start}&limit=${limit}`,
       {

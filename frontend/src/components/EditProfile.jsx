@@ -44,13 +44,16 @@ async function handleEditProfile(
     formData.append("pfp", profileInfo.pfp);
     formData.append("pfpFile", profileInfo.pfpFile);
     try {
-      const res = await fetch("http://localhost:5000/edit_profile", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const res = await fetch(
+        "https://sh12345.pythonanywhere.com/edit_profile",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
       const data = await res.json();
       if (res.ok) {
         setMsg(data.success);
