@@ -136,7 +136,6 @@ export default function Header() {
   const { error500Msg, setError500Msg, setError500Page, setError503 } =
     useContext(ErrorContext);
   const location = useLocation();
-  console.log("Header");
 
   //remove ability to scroll any content outside of the account component
   useEffect(() => {

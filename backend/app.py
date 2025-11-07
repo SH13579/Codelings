@@ -1,6 +1,4 @@
 from flask import Flask, request, jsonify
-import psycopg2
-from dotenv import load_dotenv
 from flask_cors import CORS
 import datetime
 import os
@@ -8,36 +6,17 @@ import jwt
 from functools import wraps
 from supabase import create_client, Client
 from urllib.parse import urlparse
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 CORS(app)
 load_dotenv()
 
-# connect to Supabase database
-DB_HOST = os.getenv("DB_HOST")
-DB_NAME = os.getenv("DB_NAME")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_PORT = os.getenv("DB_PORT")
-SECRET_KEY = os.getenv("SECRET_KEY")
-# connect to Supabase storage
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
-# Connect to the database
-try:
-    conn = psycopg2.connect(
-        user=DB_USER,
-        password=DB_PASSWORD,
-        host=DB_HOST,
-        port=DB_PORT,
-        dbname=DB_NAME,
-    )
-    print("Connection successful!")
-except Exception as e:
-    print(f"Failed to connect: {e}")
-
-# Connect to the supabase storage
+# Connect to supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
@@ -111,9 +90,14 @@ def removeFile(url):
 
 
 # changes the date from each row to the difference between date posted and today's date
-def get_post_date(row):
+def get_post_date(post):
     now = datetime.datetime.now()
-    time_difference = now - row[1]
+
+    # Convert ISO string to datetime if needed
+    if isinstance(post["date"], str):
+        post["date"] = datetime.datetime.fromisoformat(post["date"])
+
+    time_difference = now - post["date"]
     seconds = round(time_difference.total_seconds())
     minutes = round(seconds / 60)
     hours = round(seconds / 3600)
@@ -138,17 +122,9 @@ def get_post_date(row):
     return difference
 
 
-# turn each row into a object with corresponding dictionary values
-def get_posts_helper(rows, columns):
-    posts = []
-    now = datetime.datetime.now()
-
-    # iterate through columns and fill in the dictionary with each row fetched from rows
-    for row in rows:
-        difference = get_post_date(row)
-        post_dict = dict(zip(columns, row))
-        post_dict["date"] = difference
-
-        posts.append(post_dict)
-
+def get_posts_helper(posts):
+    # posts is a list of dicts from Supabase
+    for post in posts:
+        post["date"] = get_post_date(post)
+        # print(post["date"])
     return posts

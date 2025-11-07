@@ -256,6 +256,7 @@
   color: black;
   font-weight: 450;
   border-radius: 7.5px;
+  background-color: white;
 }
 .kebab-menu-dropdown div:hover{
   background-color: #e6e6e6;
@@ -315,14 +316,7 @@
 .comment .post-edit-box{
   margin-top: 1rem;
 }
-  /* color: #023E7D;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 1.15rem;
-  padding-top: 1.25rem;
-  padding-bottom: 1.25rem; */
+
 .char-count{
   font-size: 0.75rem;
   display: flex;

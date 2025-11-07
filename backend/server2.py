@@ -158,7 +158,6 @@ def register():
                 "INSERT INTO users (username, email, password, profile_picture) VALUES (%s, %s, %s, %s)",
                 (username, email, hashed_password, pfp),
             )
-            cursor.execute()
         conn.commit()
         return jsonify({"message": "User registered successfully"}), 201
     except Exception as e:
@@ -194,7 +193,7 @@ def login():
                     {
                         "user_id": user[0],
                         "exp": datetime.datetime.now(datetime.timezone.utc)
-                        + datetime.timedelta(seconds=30),
+                        + datetime.timedelta(minutes=30),
                     },
                     SECRET_KEY,
                     algorithm="HS256",
@@ -215,7 +214,7 @@ def extend_session(decoded):
             {
                 "user_id": decoded["user_id"],
                 "exp": datetime.datetime.now(datetime.timezone.utc)
-                + datetime.timedelta(seconds=30),
+                + datetime.timedelta(minutes=30),
             },
             SECRET_KEY,
             algorithm="HS256",

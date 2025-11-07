@@ -288,7 +288,7 @@ export default function Post() {
     error503,
     setError503,
   } = useContext(ErrorContext);
-  const limitedCharBody = 200;
+  const limitedCharBody = 4000;
 
   const handlePropagation = (e) => {
     e.stopPropagation();
