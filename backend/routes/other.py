@@ -185,6 +185,8 @@ def like_unlike_post(decoded):
             .execute()
         )
 
+        likes_col_name = "likes" if type == "posts" else "likes_count"
+
         if existing.data:
             # unlike
             supabase.table("likes").delete().eq("user_id", user_id).eq(
@@ -192,14 +194,14 @@ def like_unlike_post(decoded):
             ).eq("type", type).execute()
             likes_count = (
                 supabase.table(type)
-                .select("likes")
+                .select(likes_col_name)
                 .eq("id", target_id)
                 .single()
                 .execute()
             )
-            supabase.table(type).update({"likes": likes_count.data["likes"] - 1}).eq(
-                "id", target_id
-            ).execute()
+            supabase.table(type).update(
+                {likes_col_name: likes_count.data[likes_col_name] - 1}
+            ).eq("id", target_id).execute()
             action = "unliked"
         else:
             # like
@@ -208,14 +210,14 @@ def like_unlike_post(decoded):
             ).execute()
             likes_count = (
                 supabase.table(type)
-                .select("likes")
+                .select(likes_col_name)
                 .eq("id", target_id)
                 .single()
                 .execute()
             )
-            supabase.table(type).update({"likes": likes_count.data["likes"] + 1}).eq(
-                "id", target_id
-            ).execute()
+            supabase.table(type).update(
+                {likes_col_name: likes_count.data[likes_col_name] + 1}
+            ).eq("id", target_id).execute()
             action = "liked"
 
         return jsonify({"success": action}), 201
