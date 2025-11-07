@@ -39,7 +39,7 @@
   font-size: 1rem;
   border: 1px solid rgb(228, 227, 227);
   border-radius: 10px;
-  background-image: url("../media/images/search.svg");
+  background-image: url("/images/search.svg");
   background-repeat: no-repeat;
   background-position: 0.8rem;
   background-size: 1.2rem;
