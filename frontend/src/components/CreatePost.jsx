@@ -144,12 +144,11 @@ const CreatePostForm = ({
         ...prev,
         demoFile: file,
       }));
-    } else {
-      setProjectPost((prev) => ({
-        ...prev,
-        [e.target.name]: e.target.value,
-      }));
     }
+    setProjectPost((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
   //handles submitting the post
@@ -276,7 +275,7 @@ const CreatePostForm = ({
           <div className="create-post-files-links">
             <div className="demo-file-wrapper">
               <label>Demo </label>
-              <label for="demo-file" className="custom-file-upload">
+              <label htmlFor="demo-file" className="custom-file-upload">
                 Choose File
               </label>
               <div className="demo-file-name">{projectPost.demoFile.name}</div>

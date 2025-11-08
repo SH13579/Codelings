@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useContext, useRef } from "react";
 import "../styles/post.css";
-import { UIContext, handleLikePost, likeUnlike } from "../utils";
+import {
+  UIContext,
+  handleLikePost,
+  likeUnlike,
+  makeLinksClickable,
+} from "../utils";
 import { handleNavigating } from "./Content";
 import KebabMenu from "./KebabMenu";
 import Loading from "./Loading";
@@ -412,7 +417,9 @@ export default function CommentCard({
           </div>
         </div>
       ) : (
-        <div className="comment-text">{parentComment.comment}</div>
+        <div className="comment-text">
+          {makeLinksClickable(parentComment.comment)}
+        </div>
       )}
       <div className="upvotes-comments-wrapper">
         <span className="upvotes">

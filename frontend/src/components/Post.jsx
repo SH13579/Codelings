@@ -7,6 +7,7 @@ import {
   ErrorContext,
   handleLikePost,
   likeUnlike,
+  makeLinksClickable,
 } from "../utils";
 import { handleNavigating } from "./Content";
 import CommentCard from "./CommentCard";
@@ -462,7 +463,7 @@ export default function Post() {
               </div>
             </div>
           ) : (
-            postInfo.body
+            makeLinksClickable(postInfo.body)
           )}
         </div>
         <div className="upvotes-comments-wrapper">

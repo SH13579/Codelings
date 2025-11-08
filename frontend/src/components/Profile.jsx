@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
 import "../styles/profile.css";
-import { UserContext, UIContext, ErrorContext } from "../utils";
+import { UserContext, ErrorContext, makeLinksClickable } from "../utils";
 import { useParams, Link } from "react-router-dom";
 import Loading from "./Loading";
 import SectionsNavbar from "./SectionsNavbar";
@@ -273,7 +273,9 @@ export default function Profile() {
 
           <div className="profile-details-wrap">
             {profileInfo.about_me && (
-              <div className="profile-about">{profileInfo.about_me}</div>
+              <div className="profile-about">
+                {makeLinksClickable(profileInfo.about_me)}
+              </div>
             )}
             <div className="profile-details">
               {profileInfo.email && (

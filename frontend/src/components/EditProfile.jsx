@@ -120,7 +120,7 @@ export default function EditProfile() {
     return null;
   }
 
-  //handle profile picture change
+  //handle changing details of profile
   function handleChange(e) {
     if (e.target.name === "pfp") {
       const file = e.target.files[0];

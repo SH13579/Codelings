@@ -111,6 +111,26 @@ export function handleFilter(
   setFilter(filterValue); // changes filter, triggers useEffect fetch
 }
 
+export function makeLinksClickable(text) {
+  const parts = text.split(/(https?:\/\/[^\s]+)/g);
+  const new_text = parts.map((part, index) =>
+    part.match(/https?:\/\/[^\s]+/) ? (
+      <a
+        key={index}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ color: "blue" }}
+      >
+        {part}
+      </a>
+    ) : (
+      part
+    )
+  );
+  return new_text;
+}
+
 export const UserContext = createContext(null);
 export const UIContext = createContext(null);
 export const ErrorContext = createContext(null);
