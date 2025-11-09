@@ -175,7 +175,6 @@ def get_posts_byUser(decoded):
     limit = int(request.args.get("limit"))
     category = request.args.get("category")
     user_id = decoded["user_id"] if decoded else None
-    print(user_id)
 
     if category not in {"post_date", "likes"}:
         return jsonify({"error": "Invalid sort category"}), 400
