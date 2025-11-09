@@ -136,7 +136,7 @@ export default function Header() {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
   const cachedUser = sessionStorage.getItem("currentUser");
-  const { error500Msg, setError500Msg, setError500Page, setError503 } =
+  const { error500Msg, setError500Msg, setError500Page, setError503, error429Msg, setError429Msg } =
     useContext(ErrorContext);
   const location = useLocation();
 
@@ -304,9 +304,17 @@ export default function Header() {
           <h2 className="site-name">Codelings</h2>
         </Link>
         {error500Msg && (
-          <div className="error-500-msg">
+          <div className="error-msg">
             Something went wrong. Please try again.
             <div className="exit-button" onClick={() => setError500Msg(false)}>
+              &times;
+            </div>
+          </div>
+        )}
+        {error429Msg && (
+          <div className="error-msg">
+            You are commenting too quickly! Please wait a few seconds.
+            <div className="exit-button" onClick={() => setError429Msg(false)}>
               &times;
             </div>
           </div>

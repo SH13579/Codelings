@@ -28,6 +28,7 @@ function Comments({
   setError500Msg,
   setError500Page,
   setError503,
+  setError429Msg,
 }) {
   const [viewMoreLoading, setViewMoreLoading] = useState(false);
   const [commentsLoading, setCommentsLoading] = useState(true);
@@ -96,6 +97,11 @@ function Comments({
     fetchComments(true);
   }, [filter]);
 
+  function triggerErrorMsg(setErrorState) {
+    setErrorState(false);
+    setTimeout(() => setErrorState(true), 10);
+  }
+
   //post comment
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
@@ -139,6 +145,8 @@ function Comments({
           setError500Msg(true);
         } else if (res.status === 503) {
           setError503(true);
+        } else if (res.status === 429) {
+          triggerErrorMsg(setError429Msg);
         }
         console.error(data.error);
       }
@@ -255,6 +263,8 @@ function Comments({
               setStart={setStart}
               setError500Msg={setError500Msg}
               setError503={setError503}
+              setError429Msg={setError429Msg}
+              triggerErrorMsg={triggerErrorMsg}
             />
           ))}
           {hasMoreComments && (
@@ -291,6 +301,8 @@ export default function Post() {
     setError500Page,
     error503,
     setError503,
+    error429Msg,
+    setError429Msg,
   } = useContext(ErrorContext);
   const limitedCharBody = 4000;
 
@@ -494,6 +506,7 @@ export default function Post() {
             setError500Msg={setError500Msg}
             setError500Page={setError500Page}
             setError503={setError503}
+            setError429Msg={setError429Msg}
           />
         }
       </div>

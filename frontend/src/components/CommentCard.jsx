@@ -76,6 +76,8 @@ export default function CommentCard({
 
   setError500Msg,
   setError503,
+  setError429Msg,
+  triggerErrorMsg,
 }) {
   const isReply = parentComment.parent_comment_id !== null;
   const isCommenter =
@@ -283,6 +285,8 @@ export default function CommentCard({
       } else {
         if (res.status === 500) {
           setError500Msg(true);
+        } else if (res.status === 429) {
+          triggerErrorMsg(setError429Msg)
         }
         console.error(data.error);
       }
