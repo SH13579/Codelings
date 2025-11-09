@@ -175,6 +175,7 @@ def get_posts_byUser(decoded):
     limit = int(request.args.get("limit"))
     category = request.args.get("category")
     user_id = decoded["user_id"] if decoded else None
+    print(user_id)
 
     if category not in {"post_date", "likes"}:
         return jsonify({"error": "Invalid sort category"}), 400
@@ -192,13 +193,13 @@ def get_posts_byUser(decoded):
             .single()
             .execute()
         )
-        user_id = user_res.data["id"]
+        profile_user_id = user_res.data["id"]
 
         # Then fetch posts for that user
         res = (
             supabase.table("posts")
             .select("*, users(username, profile_picture), post_tags(tags(tag_name))")
-            .eq("user_id", user_id)
+            .eq("user_id", profile_user_id)
             .eq("post_type", post_type)
             .order(category, desc=True)
             .range(start, start + limit - 1)
@@ -218,7 +219,6 @@ def get_posts_byUser(decoded):
                     .execute()
                 )
                 liked = bool(like_check.data)
-
             posts.append(
                 {
                     "id": p["id"],
