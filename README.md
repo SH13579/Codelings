@@ -16,5 +16,19 @@
 * **Frontend:** HTML, CSS, Javascript, React
 * **Backend:** Python, Supabase, Flask
 
+## Deployment 
+* **Frontend:** The site is deployed on Netlify and accessible [here](https://splendid-valkyrie-c0f49d.netlify.app/)
+* **Backend:** PythonAnywhere
+
+## Preview
+### Homepage
+![screenshot1](/frontend/public/screenshots/codelings-home.png)
+
+### Post
+![screenshot1](/frontend/public/screenshots/codelings-post.png)
+
+### Profile
+![screenshot1](/frontend/public/screenshots/codelings-profile.png)
+
 
 
