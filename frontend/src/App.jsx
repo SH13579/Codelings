@@ -22,6 +22,7 @@ function App() {
   const [error500Msg, setError500Msg] = useState(false);
   const [error500Page, setError500Page] = useState(false);
   const [error503, setError503] = useState(false);
+  const [error429Msg, setError429Msg] = useState(false);
   const tags = [
     { tag_name: "web-app", post_type: "project" },
     { tag_name: "mobile-app", post_type: "project" },
@@ -75,6 +76,8 @@ function App() {
           setError500Page,
           error503,
           setError503,
+          error429Msg,
+          setError429Msg,
         }}
       >
         <UserContext.Provider

@@ -151,7 +151,7 @@
   align-items: center;
   justify-content: center;
 }
-.error-500-msg{
+.error-msg{
   position: absolute;
   display: flex;
   align-items: center;
@@ -160,7 +160,7 @@
   top: 103%;
   padding: 0.4rem;
   gap: 0.5rem;
-  animation: shake 0.5s ease;
+  animation: shake 0.5s ease, fadeout 1s ease 5s forwards;
 }
 @keyframes shake{
   0% { transform: translateX(0); }
@@ -170,5 +170,13 @@
   80% { transform: translateX(0.5rem); }
   100% { transform: translateX(0); }
 }
-
-
+@keyframes fadeout {
+  0% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
